@@ -3,14 +3,29 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 from django.views.generic import TemplateView
+from drf_spectacular.views import (SpectacularAPIView, SpectacularRedocView,
+                                   SpectacularSwaggerView)
 
-from core.views import health_check
+from core.views import custom_403, custom_404, custom_500, health_check
+
+# Error handlers
+handler404 = custom_404
+handler500 = custom_500
+handler403 = custom_403
 
 urlpatterns = [
     # Health check
     path("health/", health_check, name="health_check"),
     # Admin Django padrão
     path("django-admin/", admin.site.urls),
+    # API Documentation
+    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+    path(
+        "api/docs/",
+        SpectacularSwaggerView.as_view(url_name="schema"),
+        name="swagger-ui",
+    ),
+    path("api/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
     # API REST
     path("api/users/", include("users.urls")),
     path("api/agendamentos/", include("agendamentos.urls")),
@@ -53,3 +68,11 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+    # Debug toolbar
+    try:
+        import debug_toolbar
+
+        urlpatterns = [path("__debug__/", include(debug_toolbar.urls))] + urlpatterns
+    except ImportError:
+        pass

@@ -1,3 +1,5 @@
+from django.utils.decorators import method_decorator
+from django_ratelimit.decorators import ratelimit
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -14,11 +16,20 @@ class AgendamentoListView(generics.ListAPIView):
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        return Agendamento.objects.filter(user=self.request.user)
+        # Otimização: select_related para reduzir queries N+1
+        return (
+            Agendamento.objects.filter(user=self.request.user)
+            .select_related("service", "barber", "coupon")
+            .order_by("-appointment_date", "-appointment_time")
+        )
 
 
+@method_decorator(ratelimit(key="user", rate="10/h", method="POST"), name="dispatch")
 class AgendamentoCreateView(generics.CreateAPIView):
-    """Criar novo agendamento"""
+    """Criar novo agendamento
+
+    Rate limit: 10 agendamentos por hora por usuário
+    """
 
     serializer_class = CreateAgendamentoSerializer
     permission_classes = (IsAuthenticated,)
@@ -42,8 +53,12 @@ class AgendamentoCancelView(APIView):
             )
 
 
+@method_decorator(ratelimit(key="ip", rate="60/m", method="GET"), name="dispatch")
 class AvailableSlotsView(APIView):
-    """Verificar horários disponíveis"""
+    """Verificar horários disponíveis
+
+    Rate limit: 60 requisições por minuto por IP
+    """
 
     permission_classes = (AllowAny,)
 
@@ -80,14 +95,16 @@ class AvailableSlotsView(APIView):
             "19:00",
         ]
 
-        # Buscar agendamentos ocupados
-        occupied = Agendamento.objects.filter(
-            appointment_date=date,
-            barber_id=barber_id,
-            status__in=["pending", "confirmed"],
-        ).values_list("appointment_time", flat=True)
+        # Otimização: Buscar apenas os horários ocupados (query única com set)
+        occupied = set(
+            Agendamento.objects.filter(
+                appointment_date=date,
+                barber_id=barber_id,
+                status__in=["pending", "confirmed"],
+            ).values_list("appointment_time", flat=True)
+        )
 
-        occupied_times = [t.strftime("%H:%M") for t in occupied]
+        occupied_times = {t.strftime("%H:%M") for t in occupied}
 
         # Retornar horários disponíveis
         available_slots = [

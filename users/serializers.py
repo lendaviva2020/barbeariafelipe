@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from core.validators import validate_brazilian_phone
+
 from .models import User
 
 
@@ -8,15 +10,20 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ("id", "email", "name", "phone", "role", "is_active", "created_at")
         read_only_fields = ("id", "created_at")
+        extra_kwargs = {"phone": {"validators": [validate_brazilian_phone]}}
 
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=6)
     password_confirm = serializers.CharField(write_only=True)
+    phone = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
         model = User
         fields = ("email", "name", "phone", "password", "password_confirm")
+        extra_kwargs = {
+            "phone": {"required": False, "allow_blank": True},
+        }
 
     def validate(self, data):
         if data["password"] != data["password_confirm"]:

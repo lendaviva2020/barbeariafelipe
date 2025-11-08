@@ -1,7 +1,10 @@
 from datetime import datetime, timedelta
 
+from django.core.cache import cache
 from django.db.models import Avg, Sum
 from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from rest_framework import generics, status
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
@@ -14,7 +17,10 @@ from users.models import User
 
 
 class DashboardStatsView(APIView):
-    """Estatísticas do dashboard administrativo"""
+    """Estatísticas do dashboard administrativo
+
+    Cache: 5 minutos para otimizar performance
+    """
 
     permission_classes = (IsAdminUser,)
 
@@ -30,9 +36,17 @@ class DashboardStatsView(APIView):
         if isinstance(end_date, str):
             end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
 
+        # Cache key único por período
+        cache_key = f"dashboard_stats_{start_date}_{end_date}"
+        cached_stats = cache.get(cache_key)
+
+        if cached_stats:
+            return Response(cached_stats)
+
+        # Query otimizada com select_related
         agendamentos = Agendamento.objects.filter(
             appointment_date__range=[start_date, end_date]
-        )
+        ).select_related("service", "barber")
 
         # Estatísticas básicas
         stats = {
@@ -65,6 +79,9 @@ class DashboardStatsView(APIView):
             "cancelled": today_appointments.filter(status="cancelled").count(),
         }
 
+        # Armazenar em cache por 5 minutos (300 segundos)
+        cache.set(cache_key, stats, 300)
+
         return Response(stats)
 
 
@@ -80,7 +97,10 @@ class AgendamentosAdminView(generics.ListAPIView):
         if status_filter:
             queryset = queryset.filter(status=status_filter)
 
-        return queryset.select_related("user", "service", "barber", "coupon")
+        # Otimização: select_related para reduzir queries N+1
+        return queryset.select_related(
+            "user", "service", "barber", "barber__user", "coupon"
+        ).order_by("-created_at")
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()

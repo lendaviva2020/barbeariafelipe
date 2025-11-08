@@ -2,6 +2,7 @@ from datetime import date, timedelta
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.test import override_settings
 from rest_framework.test import APIClient
 
 from barbeiros.models import Barbeiro
@@ -9,6 +10,13 @@ from cupons.models import Cupom
 from servicos.models import Servico
 
 User = get_user_model()
+
+
+# Desabilitar rate limiting em testes
+@pytest.fixture(autouse=True)
+def disable_rate_limit(settings):
+    """Desabilitar rate limiting para todos os testes"""
+    settings.RATELIMIT_ENABLE = False
 
 
 @pytest.fixture
@@ -25,6 +33,7 @@ def user_data():
         "password": "testpass123",
         "name": "Test User",
         "phone": "45999999999",
+        "password_confirm": "testpass123",
     }
 
 

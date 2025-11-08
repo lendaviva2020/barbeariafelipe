@@ -1,5 +1,8 @@
 from rest_framework import serializers
 
+from core.validators import (validate_appointment_interval,
+                             validate_brazilian_phone, validate_business_hours,
+                             validate_future_date)
 
 from .models import Agendamento
 
@@ -34,6 +37,13 @@ class CreateAgendamentoSerializer(serializers.ModelSerializer):
             "discount_amount",
             "coupon_code",
         )
+        extra_kwargs = {
+            "appointment_date": {"validators": [validate_future_date]},
+            "appointment_time": {
+                "validators": [validate_business_hours, validate_appointment_interval]
+            },
+            "customer_phone": {"validators": [validate_brazilian_phone]},
+        }
 
     def validate(self, data):
         # Verificar se já existe agendamento no mesmo horário

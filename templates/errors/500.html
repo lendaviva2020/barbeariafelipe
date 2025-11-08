@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Erro Interno - Barbearia Francisco{% endblock %}
+
+{% block content %}
+<div class="error-page">
+    <div class="error-container">
+        <div class="error-code">500</div>
+        <h1 class="error-title">Erro Interno do Servidor</h1>
+        <p class="error-message">
+            Ops! Algo deu errado. Nossa equipe já foi notificada e está trabalhando para resolver o problema.
+        </p>
+        <div class="error-actions">
+            <a href="{% url 'home' %}" class="btn btn-primary">Voltar para Home</a>
+            <a href="{% url 'contato' %}" class="btn btn-outline">Entrar em Contato</a>
+        </div>
+    </div>
+</div>
+
+<style>
+.error-page {
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.error-container {
+    text-align: center;
+    max-width: 600px;
+}
+
+.error-code {
+    font-size: 8rem;
+    font-weight: 700;
+    color: var(--error);
+    line-height: 1;
+    margin-bottom: 1rem;
+}
+
+.error-title {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.error-message {
+    font-size: 1.125rem;
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+}
+
+.error-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+</style>
+{% endblock %}
+

@@ -1,6 +1,7 @@
 from datetime import timedelta
 from pathlib import Path
 
+import dj_database_url
 from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -16,6 +17,9 @@ ALLOWED_HOSTS = config(
     "ALLOWED_HOSTS", default="localhost,127.0.0.1,.vercel.app"
 ).split(",")
 
+# Internal IPs (para debug toolbar)
+INTERNAL_IPS = ["127.0.0.1", "localhost"]
+
 # Application definition
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -29,6 +33,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
+    "drf_spectacular",
     # Local apps
     "core",
     "users",
@@ -39,7 +44,12 @@ INSTALLED_APPS = [
     "admin_painel",
 ]
 
+# Debug Toolbar (apenas em desenvolvimento)
+if DEBUG:
+    INSTALLED_APPS += ["debug_toolbar"]
+
 MIDDLEWARE = [
+    "django.middleware.gzip.GZipMiddleware",  # Compressão GZip (primeiro)
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",  # Servir arquivos estáticos
     "corsheaders.middleware.CorsMiddleware",  # CORS
@@ -50,6 +60,10 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+# Debug Toolbar Middleware (apenas em desenvolvimento, após GZip)
+if DEBUG:
+    MIDDLEWARE.insert(1, "debug_toolbar.middleware.DebugToolbarMiddleware")
 
 ROOT_URLCONF = "barbearia.urls"
 
@@ -72,11 +86,13 @@ TEMPLATES = [
 WSGI_APPLICATION = "barbearia.wsgi.application"
 
 # Database
+# Suporte para PostgreSQL via DATABASE_URL (produção) ou SQLite (dev)
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    "default": dj_database_url.config(
+        default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 }
 
 # Custom User Model
@@ -122,6 +138,17 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+# API Documentation (drf-spectacular)
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Barbearia Francisco API",
+    "DESCRIPTION": "API REST para sistema de agendamento de barbearia",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "SCHEMA_PATH_PREFIX": "/api/",
+    "COMPONENT_SPLIT_REQUEST": True,
 }
 
 # Simple JWT
@@ -155,6 +182,26 @@ if not DEBUG:
 
 # WhatsApp Configuration
 WHATSAPP_PHONE = config("WHATSAPP_PHONE", default="5545999417111")
+
+# Cache Configuration (Redis)
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": config("REDIS_URL", default="redis://127.0.0.1:6379/1"),
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "SOCKET_CONNECT_TIMEOUT": 5,
+            "SOCKET_TIMEOUT": 5,
+            "RETRY_ON_TIMEOUT": True,
+            "IGNORE_EXCEPTIONS": True,  # Não quebra se Redis estiver offline
+        },
+        "KEY_PREFIX": "barbearia",
+    }
+}
+
+# Session cache (usar Redis se disponível)
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = "default"
 
 # Logging Configuration
 LOGGING = {

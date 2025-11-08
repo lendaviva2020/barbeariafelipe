@@ -1,4 +1,6 @@
 from django.contrib.auth import authenticate
+from django.utils.decorators import method_decorator
+from django_ratelimit.decorators import ratelimit
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -9,8 +11,12 @@ from .models import User
 from .serializers import LoginSerializer, RegisterSerializer, UserSerializer
 
 
+@method_decorator(ratelimit(key="ip", rate="3/h", method="POST"), name="dispatch")
 class RegisterView(generics.CreateAPIView):
-    """Registro de novos usuários"""
+    """Registro de novos usuários
+
+    Rate limit: 3 registros por hora por IP
+    """
 
     queryset = User.objects.all()
     permission_classes = (AllowAny,)
@@ -36,8 +42,12 @@ class RegisterView(generics.CreateAPIView):
         )
 
 
+@method_decorator(ratelimit(key="ip", rate="5/m", method="POST"), name="dispatch")
 class LoginView(APIView):
-    """Login de usuários"""
+    """Login de usuários
+
+    Rate limit: 5 tentativas por minuto por IP
+    """
 
     permission_classes = (AllowAny,)
 

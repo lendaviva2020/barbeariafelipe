@@ -1,5 +1,8 @@
 from rest_framework import serializers
 
+from core.validators import (validate_discount_percentage,
+                             validate_price_positive)
+
 from .models import Cupom
 
 
@@ -24,17 +27,20 @@ class CupomSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["created_at", "updated_at", "current_uses"]
 
+    def validate_discount(self, value):
+        """Validar desconto baseado no tipo"""
+        discount_type = self.initial_data.get("discount_type", "percentage")
+
+        if discount_type == "percentage":
+            validate_discount_percentage(value)
+        else:  # fixed
+            validate_price_positive(value)
+
+        return value
+
 
 class ValidateCupomSerializer(serializers.Serializer):
     code = serializers.CharField(max_length=20)
 
-    def validate_code(self, value):
-        try:
-            cupom = Cupom.objects.get(code=value.upper())
-            if not cupom.is_valid:
-                raise serializers.ValidationError(
-                    "Cupom inválido, expirado ou esgotado"
-                )
-            return value
-        except Cupom.DoesNotExist:
-            raise serializers.ValidationError("Cupom não encontrado")
+    # Não validar no serializer, deixar para a view lidar com isso
+    # para poder retornar responses customizadas

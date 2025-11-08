@@ -10,16 +10,22 @@ from .models import Agendamento
 class TestAgendamentos:
     def test_create_agendamento(self, authenticated_client, servico, barbeiro):
         """Teste de criação de agendamento"""
+        from datetime import timedelta
+
+        future_date = date.today() + timedelta(days=1)  # Usar data futura
         data = {
             "service": servico.id,
             "barber": barbeiro.id,
-            "appointment_date": str(date.today()),
+            "appointment_date": str(future_date),
             "appointment_time": "10:00",
             "customer_name": "Test Customer",
             "customer_phone": "45999999999",
             "payment_method": "cash",
+            "price": servico.price,
         }
         response = authenticated_client.post("/api/agendamentos/create/", data)
+        if response.status_code != status.HTTP_201_CREATED:
+            print(f"Error: {response.data}")  # Debug
         assert response.status_code == status.HTTP_201_CREATED
 
     def test_list_agendamentos(self, authenticated_client, user):

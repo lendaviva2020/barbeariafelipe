@@ -2,7 +2,7 @@ from django.urls import path
 
 from barbeiros.admin_views import (BarbeiroAdminDetailView,
                                    BarbeiroAdminListCreateView)
-from cupons.admin_views import (CupomAdminDetailView, CupomAdminListCreateView)
+from cupons.admin_views import CupomAdminDetailView, CupomAdminListCreateView
 from servicos.admin_views import (ServicoAdminDetailView,
                                   ServicoAdminListCreateView)
 
