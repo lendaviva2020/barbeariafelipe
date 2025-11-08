@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Agendar Horário - Barbearia Francisco{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/booking.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="booking-section">
+    <div class="container">
+        <div class="booking-header">
+            <h1>Agendamento</h1>
+            <p>Reserve seu horário em poucos passos simples</p>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div class="progress-container">
+            <div class="progress-steps">
+                <div class="progress-step active" data-step="1">
+                    <div class="step-number">1</div>
+                    <span>Serviço</span>
+                </div>
+                <div class="progress-step" data-step="2">
+                    <div class="step-number">2</div>
+                    <span>Data/Hora</span>
+                </div>
+                <div class="progress-step" data-step="3">
+                    <div class="step-number">3</div>
+                    <span>Dados</span>
+                </div>
+                <div class="progress-step" data-step="4">
+                    <div class="step-number">4</div>
+                    <span>Confirmação</span>
+                </div>
+            </div>
+        </div>
+        
+        <div id="bookingMessage" class="message" style="display: none;"></div>
+        
+        <!-- Booking Form -->
+        <form id="bookingForm" class="booking-form">
+            <!-- Step 1: Serviço -->
+            <div class="booking-step" data-step="1">
+                <h2>Escolha o Serviço</h2>
+                <div id="servicesList" class="services-grid">
+                    <div class="loader-container">
+                        <div class="loader"></div>
+                        <p>Carregando serviços...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 2: Data e Hora -->
+            <div class="booking-step" data-step="2" style="display: none;">
+                <h2>Escolha a Data e Horário</h2>
+                
+                <div class="form-group">
+                    <label for="date">Data</label>
+                    <input type="date" id="date" name="date" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="barber">Barbeiro</label>
+                    <select id="barber" name="barber" required>
+                        <option value="">Selecione um barbeiro</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Horário Disponível</label>
+                    <div id="timeSlots" class="time-slots">
+                        <p class="text-muted">Selecione a data e barbeiro primeiro</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 3: Dados do Cliente -->
+            <div class="booking-step" data-step="3" style="display: none;">
+                <h2>Seus Dados</h2>
+                
+                <div class="form-group">
+                    <label for="customer_name">Nome Completo</label>
+                    <input type="text" id="customer_name" name="customer_name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="customer_phone">Telefone</label>
+                    <input type="tel" id="customer_phone" name="customer_phone" required placeholder="(00) 00000-0000">
+                </div>
+                
+                <div class="form-group">
+                    <label for="customer_email">E-mail (opcional)</label>
+                    <input type="email" id="customer_email" name="customer_email">
+                </div>
+                
+                <div class="form-group">
+                    <label for="notes">Observações (opcional)</label>
+                    <textarea id="notes" name="notes" rows="3"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="payment_method">Forma de Pagamento</label>
+                    <select id="payment_method" name="payment_method" required>
+                        <option value="cash">Dinheiro</option>
+                        <option value="credit">Cartão de Crédito</option>
+                        <option value="debit">Cartão de Débito</option>
+                        <option value="pix">PIX</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Step 4: Confirmação -->
+            <div class="booking-step" data-step="4" style="display: none;">
+                <h2>Confirmação do Agendamento</h2>
+                
+                <div class="booking-summary">
+                    <div class="summary-item">
+                        <span class="summary-label">Serviço:</span>
+                        <span id="summary_service">-</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Data:</span>
+                        <span id="summary_date">-</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Horário:</span>
+                        <span id="summary_time">-</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Barbeiro:</span>
+                        <span id="summary_barber">-</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Cliente:</span>
+                        <span id="summary_customer">-</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Telefone:</span>
+                        <span id="summary_phone">-</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Pagamento:</span>
+                        <span id="summary_payment">-</span>
+                    </div>
+                    <div class="summary-item summary-total">
+                        <span class="summary-label">Total:</span>
+                        <span id="summary_price">R$ 0,00</span>
+                    </div>
+                </div>
+                
+                <div class="whatsapp-info">
+                    <p>📱 Ao confirmar, você será redirecionado para o WhatsApp da barbearia com todos os detalhes do seu agendamento.</p>
+                </div>
+            </div>
+            
+            <!-- Navigation Buttons -->
+            <div class="booking-nav">
+                <button type="button" id="prevBtn" class="btn btn-outline" style="display: none;">Voltar</button>
+                <button type="button" id="nextBtn" class="btn btn-primary">Próximo</button>
+                <button type="submit" id="submitBtn" class="btn btn-primary" style="display: none;">
+                    <span id="submitBtnText">Confirmar Agendamento</span>
+                    <span id="submitBtnLoader" class="loader" style="display: none;"></span>
+                </button>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/booking.js' %}"></script>
+{% endblock %}
+

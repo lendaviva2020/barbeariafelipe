@@ -1,0 +1,371 @@
+/* Booking Styles */
+
+.booking-section {
+    padding: 3rem 0;
+    min-height: 80vh;
+}
+
+.booking-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.booking-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.booking-header p {
+    color: var(--text-muted);
+}
+
+/* Progress Bar */
+.progress-container {
+    max-width: 800px;
+    margin: 0 auto 3rem;
+}
+
+.progress-steps {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+}
+
+.progress-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.step-number {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background: var(--border);
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.25rem;
+}
+
+.progress-step.active .step-number {
+    background: var(--primary);
+    color: white;
+}
+
+.progress-step.completed .step-number {
+    background: var(--success);
+    color: white;
+}
+
+.progress-step span {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+/* Booking Form */
+.booking-form {
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: var(--shadow);
+}
+
+.booking-step h2 {
+    font-size: 1.75rem;
+    margin-bottom: 2rem;
+    color: var(--primary);
+}
+
+/* Services Grid */
+.services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.service-card {
+    padding: 1.5rem;
+    border: 2px solid var(--border);
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.service-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-5px);
+    box-shadow: var(--shadow);
+}
+
+.service-card.selected {
+    border-color: var(--primary);
+    background: rgba(139, 115, 85, 0.05);
+}
+
+.service-card h3 {
+    margin-bottom: 0.5rem;
+    color: var(--text);
+}
+
+.service-card p {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+}
+
+.service-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.service-price {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.service-duration {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+/* Form Groups */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    font-size: 1rem;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(139, 115, 85, 0.1);
+}
+
+/* Time Slots */
+.time-slots {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 0.75rem;
+}
+
+.time-slot {
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    background: white;
+    cursor: pointer;
+    text-align: center;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.time-slot:hover:not(.disabled) {
+    border-color: var(--primary);
+    background: rgba(139, 115, 85, 0.05);
+}
+
+.time-slot.selected {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.time-slot.disabled {
+    background: #f3f4f6;
+    color: #9ca3af;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* Booking Summary */
+.booking-summary {
+    background: rgba(139, 115, 85, 0.05);
+    padding: 2rem;
+    border-radius: 0.75rem;
+    margin-bottom: 2rem;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.summary-item:last-child {
+    border-bottom: none;
+}
+
+.summary-label {
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.summary-total {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.whatsapp-info {
+    background: #d1fae5;
+    border: 1px solid var(--success);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    text-align: center;
+}
+
+/* Booking Navigation */
+.booking-nav {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+}
+
+.booking-nav .btn {
+    min-width: 150px;
+}
+
+/* Auth Form Styles */
+.auth-section {
+    padding: 3rem 0;
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+}
+
+.auth-card {
+    max-width: 500px;
+    margin: 0 auto;
+    background: white;
+    padding: 3rem;
+    border-radius: 1rem;
+    box-shadow: var(--shadow);
+}
+
+.auth-card h2 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+
+.auth-subtitle {
+    text-align: center;
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+}
+
+.auth-form {
+    margin-bottom: 1.5rem;
+}
+
+.auth-divider {
+    text-align: center;
+    color: var(--text-muted);
+    margin: 1.5rem 0;
+    position: relative;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 40%;
+    height: 1px;
+    background: var(--border);
+}
+
+.auth-divider::before {
+    left: 0;
+}
+
+.auth-divider::after {
+    right: 0;
+}
+
+.auth-toggle {
+    text-align: center;
+    margin-top: 1.5rem;
+}
+
+.auth-toggle a {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .booking-form {
+        padding: 1.5rem;
+    }
+    
+    .progress-steps {
+        gap: 0.5rem;
+    }
+    
+    .step-number {
+        width: 2.5rem;
+        height: 2.5rem;
+    }
+    
+    .progress-step span {
+        font-size: 0.75rem;
+    }
+    
+    .services-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .time-slots {
+        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    }
+    
+    .booking-nav {
+        flex-direction: column;
+    }
+    
+    .auth-card {
+        padding: 2rem 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .booking-header h1 {
+        font-size: 2rem;
+    }
+    
+    .booking-step h2 {
+        font-size: 1.5rem;
+    }
+}
+

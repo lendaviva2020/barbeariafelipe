@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Login - Barbearia Francisco{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+    <div class="container">
+        <div class="auth-card">
+            <h2>Entrar</h2>
+            <p class="auth-subtitle">Acesse sua conta para agendar e gerenciar seus horários</p>
+            
+            <div id="authMessage" class="message" style="display: none;"></div>
+            
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form">
+                <div class="form-group">
+                    <label for="email">E-mail</label>
+                    <input type="email" id="email" name="email" required placeholder="seu@email.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Senha</label>
+                    <input type="password" id="password" name="password" required placeholder="Sua senha">
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-block" id="loginBtn">
+                    <span id="loginBtnText">Entrar</span>
+                    <span id="loginBtnLoader" class="loader" style="display: none;"></span>
+                </button>
+            </form>
+            
+            <div class="auth-divider">ou</div>
+            
+            <!-- Register Form -->
+            <form id="registerForm" class="auth-form" style="display: none;">
+                <div class="form-group">
+                    <label for="reg_name">Nome Completo</label>
+                    <input type="text" id="reg_name" name="name" required placeholder="Seu nome">
+                </div>
+                
+                <div class="form-group">
+                    <label for="reg_email">E-mail</label>
+                    <input type="email" id="reg_email" name="email" required placeholder="seu@email.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="reg_phone">Telefone</label>
+                    <input type="tel" id="reg_phone" name="phone" placeholder="(00) 00000-0000">
+                </div>
+                
+                <div class="form-group">
+                    <label for="reg_password">Senha</label>
+                    <input type="password" id="reg_password" name="password" required placeholder="Mínimo 6 caracteres">
+                </div>
+                
+                <div class="form-group">
+                    <label for="reg_password_confirm">Confirmar Senha</label>
+                    <input type="password" id="reg_password_confirm" name="password_confirm" required placeholder="Repita a senha">
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-block" id="registerBtn">
+                    <span id="registerBtnText">Criar Conta</span>
+                    <span id="registerBtnLoader" class="loader" style="display: none;"></span>
+                </button>
+            </form>
+            
+            <div class="auth-toggle">
+                <p id="toggleText">Não tem uma conta? <a href="#" id="toggleAuth">Criar conta</a></p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/auth.js' %}"></script>
+{% endblock %}
+

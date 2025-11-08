@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Barbearia Francisco - A Arte do Cavalheiro Moderno{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="container">
+        <div class="hero-content">
+            <div class="hero-text">
+                <p class="hero-subtitle">DESDE 1947</p>
+                <h1 class="hero-title">
+                    A Arte do<br>
+                    <span class="gradient-text">Cavalheiro Moderno</span>
+                </h1>
+                <p class="hero-description">
+                    Inspirados nas lendárias barbearias de Nova York dos anos 40,
+                    resgatamos a tradição do cuidado masculino com elegância e sofisticação.
+                </p>
+                <div class="hero-buttons">
+                    <a href="{% url 'agendar' %}" class="btn btn-primary">Agendar Agora</a>
+                    <a href="{% url 'servicos' %}" class="btn btn-outline">Nossos Serviços</a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <img src="{% static 'images/hero.jpg' %}" alt="Barbearia Francisco">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section class="about-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Conheça a Barbearia Francisco</h2>
+            <div class="section-divider"></div>
+        </div>
+        <div class="about-content">
+            <p>
+                A <strong>Barbearia Francisco</strong> é referência em qualidade e tradição no cuidado masculino há mais de 20 anos.
+                Nosso compromisso é oferecer não apenas um corte de cabelo, mas uma experiência completa de bem-estar e estilo.
+            </p>
+            <p>
+                Com uma equipe de <strong>barbeiros especializados</strong> e um ambiente clássico e acolhedor,
+                garantimos atendimento personalizado e resultados impecáveis em cada visita.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Por que escolher a Barbearia Francisco?</h2>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🏆</div>
+                <h3>20 Anos de Tradição</h3>
+                <p>Experiência comprovada no cuidado masculino</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">👨‍💼</div>
+                <h3>Barbeiros Especializados</h3>
+                <p>Profissionais qualificados e experientes</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🕐</div>
+                <h3>Horário Flexível</h3>
+                <p>Funcionamento de segunda a sábado</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⭐</div>
+                <h3>Avaliação 5 Estrelas</h3>
+                <p>Reconhecido pela qualidade do serviço</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="container">
+        <h2>Pronto para renovar seu visual?</h2>
+        <p>Agende seu horário e experimente o melhor da tradição barbeira</p>
+        <div class="cta-buttons">
+            <a href="{% url 'agendar' %}" class="btn btn-primary btn-lg">Agendar Agora</a>
+            <a href="{% url 'galeria' %}" class="btn btn-outline btn-lg">Ver Galeria</a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+

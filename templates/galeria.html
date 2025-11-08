@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Galeria - Barbearia Francisco{% endblock %}
+
+{% block content %}
+<section class="gallery-section">
+    <div class="container">
+        <div class="section-header">
+            <h1>Nossa Galeria</h1>
+            <p>Confira alguns dos nossos melhores trabalhos</p>
+        </div>
+        
+        <div class="gallery-grid">
+            <div class="gallery-item">
+                <div class="gallery-placeholder">
+                    <p>Corte Social</p>
+                </div>
+            </div>
+            <div class="gallery-item">
+                <div class="gallery-placeholder">
+                    <p>Barba Completa</p>
+                </div>
+            </div>
+            <div class="gallery-item">
+                <div class="gallery-placeholder">
+                    <p>Corte + Barba</p>
+                </div>
+            </div>
+            <div class="gallery-item">
+                <div class="gallery-placeholder">
+                    <p>Degradê Moderno</p>
+                </div>
+            </div>
+            <div class="gallery-item">
+                <div class="gallery-placeholder">
+                    <p>Barba Desenhada</p>
+                </div>
+            </div>
+            <div class="gallery-item">
+                <div class="gallery-placeholder">
+                    <p>Combo Premium</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="gallery-cta">
+            <h2>Gostou do que viu?</h2>
+            <p>Agende agora e tenha o mesmo resultado!</p>
+            <a href="/agendar/" class="btn btn-primary btn-lg">Agendar Horário</a>
+        </div>
+    </div>
+</section>
+
+<style>
+.gallery-section {
+    padding: 4rem 0;
+}
+
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-bottom: 4rem;
+}
+
+.gallery-item {
+    aspect-ratio: 1;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: transform 0.3s;
+}
+
+.gallery-item:hover {
+    transform: translateY(-10px);
+}
+
+.gallery-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.gallery-cta {
+    text-align: center;
+    padding: 3rem;
+    background: var(--background);
+    border-radius: 1rem;
+}
+
+.gallery-cta h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.gallery-cta p {
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+    .gallery-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+

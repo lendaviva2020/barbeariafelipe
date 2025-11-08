@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Meus Agendamentos - Barbearia Francisco{% endblock %}
+
+{% block content %}
+<section class="history-section">
+    <div class="container">
+        <h1>Meus Agendamentos</h1>
+        
+        <div id="appointmentsList" class="appointments-list">
+            <div class="loader-container">
+                <div class="loader"></div>
+                <p>Carregando agendamentos...</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    if (!auth.isAuthenticated()) {
+        window.location.href = '/auth/?redirect=/historico/';
+        return;
+    }
+    
+    try {
+        const response = await fetchAPI('/agendamentos/');
+        const appointments = await response.json();
+        
+        const appointmentsList = document.getElementById('appointmentsList');
+        appointmentsList.innerHTML = '';
+        
+        if (appointments.length === 0) {
+            appointmentsList.innerHTML = '<div class="empty-state"><p>Você ainda não tem agendamentos.</p><a href="/agendar/" class="btn btn-primary">Fazer Agendamento</a></div>';
+            return;
+        }
+        
+        appointments.forEach(appointment => {
+            const card = document.createElement('div');
+            card.className = 'appointment-card';
+            card.innerHTML = `
+                <div class="appointment-header">
+                    <h3>${appointment.service_name}</h3>
+                    <span class="appointment-status ${appointment.status}">${getStatusLabel(appointment.status)}</span>
+                </div>
+                <div class="appointment-details">
+                    <p><strong>Barbeiro:</strong> ${appointment.barber_name}</p>
+                    <p><strong>Data:</strong> ${formatDate(appointment.appointment_date)}</p>
+                    <p><strong>Horário:</strong> ${appointment.appointment_time}</p>
+                    <p><strong>Valor:</strong> ${formatCurrency(appointment.final_price)}</p>
+                </div>
+                ${appointment.status === 'pending' || appointment.status === 'confirmed' ? `
+                    <button class="btn btn-outline btn-sm" onclick="cancelAppointment(${appointment.id})">Cancelar</button>
+                ` : ''}
+            `;
+            appointmentsList.appendChild(card);
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('appointmentsList').innerHTML = '<p class="error">Erro ao carregar agendamentos</p>';
+    }
+});
+
+function getStatusLabel(status) {
+    const labels = {
+        'pending': 'Pendente',
+        'confirmed': 'Confirmado',
+        'completed': 'Concluído',
+        'cancelled': 'Cancelado'
+    };
+    return labels[status] || status;
+}
+
+async function cancelAppointment(id) {
+    if (!confirm('Deseja realmente cancelar este agendamento?')) return;
+    
+    try {
+        const response = await fetchAPI(`/agendamentos/${id}/cancel/`, {
+            method: 'POST',
+            body: JSON.stringify({ reason: 'Cancelado pelo cliente' }),
+        });
+        
+        if (response.ok) {
+            alert('Agendamento cancelado com sucesso!');
+            location.reload();
+        } else {
+            alert('Erro ao cancelar agendamento');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Erro ao cancelar agendamento');
+    }
+}
+</script>
+
+<style>
+.history-section {
+    padding: 4rem 0;
+    min-height: 60vh;
+}
+
+.appointments-list {
+    display: grid;
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.appointment-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    box-shadow: var(--shadow);
+}
+
+.appointment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.appointment-header h3 {
+    font-size: 1.5rem;
+    color: var(--text);
+}
+
+.appointment-details p {
+    margin-bottom: 0.75rem;
+    color: var(--text-muted);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 0.75rem;
+}
+
+.empty-state p {
+    margin-bottom: 2rem;
+    color: var(--text-muted);
+}
+
+@media (max-width: 768px) {
+    .appointment-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+}
+</style>
+{% endblock %}
+

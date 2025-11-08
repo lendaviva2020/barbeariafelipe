@@ -1,0 +1,88 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Barbearia Francisco - Tradição Desde 1947{% endblock %}</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    {% block extra_css %}{% endblock %}
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <nav class="navbar">
+                <div class="logo">
+                    <a href="{% url 'home' %}">
+                        <h1>Barbearia Francisco</h1>
+                    </a>
+                </div>
+                
+                <button class="menu-toggle" id="menuToggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                
+                <ul class="nav-menu" id="navMenu">
+                    <li><a href="{% url 'home' %}">Início</a></li>
+                    <li><a href="{% url 'servicos' %}">Serviços</a></li>
+                    <li><a href="{% url 'galeria' %}">Galeria</a></li>
+                    <li><a href="{% url 'contato' %}">Contato</a></li>
+                    <li><a href="{% url 'agendar' %}" class="btn-primary">Agendar</a></li>
+                    
+                    <li class="auth-links">
+                        <span id="userMenu" style="display: none;">
+                            <a href="{% url 'perfil' %}">Perfil</a>
+                            <a href="{% url 'historico' %}">Histórico</a>
+                            <a href="#" id="logoutBtn">Sair</a>
+                        </span>
+                        <a href="{% url 'auth' %}" id="loginLink">Entrar</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Barbearia Francisco</h3>
+                    <p>Tradição e qualidade desde 1947</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Contato</h4>
+                    <p>WhatsApp: (45) 99941-7111</p>
+                    <p>Email: contato@barbearia.com</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Horário</h4>
+                    <p>Seg-Sex: 08:00 - 19:00</p>
+                    <p>Sábado: 08:00 - 18:00</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Barbearia Francisco. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- JavaScript -->
+    <script src="{% static 'js/app.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+

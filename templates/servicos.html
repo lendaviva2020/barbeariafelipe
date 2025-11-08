@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Nossos Serviços - Barbearia Francisco{% endblock %}
+
+{% block content %}
+<section class="services-section">
+    <div class="container">
+        <div class="section-header">
+            <h1>Nossos Serviços</h1>
+            <p>Conheça nosso catálogo completo de serviços premium</p>
+        </div>
+        
+        <div id="servicesList" class="services-grid">
+            <div class="loader-container">
+                <div class="loader"></div>
+                <p>Carregando serviços...</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const response = await fetch('/api/servicos/');
+        const services = await response.json();
+        
+        const servicesList = document.getElementById('servicesList');
+        servicesList.innerHTML = '';
+        
+        services.forEach(service => {
+            const card = document.createElement('div');
+            card.className = 'service-card';
+            card.innerHTML = `
+                <h3>${service.name}</h3>
+                <p>${service.description}</p>
+                <div class="service-info">
+                    <span class="service-price">R$ ${parseFloat(service.price).toFixed(2)}</span>
+                    <span class="service-duration">${service.duration} min</span>
+                </div>
+                <a href="/agendar/" class="btn btn-primary btn-block">Agendar</a>
+            `;
+            servicesList.appendChild(card);
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('servicesList').innerHTML = '<p class="error">Erro ao carregar serviços</p>';
+    }
+});
+</script>
+{% endblock %}
+

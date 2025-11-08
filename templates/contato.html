@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Contato - Barbearia Francisco{% endblock %}
+
+{% block content %}
+<section class="contact-section">
+    <div class="container">
+        <div class="section-header">
+            <h1>Contato</h1>
+            <p>Entre em contato conosco</p>
+        </div>
+        
+        <div class="contact-content">
+            <div class="contact-info">
+                <div class="info-item">
+                    <h3>📍 Endereço</h3>
+                    <p>Av. Paulista, 1000<br>São Paulo - SP<br>CEP: 01310-100</p>
+                </div>
+                
+                <div class="info-item">
+                    <h3>📱 Telefone / WhatsApp</h3>
+                    <p>(45) 99941-7111</p>
+                    <a href="https://wa.me/5545999417111" class="btn btn-primary" target="_blank">
+                        Chamar no WhatsApp
+                    </a>
+                </div>
+                
+                <div class="info-item">
+                    <h3>📧 E-mail</h3>
+                    <p>contato@barbearia.com</p>
+                </div>
+                
+                <div class="info-item">
+                    <h3>🕐 Horário de Funcionamento</h3>
+                    <p>
+                        Segunda a Sexta: 08:00 - 19:00<br>
+                        Sábado: 08:00 - 18:00<br>
+                        Domingo: Fechado
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+.contact-section {
+    padding: 4rem 0;
+    min-height: 60vh;
+}
+
+.contact-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.contact-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+}
+
+.info-item {
+    background: white;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    box-shadow: var(--shadow);
+}
+
+.info-item h3 {
+    margin-bottom: 1rem;
+    color: var(--primary);
+}
+
+.info-item p {
+    color: var(--text-muted);
+    line-height: 1.8;
+    margin-bottom: 1rem;
+}
+
+.info-item .btn {
+    margin-top: 1rem;
+}
+
+@media (max-width: 768px) {
+    .contact-info {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
