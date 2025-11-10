@@ -1,28 +1,14 @@
 /**
- * BOOKING SYSTEM - Extraído de BookingOptimized.tsx (1289 linhas)
- * Sistema completo de agendamento com 4 steps, validações, cupons e promoções
+ * BOOKING SYSTEM - Sistema Moderno de Agendamento
+ * Integração completa com API REST Django
  */
 
 // ========== CONFIGURAÇÕES ==========
+const API_BASE = '/api';
 const TIME_SLOTS = [
     "08:00", "08:30", "09:00", "09:30", "10:00", "10:30",
-    "11:00", "11:30", "14:00", "14:30", "15:00", "15:30",
-    "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00"
-];
-
-const QUICK_DATES = [
-    { label: "Hoje", days: 0 },
-    { label: "Amanhã", days: 1 },
-    { label: "Em 2 dias", days: 2 },
-    { label: "Em 3 dias", days: 3 },
-    { label: "Em 1 semana", days: 7 }
-];
-
-const PAYMENT_METHODS = [
-    { value: 'cash', label: 'Dinheiro', icon: '💵' },
-    { value: 'credit_card', label: 'Cartão de Crédito', icon: '💳' },
-    { value: 'debit_card', label: 'Cartão de Débito', icon: '💳' },
-    { value: 'pix', label: 'PIX', icon: '📱' }
+    "11:00", "11:30", "13:00", "13:30", "14:00", "14:30",
+    "15:00", "15:30", "16:00", "16:30", "17:00", "17:30"
 ];
 
 // ========== STATE MANAGEMENT ==========
@@ -32,687 +18,590 @@ const bookingState = {
     selectedBarber: null,
     selectedDate: null,
     selectedTime: null,
-    customerInfo: {
-        name: '',
-        phone: '',
-        email: '',
-        notes: ''
-    },
-    paymentMethod: 'cash',
-    couponCode: '',
-    appliedCoupon: null,
-    appliedPromotion: null,
-    enableRecurrence: false,
-    recurrenceType: 'weekly',
-    isSubmitting: false
+    coupon: null,
+    discount: 0,
+    currentMonth: new Date().getMonth(),
+    currentYear: new Date().getFullYear()
 };
 
-// ========== UTILITY FUNCTIONS ==========
-function formatDate(date) {
-    const d = new Date(date);
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const year = d.getFullYear();
-    return `${year}-${month}-${day}`;
+// ========== INICIALIZAÇÃO ==========
+document.addEventListener('DOMContentLoaded', function() {
+    initializeBookingSystem();
+});
+
+function initializeBookingSystem() {
+    loadServices();
+    loadBarbers();
+    initCalendar();
+    setupStepNavigation();
+    setupFormEvents();
 }
 
-function addDays(date, days) {
-    const result = new Date(date);
-    result.setDate(result.getDate() + days);
-    return result;
-}
-
-function formatCurrency(value) {
-    return new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL'
-    }).format(value);
-}
-
-function formatPhoneForWhatsApp(phone) {
-    return phone.replace(/\D/g, '');
-}
-
-function showToast(title, description, type = 'success') {
-    // Simple toast notification
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    toast.innerHTML = `
-        <strong>${title}</strong>
-        <p>${description}</p>
-    `;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.classList.add('show');
-    }, 100);
-    
-    setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
-}
-
-// ========== API FUNCTIONS ==========
-async function fetchServices() {
+// ========== API CALLS ==========
+async function apiCall(endpoint, options = {}) {
     try {
-        const response = await fetch('/api/servicos/');
-        return await response.json();
-    } catch (error) {
-        console.error('Erro ao carregar serviços:', error);
-        return [];
-    }
-}
-
-async function fetchBarbers() {
-    try {
-        const response = await fetch('/api/barbeiros/');
-        return await response.json();
-    } catch (error) {
-        console.error('Erro ao carregar barbeiros:', error);
-        return [];
-    }
-}
-
-async function fetchAvailableSlots(date, barberId) {
-    try {
-        const response = await fetch(`/api/agendamentos/available-slots/?date=${date}&barber_id=${barberId}`);
-        return await response.json();
-    } catch (error) {
-        console.error('Erro ao carregar horários:', error);
-        return [];
-    }
-}
-
-async function validateCoupon(code) {
-    try {
-        const response = await fetch('/api/cupons/validate/', {
-            method: 'POST',
+        const response = await fetch(`${API_BASE}${endpoint}`, {
+            ...options,
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-            },
-            body: JSON.stringify({ code })
-        });
-        
-        if (response.ok) {
-            return await response.json();
-        }
-        return null;
-    } catch (error) {
-        console.error('Erro ao validar cupom:', error);
-        return null;
-    }
-}
-
-async function createBooking(data) {
-    try {
-        const response = await fetch('/api/agendamentos/create/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-            },
-            body: JSON.stringify(data)
+                ...options.headers
+            }
         });
         
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Erro ao criar agendamento');
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         return await response.json();
     } catch (error) {
+        console.error('API Error:', error);
         throw error;
     }
 }
 
-// ========== STEP NAVIGATION ==========
-function updateProgress() {
-    const progress = (bookingState.currentStep / 4) * 100;
-    const progressBar = document.getElementById('bookingProgress');
-    if (progressBar) {
-        progressBar.style.width = `${progress}%`;
-    }
+// ========== LOAD SERVICES ==========
+async function loadServices() {
+    const servicesGrid = document.getElementById('servicesGrid');
     
-    // Update step indicators
-    document.querySelectorAll('.step-indicator').forEach((indicator, index) => {
-        const stepNum = index + 1;
-        indicator.classList.toggle('active', stepNum === bookingState.currentStep);
-        indicator.classList.toggle('completed', stepNum < bookingState.currentStep);
-    });
-}
-
-function showStep(stepNumber) {
-    // Hide all steps
-    document.querySelectorAll('.booking-step').forEach(step => {
-        step.style.display = 'none';
-    });
-    
-    // Show current step
-    const currentStepEl = document.getElementById(`step${stepNumber}`);
-    if (currentStepEl) {
-        currentStepEl.style.display = 'block';
-        currentStepEl.classList.add('animate-slide-up');
-    }
-    
-    bookingState.currentStep = stepNumber;
-    updateProgress();
-    updateNavigationButtons();
-    
-    // Scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function updateNavigationButtons() {
-    const prevBtn = document.getElementById('prevStepBtn');
-    const nextBtn = document.getElementById('nextStepBtn');
-    const submitBtn = document.getElementById('submitBookingBtn');
-    
-    if (prevBtn) {
-        prevBtn.style.display = bookingState.currentStep === 1 ? 'none' : 'inline-flex';
-    }
-    
-    if (nextBtn) {
-        nextBtn.style.display = bookingState.currentStep === 4 ? 'none' : 'inline-flex';
-    }
-    
-    if (submitBtn) {
-        submitBtn.style.display = bookingState.currentStep === 4 ? 'inline-flex' : 'none';
-    }
-}
-
-function goToNextStep() {
-    if (!validateCurrentStep()) {
-        return;
-    }
-    
-    if (bookingState.currentStep < 4) {
-        showStep(bookingState.currentStep + 1);
+    try {
+        const services = await apiCall('/servicos/');
         
-        // Load data for next step
-        if (bookingState.currentStep === 2) {
-            loadAvailableSlots();
-        } else if (bookingState.currentStep === 4) {
-            updateSummary();
-        }
-    }
-}
-
-function goToPreviousStep() {
-    if (bookingState.currentStep > 1) {
-        showStep(bookingState.currentStep - 1);
-    }
-}
-
-// ========== VALIDATION ==========
-function validateCurrentStep() {
-    const step = bookingState.currentStep;
-    
-    if (step === 1) {
-        if (!bookingState.selectedService) {
-            showToast('Atenção', 'Selecione um serviço', 'error');
-            return false;
-        }
-        if (!bookingState.selectedBarber) {
-            showToast('Atenção', 'Selecione um barbeiro', 'error');
-            return false;
-        }
-        return true;
-    }
-    
-    if (step === 2) {
-        if (!bookingState.selectedDate) {
-            showToast('Atenção', 'Selecione uma data', 'error');
-            return false;
-        }
-        if (!bookingState.selectedTime) {
-            showToast('Atenção', 'Selecione um horário', 'error');
-            return false;
-        }
-        return true;
-    }
-    
-    if (step === 3) {
-        const { name, phone, email } = bookingState.customerInfo;
+        servicesGrid.innerHTML = '';
         
-        if (!name || name.trim().length < 3) {
-            showToast('Atenção', 'Digite seu nome completo', 'error');
-            return false;
+        if (!services || services.length === 0) {
+            servicesGrid.innerHTML = '<p class="empty-state">Nenhum serviço disponível no momento.</p>';
+            return;
         }
         
-        if (!phone || phone.replace(/\D/g, '').length < 10) {
-            showToast('Atenção', 'Digite um telefone válido', 'error');
-            return false;
-        }
-        
-        if (email && !email.includes('@')) {
-            showToast('Atenção', 'Digite um e-mail válido', 'error');
-            return false;
-        }
-        
-        return true;
-    }
-    
-    return true;
-}
-
-// ========== STEP 1: SERVICE & BARBER ==========
-async function loadServicesAndBarbers() {
-    const servicesContainer = document.getElementById('servicesGrid');
-    const barbersContainer = document.getElementById('barbersGrid');
-    
-    // Show loading
-    if (servicesContainer) {
-        servicesContainer.innerHTML = '<div class="loader"></div>';
-    }
-    if (barbersContainer) {
-        barbersContainer.innerHTML = '<div class="loader"></div>';
-    }
-    
-    // Load services
-    const services = await fetchServices();
-    if (servicesContainer && services.length > 0) {
-        servicesContainer.innerHTML = services
-            .filter(s => s.active)
-            .map(service => `
-                <div class="service-card ${bookingState.selectedService === service.id ? 'selected' : ''}" 
-                     onclick="selectService(${service.id}, '${service.name}', ${service.price}, ${service.duration})">
-                    <div class="service-icon">✂️</div>
-                    <h3 class="service-name">${service.name}</h3>
-                    <p class="service-description">${service.description || ''}</p>
-                    <div class="service-details">
-                        <span class="service-price">${formatCurrency(service.price)}</span>
-                        <span class="service-duration">${service.duration} min</span>
-                    </div>
-                    ${bookingState.selectedService === service.id ? '<div class="selected-badge">✓ Selecionado</div>' : ''}
+        services.forEach(service => {
+            const serviceCard = document.createElement('div');
+            serviceCard.className = 'service-card';
+            
+            // Determinar ícone baseado na categoria
+            const icon = getServiceIcon(service.category || 'haircut');
+            
+            serviceCard.innerHTML = `
+                <div class="service-icon">
+                    <i class="${icon}"></i>
                 </div>
-            `).join('');
-    }
-    
-    // Load barbers
-    const barbers = await fetchBarbers();
-    if (barbersContainer && barbers.length > 0) {
-        barbersContainer.innerHTML = barbers
-            .filter(b => b.active)
-            .map(barber => `
-                <div class="barber-card ${bookingState.selectedBarber === barber.id ? 'selected' : ''}"
-                     onclick="selectBarber(${barber.id}, '${barber.name}')">
-                    <div class="barber-avatar">${barber.name.split(' ').map(n => n[0]).join('').slice(0, 2)}</div>
-                    <h3 class="barber-name">${barber.name}</h3>
-                    ${barber.specialty ? `<p class="barber-specialty">${barber.specialty}</p>` : ''}
-                    ${bookingState.selectedBarber === barber.id ? '<div class="selected-badge">✓ Selecionado</div>' : ''}
-                </div>
-            `).join('');
-    }
-}
-
-function selectService(id, name, price, duration) {
-    bookingState.selectedService = id;
-    bookingState.serviceData = { id, name, price, duration };
-    loadServicesAndBarbers(); // Reload to update UI
-}
-
-function selectBarber(id, name) {
-    bookingState.selectedBarber = id;
-    bookingState.barberData = { id, name };
-    loadServicesAndBarbers(); // Reload to update UI
-}
-
-// ========== STEP 2: DATE & TIME ==========
-function initializeDatePicker() {
-    const dateInput = document.getElementById('selectedDate');
-    if (dateInput) {
-        // Set min date to today
-        const today = new Date();
-        dateInput.min = formatDate(today);
-        
-        // Set max date to 60 days from now
-        const maxDate = addDays(today, 60);
-        dateInput.max = formatDate(maxDate);
-        
-        dateInput.addEventListener('change', (e) => {
-            bookingState.selectedDate = e.target.value;
-            loadAvailableSlots();
+                <div class="service-duration">${service.duration} min</div>
+                <h3>${service.name}</h3>
+                <p>${service.description || 'Serviço profissional de qualidade'}</p>
+                <div class="service-price">R$ ${parseFloat(service.price).toFixed(2).replace('.', ',')}</div>
+            `;
+            
+            serviceCard.addEventListener('click', () => selectService(serviceCard, service));
+            servicesGrid.appendChild(serviceCard);
         });
-    }
-    
-    // Quick date buttons
-    const quickDatesContainer = document.getElementById('quickDates');
-    if (quickDatesContainer) {
-        quickDatesContainer.innerHTML = QUICK_DATES.map(qd => `
-            <button class="btn btn-outline btn-sm" onclick="selectQuickDate(${qd.days})">
-                ${qd.label}
-            </button>
-        `).join('');
+        
+    } catch (error) {
+        servicesGrid.innerHTML = '<p class="empty-state">Erro ao carregar serviços. Tente novamente.</p>';
     }
 }
 
-function selectQuickDate(days) {
-    const date = addDays(new Date(), days);
-    const dateStr = formatDate(date);
-    bookingState.selectedDate = dateStr;
+function getServiceIcon(category) {
+    const icons = {
+        'haircut': 'fas fa-cut',
+        'beard': 'fas fa-user',
+        'combo': 'fas fa-gem',
+        'treatment': 'fas fa-spa'
+    };
+    return icons[category] || 'fas fa-cut';
+}
+
+function selectService(card, service) {
+    document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    bookingState.selectedService = service;
+    document.getElementById('nextStep1').disabled = false;
+}
+
+// ========== LOAD BARBERS ==========
+async function loadBarbers() {
+    const barbersGrid = document.getElementById('barbersGrid');
     
-    const dateInput = document.getElementById('selectedDate');
-    if (dateInput) {
-        dateInput.value = dateStr;
+    try {
+        const barbers = await apiCall('/barbeiros/');
+        
+        barbersGrid.innerHTML = '';
+        
+        // Opção "Qualquer barbeiro"
+        const anyBarberCard = document.createElement('div');
+        anyBarberCard.className = 'barber-card selected';
+        anyBarberCard.innerHTML = `
+            <div class="barber-avatar">
+                <i class="fas fa-random"></i>
+            </div>
+            <h3>Qualquer Barbeiro</h3>
+            <p>Será atendido por qualquer barbeiro disponível</p>
+        `;
+        anyBarberCard.addEventListener('click', () => selectBarber(anyBarberCard, null));
+        barbersGrid.appendChild(anyBarberCard);
+        
+        // Barbeiros disponíveis
+        if (barbers && barbers.length > 0) {
+            barbers.forEach(barber => {
+                const barberCard = document.createElement('div');
+                barberCard.className = 'barber-card';
+                barberCard.innerHTML = `
+                    <div class="barber-avatar">
+                        ${barber.photo_url ? 
+                            `<img src="${barber.photo_url}" alt="${barber.name}">` : 
+                            '<i class="fas fa-user"></i>'}
+                    </div>
+                    <h3>${barber.name}</h3>
+                    <p>${barber.specialty || 'Barbeiro profissional'}</p>
+                    <div class="barber-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                    </div>
+                `;
+                barberCard.addEventListener('click', () => selectBarber(barberCard, barber));
+                barbersGrid.appendChild(barberCard);
+            });
+        }
+        
+    } catch (error) {
+        barbersGrid.innerHTML = '<p class="empty-state">Erro ao carregar barbeiros.</p>';
+    }
+}
+
+function selectBarber(card, barber) {
+    document.querySelectorAll('.barber-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    bookingState.selectedBarber = barber;
+}
+
+// ========== CALENDAR ==========
+function initCalendar() {
+    renderCalendar();
+}
+
+function renderCalendar() {
+    const calendar = document.getElementById('calendar');
+    calendar.innerHTML = '';
+    
+    const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+                       "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+    
+    // Header
+    const header = document.createElement('div');
+    header.className = 'calendar-header';
+    header.innerHTML = `
+        <button type="button" id="prevMonth"><i class="fas fa-chevron-left"></i></button>
+        <h4>${monthNames[bookingState.currentMonth]} ${bookingState.currentYear}</h4>
+        <button type="button" id="nextMonth"><i class="fas fa-chevron-right"></i></button>
+    `;
+    calendar.appendChild(header);
+    
+    // Grid de dias
+    const daysGrid = document.createElement('div');
+    daysGrid.className = 'calendar-grid';
+    
+    // Dias da semana
+    const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+    weekDays.forEach(day => {
+        const dayElement = document.createElement('div');
+        dayElement.className = 'calendar-day';
+        dayElement.textContent = day;
+        daysGrid.appendChild(dayElement);
+    });
+    
+    // Dias do mês
+    const firstDay = new Date(bookingState.currentYear, bookingState.currentMonth, 1);
+    const lastDay = new Date(bookingState.currentYear, bookingState.currentMonth + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Dias vazios antes do primeiro dia
+    for (let i = 0; i < firstDay.getDay(); i++) {
+        const emptyDay = document.createElement('div');
+        emptyDay.className = 'calendar-date disabled';
+        daysGrid.appendChild(emptyDay);
     }
     
+    // Dias do mês
+    for (let i = 1; i <= daysInMonth; i++) {
+        const dateElement = document.createElement('div');
+        dateElement.className = 'calendar-date';
+        dateElement.textContent = i;
+        
+        const date = new Date(bookingState.currentYear, bookingState.currentMonth, i);
+        date.setHours(0, 0, 0, 0);
+        
+        if (date < today) {
+            dateElement.classList.add('disabled');
+        } else {
+            dateElement.addEventListener('click', () => selectDate(dateElement, date));
+        }
+        
+        daysGrid.appendChild(dateElement);
+    }
+    
+    calendar.appendChild(daysGrid);
+    
+    // Event listeners para navegação
+    document.getElementById('prevMonth').addEventListener('click', () => {
+        if (bookingState.currentMonth === 0) {
+            bookingState.currentMonth = 11;
+            bookingState.currentYear--;
+        } else {
+            bookingState.currentMonth--;
+        }
+        renderCalendar();
+    });
+    
+    document.getElementById('nextMonth').addEventListener('click', () => {
+        if (bookingState.currentMonth === 11) {
+            bookingState.currentMonth = 0;
+            bookingState.currentYear++;
+        } else {
+            bookingState.currentMonth++;
+        }
+        renderCalendar();
+    });
+}
+
+function selectDate(element, date) {
+    document.querySelectorAll('.calendar-date').forEach(el => el.classList.remove('selected'));
+    element.classList.add('selected');
+    bookingState.selectedDate = date;
     loadAvailableSlots();
 }
 
+// ========== LOAD AVAILABLE SLOTS ==========
 async function loadAvailableSlots() {
-    if (!bookingState.selectedDate || !bookingState.selectedBarber) {
+    const slotsContainer = document.getElementById('availableSlots');
+    
+    if (!bookingState.selectedDate) {
+        slotsContainer.innerHTML = '<p class="empty-state">Selecione uma data primeiro</p>';
         return;
     }
     
-    const slotsContainer = document.getElementById('timeSlotsGrid');
-    if (!slotsContainer) return;
-    
-    slotsContainer.innerHTML = '<div class="loader"></div>';
-    
-    const slots = await fetchAvailableSlots(bookingState.selectedDate, bookingState.selectedBarber);
-    
-    if (slots.length === 0) {
-        slotsContainer.innerHTML = '<p class="text-center">Nenhum horário disponível para esta data</p>';
-        return;
-    }
-    
-    slotsContainer.innerHTML = slots.map(slot => `
-        <button class="time-slot ${!slot.available ? 'disabled' : ''} ${bookingState.selectedTime === slot.time_slot ? 'selected' : ''}"
-                onclick="selectTimeSlot('${slot.time_slot}')"
-                ${!slot.available ? 'disabled' : ''}>
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-            ${slot.time_slot}
-        </button>
-    `).join('');
-}
-
-function selectTimeSlot(time) {
-    bookingState.selectedTime = time;
-    loadAvailableSlots(); // Reload to update UI
-}
-
-// ========== STEP 3: CUSTOMER INFO ==========
-function initializeCustomerInfo() {
-    const nameInput = document.getElementById('customerName');
-    const phoneInput = document.getElementById('customerPhone');
-    const emailInput = document.getElementById('customerEmail');
-    const notesInput = document.getElementById('customerNotes');
-    
-    // Pre-fill from localStorage if available
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    if (user.name) bookingState.customerInfo.name = user.name;
-    if (user.phone) bookingState.customerInfo.phone = user.phone;
-    if (user.email) bookingState.customerInfo.email = user.email;
-    
-    if (nameInput) nameInput.value = bookingState.customerInfo.name;
-    if (phoneInput) phoneInput.value = bookingState.customerInfo.phone;
-    if (emailInput) emailInput.value = bookingState.customerInfo.email;
-    
-    // Event listeners
-    if (nameInput) {
-        nameInput.addEventListener('input', (e) => {
-            bookingState.customerInfo.name = e.target.value;
-        });
-    }
-    
-    if (phoneInput) {
-        phoneInput.addEventListener('input', (e) => {
-            // Format phone
-            let value = e.target.value.replace(/\D/g, '');
-            if (value.length > 11) value = value.slice(0, 11);
-            
-            if (value.length > 6) {
-                value = `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`;
-            } else if (value.length > 2) {
-                value = `(${value.slice(0, 2)}) ${value.slice(2)}`;
-            }
-            
-            e.target.value = value;
-            bookingState.customerInfo.phone = value;
-        });
-    }
-    
-    if (emailInput) {
-        emailInput.addEventListener('input', (e) => {
-            bookingState.customerInfo.email = e.target.value;
-        });
-    }
-    
-    if (notesInput) {
-        notesInput.addEventListener('input', (e) => {
-            bookingState.customerInfo.notes = e.target.value;
-        });
-    }
-}
-
-// Coupon handling
-async function applyCoupon() {
-    const couponInput = document.getElementById('couponInput');
-    if (!couponInput || !couponInput.value) {
-        showToast('Atenção', 'Digite um código de cupom', 'error');
-        return;
-    }
-    
-    const code = couponInput.value.toUpperCase();
-    const coupon = await validateCoupon(code);
-    
-    if (coupon) {
-        bookingState.appliedCoupon = coupon;
-        bookingState.couponCode = code;
-        showToast('Sucesso', `Cupom aplicado! Desconto de ${coupon.discount_type === 'percentage' ? coupon.discount + '%' : formatCurrency(coupon.discount)}`, 'success');
-        updateSummary();
-    } else {
-        showToast('Erro', 'Cupom inválido ou expirado', 'error');
-    }
-}
-
-function removeCoupon() {
-    bookingState.appliedCoupon = null;
-    bookingState.couponCode = '';
-    const couponInput = document.getElementById('couponInput');
-    if (couponInput) couponInput.value = '';
-    showToast('Info', 'Cupom removido', 'info');
-    updateSummary();
-}
-
-// ========== STEP 4: PAYMENT & SUMMARY ==========
-function initializePayment() {
-    const paymentMethodsContainer = document.getElementById('paymentMethods');
-    if (paymentMethodsContainer) {
-        paymentMethodsContainer.innerHTML = PAYMENT_METHODS.map(pm => `
-            <div class="payment-method ${bookingState.paymentMethod === pm.value ? 'selected' : ''}"
-                 onclick="selectPaymentMethod('${pm.value}')">
-                <span class="payment-icon">${pm.icon}</span>
-                <span class="payment-label">${pm.label}</span>
-                ${bookingState.paymentMethod === pm.value ? '<span class="selected-check">✓</span>' : ''}
-            </div>
-        `).join('');
-    }
-    
-    updateSummary();
-}
-
-function selectPaymentMethod(method) {
-    bookingState.paymentMethod = method;
-    initializePayment(); // Reload to update UI
-}
-
-function updateSummary() {
-    // Calculate price
-    let basePrice = bookingState.serviceData?.price || 0;
-    let discount = 0;
-    
-    if (bookingState.appliedCoupon) {
-        const coupon = bookingState.appliedCoupon;
-        if (coupon.discount_type === 'percentage') {
-            discount = (basePrice * coupon.discount) / 100;
-        } else {
-            discount = coupon.discount;
-        }
-    }
-    
-    const finalPrice = Math.max(0, basePrice - discount);
-    
-    // Update summary HTML
-    const summaryEl = document.getElementById('bookingSummary');
-    if (summaryEl) {
-        summaryEl.innerHTML = `
-            <div class="summary-item">
-                <span>Serviço:</span>
-                <strong>${bookingState.serviceData?.name || '-'}</strong>
-            </div>
-            <div class="summary-item">
-                <span>Barbeiro:</span>
-                <strong>${bookingState.barberData?.name || '-'}</strong>
-            </div>
-            <div class="summary-item">
-                <span>Data:</span>
-                <strong>${bookingState.selectedDate ? new Date(bookingState.selectedDate).toLocaleDateString('pt-BR') : '-'}</strong>
-            </div>
-            <div class="summary-item">
-                <span>Horário:</span>
-                <strong>${bookingState.selectedTime || '-'}</strong>
-            </div>
-            <div class="summary-item">
-                <span>Duração:</span>
-                <strong>${bookingState.serviceData?.duration || 0} minutos</strong>
-            </div>
-            <div class="summary-divider"></div>
-            <div class="summary-item">
-                <span>Preço base:</span>
-                <span>${formatCurrency(basePrice)}</span>
-            </div>
-            ${discount > 0 ? `
-                <div class="summary-item discount">
-                    <span>Desconto (${bookingState.couponCode}):</span>
-                    <span>-${formatCurrency(discount)}</span>
-                </div>
-            ` : ''}
-            <div class="summary-divider"></div>
-            <div class="summary-item total">
-                <span>Total:</span>
-                <strong>${formatCurrency(finalPrice)}</strong>
-            </div>
-        `;
-    }
-}
-
-// ========== SUBMIT BOOKING ==========
-async function submitBooking() {
-    if (!validateCurrentStep()) {
-        return;
-    }
-    
-    if (bookingState.isSubmitting) {
-        return;
-    }
-    
-    bookingState.isSubmitting = true;
-    const submitBtn = document.getElementById('submitBookingBtn');
-    if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<div class="loader"></div> Processando...';
-    }
+    slotsContainer.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Carregando horários...</p></div>';
     
     try {
-        // Calculate final price
-        let finalPrice = bookingState.serviceData?.price || 0;
-        if (bookingState.appliedCoupon) {
-            const coupon = bookingState.appliedCoupon;
-            if (coupon.discount_type === 'percentage') {
-                finalPrice -= (finalPrice * coupon.discount) / 100;
-            } else {
-                finalPrice -= coupon.discount;
-            }
+        const dateStr = bookingState.selectedDate.toISOString().split('T')[0];
+        const barberId = bookingState.selectedBarber?.id || '';
+        const serviceId = bookingState.selectedService?.id || '';
+        
+        const availableSlots = await apiCall(
+            `/agendamentos/available-slots/?date=${dateStr}&barber_id=${barberId}&service_id=${serviceId}`
+        );
+        
+        slotsContainer.innerHTML = '';
+        
+        if (!availableSlots || availableSlots.length === 0) {
+            slotsContainer.innerHTML = '<p class="empty-state">Nenhum horário disponível nesta data</p>';
+            return;
         }
-        finalPrice = Math.max(0, finalPrice);
         
-        // Prepare booking data
-        const bookingData = {
-            service_id: bookingState.selectedService,
-            barber_id: bookingState.selectedBarber,
-            appointment_date: bookingState.selectedDate,
-            appointment_time: bookingState.selectedTime,
-            customer_name: bookingState.customerInfo.name,
-            customer_phone: bookingState.customerInfo.phone,
-            customer_email: bookingState.customerInfo.email,
-            notes: bookingState.customerInfo.notes,
-            payment_method: bookingState.paymentMethod,
-            price: finalPrice,
-            coupon_code: bookingState.couponCode || null
-        };
-        
-        // Create booking
-        const result = await createBooking(bookingData);
-        
-        showToast('Sucesso', 'Agendamento realizado com sucesso!', 'success');
-        
-        // Send WhatsApp confirmation (if phone provided)
-        if (bookingState.customerInfo.phone) {
-            const phone = formatPhoneForWhatsApp(bookingState.customerInfo.phone);
-            const message = `Olá ${bookingState.customerInfo.name}! Seu agendamento foi confirmado:\n\n` +
-                          `📅 Data: ${new Date(bookingState.selectedDate).toLocaleDateString('pt-BR')}\n` +
-                          `⏰ Horário: ${bookingState.selectedTime}\n` +
-                          `✂️ Serviço: ${bookingState.serviceData.name}\n` +
-                          `👨‍💼 Barbeiro: ${bookingState.barberData.name}\n` +
-                          `💰 Valor: ${formatCurrency(finalPrice)}\n\n` +
-                          `Aguardamos você! 🎩`;
+        availableSlots.forEach(slot => {
+            const timeSlot = document.createElement('div');
+            timeSlot.className = 'time-slot';
+            timeSlot.textContent = slot.time || slot;
             
-            // Open WhatsApp (optional)
-            // window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(message)}`, '_blank');
-        }
-        
-        // Redirect to success page or history
-        setTimeout(() => {
-            window.location.href = '/historico/';
-        }, 2000);
+            if (slot.available === false) {
+                timeSlot.classList.add('disabled');
+            } else {
+                timeSlot.addEventListener('click', () => selectTimeSlot(timeSlot, slot.time || slot));
+            }
+            
+            slotsContainer.appendChild(timeSlot);
+        });
         
     } catch (error) {
-        console.error('Erro ao criar agendamento:', error);
-        showToast('Erro', error.message || 'Erro ao criar agendamento. Tente novamente.', 'error');
-        
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = 'Confirmar Agendamento';
-        }
-    } finally {
-        bookingState.isSubmitting = false;
+        // Fallback para horários padrão
+        slotsContainer.innerHTML = '';
+        TIME_SLOTS.forEach(time => {
+            const timeSlot = document.createElement('div');
+            timeSlot.className = 'time-slot';
+            timeSlot.textContent = time;
+            timeSlot.addEventListener('click', () => selectTimeSlot(timeSlot, time));
+            slotsContainer.appendChild(timeSlot);
+        });
     }
 }
 
-// ========== INITIALIZATION ==========
-document.addEventListener('DOMContentLoaded', () => {
-    // Initialize first step
-    loadServicesAndBarbers();
-    initializeDatePicker();
-    initializeCustomerInfo();
-    initializePayment();
-    updateProgress();
+function selectTimeSlot(element, time) {
+    document.querySelectorAll('.time-slot').forEach(el => el.classList.remove('selected'));
+    element.classList.add('selected');
+    bookingState.selectedTime = time;
+    document.getElementById('nextStep3').disabled = false;
+}
+
+// ========== NAVIGATION ==========
+function setupStepNavigation() {
+    document.getElementById('nextStep1')?.addEventListener('click', () => navigateToStep(2));
+    document.getElementById('nextStep2')?.addEventListener('click', () => navigateToStep(3));
+    document.getElementById('nextStep3')?.addEventListener('click', () => {
+        updateBookingSummary();
+        navigateToStep(4);
+    });
     
-    // Event listeners for navigation
-    const prevBtn = document.getElementById('prevStepBtn');
-    if (prevBtn) {
-        prevBtn.addEventListener('click', goToPreviousStep);
+    document.getElementById('prevStep2')?.addEventListener('click', () => navigateToStep(1));
+    document.getElementById('prevStep3')?.addEventListener('click', () => navigateToStep(2));
+    document.getElementById('prevStep4')?.addEventListener('click', () => navigateToStep(3));
+}
+
+function navigateToStep(step) {
+    // Ocultar etapa atual
+    const currentStepEl = document.getElementById(`step-${bookingState.currentStep}`);
+    if (currentStepEl) {
+        currentStepEl.classList.remove('active');
+        currentStepEl.style.display = 'none';
     }
     
-    const nextBtn = document.getElementById('nextStepBtn');
-    if (nextBtn) {
-        nextBtn.addEventListener('click', goToNextStep);
+    // Atualizar indicadores de progresso
+    document.querySelectorAll('.step').forEach(stepElement => {
+        const stepNumber = parseInt(stepElement.getAttribute('data-step'));
+        
+        if (stepNumber < step) {
+            stepElement.classList.add('completed');
+            stepElement.classList.remove('active');
+        } else if (stepNumber === step) {
+            stepElement.classList.add('active');
+            stepElement.classList.remove('completed');
+        } else {
+            stepElement.classList.remove('active', 'completed');
+        }
+    });
+    
+    // Mostrar nova etapa
+    const newStepEl = document.getElementById(`step-${step}`);
+    if (newStepEl) {
+        newStepEl.style.display = 'block';
+        newStepEl.classList.add('active');
     }
     
-    const submitBtn = document.getElementById('submitBookingBtn');
-    if (submitBtn) {
-        submitBtn.addEventListener('click', submitBooking);
-    }
+    bookingState.currentStep = step;
     
-    // Coupon button
-    const applyCouponBtn = document.getElementById('applyCouponBtn');
+    // Scroll suave para o topo
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ========== FORM EVENTS ==========
+function setupFormEvents() {
+    const applyCouponBtn = document.getElementById('applyCoupon');
     if (applyCouponBtn) {
-        applyCouponBtn.addEventListener('click', applyCoupon);
+        applyCouponBtn.addEventListener('click', validateCoupon);
     }
-});
+    
+    const confirmBtn = document.getElementById('confirmBooking');
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', confirmBooking);
+    }
+}
+
+// ========== VALIDATE COUPON ==========
+async function validateCoupon() {
+    const couponCode = document.getElementById('couponCode').value.trim();
+    const feedback = document.getElementById('couponFeedback');
+    
+    if (!couponCode) {
+        feedback.textContent = 'Por favor, digite um código de cupom.';
+        feedback.className = 'coupon-feedback error';
+        return;
+    }
+    
+    feedback.textContent = 'Validando...';
+    feedback.className = 'coupon-feedback';
+    
+    try {
+        const result = await apiCall('/agendamentos/validate-cupom/', {
+            method: 'POST',
+            body: JSON.stringify({ code: couponCode })
+        });
+        
+        if (result.valid) {
+            feedback.textContent = `Cupom aplicado! Desconto: ${result.discount_display || result.discount}`;
+            feedback.className = 'coupon-feedback success';
+            bookingState.coupon = result;
+            bookingState.discount = parseFloat(result.discount) || 0;
+            updateBookingSummary();
+        } else {
+            feedback.textContent = 'Cupom inválido ou expirado.';
+            feedback.className = 'coupon-feedback error';
+        }
+        
+    } catch (error) {
+        feedback.textContent = 'Erro ao validar cupom.';
+        feedback.className = 'coupon-feedback error';
+    }
+}
+
+// ========== UPDATE SUMMARY ==========
+function updateBookingSummary() {
+    // Serviço
+    if (bookingState.selectedService) {
+        document.getElementById('summaryService').textContent = bookingState.selectedService.name;
+        document.getElementById('summaryDuration').textContent = `${bookingState.selectedService.duration} min`;
+    }
+    
+    // Barbeiro
+    const barberName = bookingState.selectedBarber ? 
+        bookingState.selectedBarber.name : 
+        'Qualquer um disponível';
+    document.getElementById('summaryBarber').textContent = barberName;
+    
+    // Data
+    if (bookingState.selectedDate) {
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('summaryDate').textContent = 
+            bookingState.selectedDate.toLocaleDateString('pt-BR', options);
+    }
+    
+    // Horário
+    if (bookingState.selectedTime) {
+        document.getElementById('summaryTime').textContent = bookingState.selectedTime;
+    }
+    
+    // Cálculo de preços
+    if (bookingState.selectedService) {
+        const price = parseFloat(bookingState.selectedService.price);
+        let discount = 0;
+        
+        if (bookingState.coupon) {
+            if (bookingState.coupon.discount_type === 'percentage') {
+                discount = (price * bookingState.discount) / 100;
+            } else {
+                discount = bookingState.discount;
+            }
+        }
+        
+        const subtotal = price;
+        const total = subtotal - discount;
+        
+        document.getElementById('summarySubtotal').textContent = `R$ ${subtotal.toFixed(2).replace('.', ',')}`;
+        document.getElementById('summaryDiscount').textContent = `- R$ ${discount.toFixed(2).replace('.', ',')}`;
+        document.getElementById('summaryTotal').textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
+        
+        // Mostrar/ocultar desconto
+        const discountItem = document.getElementById('discountItem');
+        if (discount > 0) {
+            discountItem.style.display = 'flex';
+        } else {
+            discountItem.style.display = 'none';
+        }
+    }
+}
+
+// ========== CONFIRM BOOKING ==========
+async function confirmBooking() {
+    const customerName = document.getElementById('customerName').value.trim();
+    const customerPhone = document.getElementById('customerPhone').value.trim();
+    const customerEmail = document.getElementById('customerEmail').value.trim();
+    const notes = document.getElementById('notes').value.trim();
+    
+    // Validação
+    if (!customerName || !customerPhone) {
+        alert('Por favor, preencha nome e telefone.');
+        return;
+    }
+    
+    if (!bookingState.selectedService || !bookingState.selectedDate || !bookingState.selectedTime) {
+        alert('Por favor, complete todas as etapas do agendamento.');
+        return;
+    }
+    
+    // Preparar dados
+    const bookingData = {
+        service: bookingState.selectedService.id,
+        barber: bookingState.selectedBarber?.id || null,
+        appointment_date: bookingState.selectedDate.toISOString().split('T')[0],
+        appointment_time: bookingState.selectedTime,
+        customer_name: customerName,
+        customer_phone: customerPhone,
+        customer_email: customerEmail,
+        notes: notes,
+        payment_method: 'cash',
+        price: bookingState.selectedService.price,
+        discount_amount: 0,
+        coupon_code: bookingState.coupon?.code || ''
+    };
+    
+    // Calcular desconto
+    if (bookingState.coupon) {
+        const price = parseFloat(bookingState.selectedService.price);
+        if (bookingState.coupon.discount_type === 'percentage') {
+            bookingData.discount_amount = (price * bookingState.discount) / 100;
+        } else {
+            bookingData.discount_amount = bookingState.discount;
+        }
+    }
+    
+    // Desabilitar botão
+    const confirmBtn = document.getElementById('confirmBooking');
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = '<div class="spinner"></div> Processando...';
+    
+    try {
+        const result = await apiCall('/agendamentos/create/', {
+            method: 'POST',
+            body: JSON.stringify(bookingData)
+        });
+        
+        // Mostrar modal de sucesso
+        showSuccessModal(result);
+        
+    } catch (error) {
+        alert('Erro ao criar agendamento. Tente novamente.');
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = '<i class="fas fa-check"></i> Confirmar Agendamento';
+    }
+}
+
+// ========== SUCCESS MODAL ==========
+function showSuccessModal(appointmentData) {
+    const modal = document.getElementById('successModal');
+    const successDetails = document.getElementById('successDetails');
+    
+    let details = '';
+    if (bookingState.selectedService) {
+        details += `<strong>Serviço:</strong> ${bookingState.selectedService.name}<br>`;
+    }
+    if (bookingState.selectedBarber) {
+        details += `<strong>Barbeiro:</strong> ${bookingState.selectedBarber.name}<br>`;
+    } else {
+        details += `<strong>Barbeiro:</strong> Qualquer um disponível<br>`;
+    }
+    if (bookingState.selectedDate && bookingState.selectedTime) {
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        details += `<strong>Data:</strong> ${bookingState.selectedDate.toLocaleDateString('pt-BR', options)}<br>`;
+        details += `<strong>Horário:</strong> ${bookingState.selectedTime}`;
+    }
+    
+    successDetails.innerHTML = details;
+    modal.classList.add('show');
+    
+    // Fechar modal ao clicar fora
+    modal.addEventListener('click', function(event) {
+        if (event.target === modal) {
+            modal.classList.remove('show');
+        }
+    });
+}
+
+// ========== UTILITY FUNCTIONS ==========
+function formatCurrency(value) {
+    return `R$ ${parseFloat(value).toFixed(2).replace('.', ',')}`;
+}
+
+function formatDate(date) {
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    return date.toLocaleDateString('pt-BR', options);
+}
+
+// ========== ERROR HANDLING ==========
+function showError(message) {
+    alert(message);
+}
+
+function showSuccess(message) {
+    alert(message);
+}
+
