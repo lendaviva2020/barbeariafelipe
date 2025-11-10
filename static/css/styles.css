@@ -216,13 +216,13 @@ img {
 }
 
 .btn-classic {
-    background: var(--color-burgundy);
+    background: var(--color-brown-medium);
     color: var(--color-cream);
-    box-shadow: var(--shadow-burgundy);
+    box-shadow: var(--shadow-dark);
 }
 
 .btn-classic:hover {
-    background: var(--color-burgundy-light);
+    background: var(--color-brown-light);
     transform: translateY(-2px);
     box-shadow: var(--shadow-glow);
 }
@@ -277,7 +277,7 @@ img {
     right: 0;
     width: 28rem;
     height: 28rem;
-    background: var(--color-burgundy);
+    background: var(--color-gold);
     border-radius: 50%;
     filter: blur(100px);
     opacity: 0.05;
@@ -301,7 +301,7 @@ img {
     font-size: 0.875rem;
     letter-spacing: 0.3em;
     text-transform: uppercase;
-    color: var(--color-burgundy-light);
+    color: var(--color-gold-light);
     font-weight: 600;
     margin-bottom: 1rem;
     animation: slide-down 0.6s ease-out;
