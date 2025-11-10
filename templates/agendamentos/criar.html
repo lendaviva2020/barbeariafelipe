@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load static %}
 
 {% block title %}Agendar Horário - Barbearia Francisco{% endblock %}
@@ -8,168 +8,244 @@
 {% endblock %}
 
 {% block content %}
-<section class="booking-section">
-    <div class="container">
-        <div class="booking-header">
-            <h1>Agendamento</h1>
-            <p>Reserve seu horário em poucos passos simples</p>
-        </div>
-        
-        <!-- Progress Bar -->
-        <div class="progress-container">
-            <div class="progress-steps">
-                <div class="progress-step active" data-step="1">
-                    <div class="step-number">1</div>
-                    <span>Serviço</span>
-                </div>
-                <div class="progress-step" data-step="2">
-                    <div class="step-number">2</div>
-                    <span>Data/Hora</span>
-                </div>
-                <div class="progress-step" data-step="3">
-                    <div class="step-number">3</div>
-                    <span>Dados</span>
-                </div>
-                <div class="progress-step" data-step="4">
-                    <div class="step-number">4</div>
-                    <span>Confirmação</span>
-                </div>
+<div class="booking-container">
+    <!-- Progress Steps -->
+    <div class="booking-steps">
+        <div class="step active" data-step="1">
+            <div class="step-number">1</div>
+            <div class="step-info">
+                <span class="step-title">Serviço</span>
+                <span class="step-subtitle">Escolha seu corte</span>
             </div>
         </div>
+        <div class="step-line"></div>
         
-        <div id="bookingMessage" class="message" style="display: none;"></div>
+        <div class="step" data-step="2">
+            <div class="step-number">2</div>
+            <div class="step-info">
+                <span class="step-title">Barbeiro</span>
+                <span class="step-subtitle">Selecione quem prefere</span>
+            </div>
+        </div>
+        <div class="step-line"></div>
         
-        <!-- Booking Form -->
-        <form id="bookingForm" class="booking-form">
-            <!-- Step 1: Serviço -->
-            <div class="booking-step" data-step="1">
-                <h2>Escolha o Serviço</h2>
-                <div id="servicesList" class="services-grid">
-                    <div class="loader-container">
-                        <div class="loader"></div>
-                        <p>Carregando serviços...</p>
-                    </div>
+        <div class="step" data-step="3">
+            <div class="step-number">3</div>
+            <div class="step-info">
+                <span class="step-title">Data/Hora</span>
+                <span class="step-subtitle">Quando deseja agendar</span>
+            </div>
+        </div>
+        <div class="step-line"></div>
+        
+        <div class="step" data-step="4">
+            <div class="step-number">4</div>
+            <div class="step-info">
+                <span class="step-title">Confirmação</span>
+                <span class="step-subtitle">Finalize seu agendamento</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Booking Form -->
+    <div class="booking-content">
+        <!-- Step 1: Service Selection -->
+        <div class="booking-step-content active" id="step-1">
+            <h2 class="step-heading">Escolha o Serviço</h2>
+            <p class="step-description">Selecione o serviço que deseja realizar</p>
+            
+            <div class="services-grid" id="servicesGrid">
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <p>Carregando serviços...</p>
                 </div>
             </div>
-            
-            <!-- Step 2: Data e Hora -->
-            <div class="booking-step" data-step="2" style="display: none;">
-                <h2>Escolha a Data e Horário</h2>
-                
-                <div class="form-group">
-                    <label for="date">Data</label>
-                    <input type="date" id="date" name="date" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="barber">Barbeiro</label>
-                    <select id="barber" name="barber" required>
-                        <option value="">Selecione um barbeiro</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>Horário Disponível</label>
-                    <div id="timeSlots" class="time-slots">
-                        <p class="text-muted">Selecione a data e barbeiro primeiro</p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Step 3: Dados do Cliente -->
-            <div class="booking-step" data-step="3" style="display: none;">
-                <h2>Seus Dados</h2>
-                
-                <div class="form-group">
-                    <label for="customer_name">Nome Completo</label>
-                    <input type="text" id="customer_name" name="customer_name" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="customer_phone">Telefone</label>
-                    <input type="tel" id="customer_phone" name="customer_phone" required placeholder="(00) 00000-0000">
-                </div>
-                
-                <div class="form-group">
-                    <label for="customer_email">E-mail (opcional)</label>
-                    <input type="email" id="customer_email" name="customer_email">
-                </div>
-                
-                <div class="form-group">
-                    <label for="notes">Observações (opcional)</label>
-                    <textarea id="notes" name="notes" rows="3"></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label for="payment_method">Forma de Pagamento</label>
-                    <select id="payment_method" name="payment_method" required>
-                        <option value="cash">Dinheiro</option>
-                        <option value="credit">Cartão de Crédito</option>
-                        <option value="debit">Cartão de Débito</option>
-                        <option value="pix">PIX</option>
-                    </select>
-                </div>
-            </div>
-            
-            <!-- Step 4: Confirmação -->
-            <div class="booking-step" data-step="4" style="display: none;">
-                <h2>Confirmação do Agendamento</h2>
-                
-                <div class="booking-summary">
-                    <div class="summary-item">
-                        <span class="summary-label">Serviço:</span>
-                        <span id="summary_service">-</span>
-                    </div>
-                    <div class="summary-item">
-                        <span class="summary-label">Data:</span>
-                        <span id="summary_date">-</span>
-                    </div>
-                    <div class="summary-item">
-                        <span class="summary-label">Horário:</span>
-                        <span id="summary_time">-</span>
-                    </div>
-                    <div class="summary-item">
-                        <span class="summary-label">Barbeiro:</span>
-                        <span id="summary_barber">-</span>
-                    </div>
-                    <div class="summary-item">
-                        <span class="summary-label">Cliente:</span>
-                        <span id="summary_customer">-</span>
-                    </div>
-                    <div class="summary-item">
-                        <span class="summary-label">Telefone:</span>
-                        <span id="summary_phone">-</span>
-                    </div>
-                    <div class="summary-item">
-                        <span class="summary-label">Pagamento:</span>
-                        <span id="summary_payment">-</span>
-                    </div>
-                    <div class="summary-item summary-total">
-                        <span class="summary-label">Total:</span>
-                        <span id="summary_price">R$ 0,00</span>
-                    </div>
-                </div>
-                
-                <div class="whatsapp-info">
-                    <p>📱 Ao confirmar, você será redirecionado para o WhatsApp da barbearia com todos os detalhes do seu agendamento.</p>
-                </div>
-            </div>
-            
-            <!-- Navigation Buttons -->
-            <div class="booking-nav">
-                <button type="button" id="prevBtn" class="btn btn-outline" style="display: none;">Voltar</button>
-                <button type="button" id="nextBtn" class="btn btn-primary">Próximo</button>
-                <button type="submit" id="submitBtn" class="btn btn-primary" style="display: none;">
-                    <span id="submitBtnText">Confirmar Agendamento</span>
-                    <span id="submitBtnLoader" class="loader" style="display: none;"></span>
+
+            <div class="step-actions">
+                <button type="button" class="btn btn-secondary" disabled>Voltar</button>
+                <button type="button" class="btn btn-primary" id="nextStep1" disabled>
+                    Próximo <i class="fas fa-arrow-right"></i>
                 </button>
             </div>
-        </form>
+        </div>
+
+        <!-- Step 2: Barber Selection -->
+        <div class="booking-step-content" id="step-2">
+            <h2 class="step-heading">Escolha o Barbeiro</h2>
+            <p class="step-description">Selecione seu barbeiro preferido (ou deixe em branco para qualquer um)</p>
+            
+            <div class="barbers-grid" id="barbersGrid">
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <p>Carregando barbeiros...</p>
+                </div>
+            </div>
+
+            <div class="step-actions">
+                <button type="button" class="btn btn-secondary" onclick="previousStep()">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </button>
+                <button type="button" class="btn btn-primary" id="nextStep2">
+                    Próximo <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 3: Date & Time Selection -->
+        <div class="booking-step-content" id="step-3">
+            <h2 class="step-heading">Escolha Data e Horário</h2>
+            <p class="step-description">Selecione quando deseja ser atendido</p>
+            
+            <div class="datetime-container">
+                <div class="calendar-section">
+                    <h3>Selecione a Data</h3>
+                    <div id="calendar"></div>
+                </div>
+
+                <div class="time-section">
+                    <h3>Horários Disponíveis</h3>
+                    <div id="availableSlots" class="time-slots">
+                        <p class="empty-state">Selecione uma data primeiro</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-actions">
+                <button type="button" class="btn btn-secondary" onclick="previousStep()">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </button>
+                <button type="button" class="btn btn-primary" id="nextStep3" disabled>
+                    Próximo <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 4: Customer Info & Confirmation -->
+        <div class="booking-step-content" id="step-4">
+            <div class="confirmation-layout">
+                <!-- Formulário -->
+                <div class="customer-form">
+                    <h2 class="step-heading">Seus Dados</h2>
+                    <p class="step-description">Preencha suas informações para finalizarmos</p>
+
+                    <form id="bookingForm">
+                        <div class="form-group">
+                            <label for="customerName">Nome Completo *</label>
+                            <input type="text" id="customerName" class="form-control" required 
+                                   placeholder="Seu nome completo">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="customerPhone">Telefone/WhatsApp *</label>
+                            <input type="tel" id="customerPhone" class="form-control" required 
+                                   placeholder="(11) 98765-4321">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="customerEmail">E-mail (opcional)</label>
+                            <input type="email" id="customerEmail" class="form-control" 
+                                   placeholder="seu@email.com">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="notes">Observações (opcional)</label>
+                            <textarea id="notes" class="form-control" rows="3" 
+                                      placeholder="Alguma observação especial?"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="couponCode">Cupom de Desconto (opcional)</label>
+                            <div class="coupon-input">
+                                <input type="text" id="couponCode" class="form-control" 
+                                       placeholder="Digite o código do cupom">
+                                <button type="button" class="btn btn-secondary" onclick="validateCoupon()">
+                                    Aplicar
+                                </button>
+                            </div>
+                            <div id="couponFeedback" class="coupon-feedback"></div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Resumo -->
+                <div class="booking-summary">
+                    <h3>Resumo do Agendamento</h3>
+                    
+                    <div class="summary-item">
+                        <span class="summary-label">Serviço:</span>
+                        <span class="summary-value" id="summaryService">-</span>
+                    </div>
+
+                    <div class="summary-item">
+                        <span class="summary-label">Barbeiro:</span>
+                        <span class="summary-value" id="summaryBarber">Qualquer um disponível</span>
+                    </div>
+
+                    <div class="summary-item">
+                        <span class="summary-label">Data:</span>
+                        <span class="summary-value" id="summaryDate">-</span>
+                    </div>
+
+                    <div class="summary-item">
+                        <span class="summary-label">Horário:</span>
+                        <span class="summary-value" id="summaryTime">-</span>
+                    </div>
+
+                    <div class="summary-item">
+                        <span class="summary-label">Duração:</span>
+                        <span class="summary-value" id="summaryDuration">-</span>
+                    </div>
+
+                    <div class="summary-divider"></div>
+
+                    <div class="summary-item price-item">
+                        <span class="summary-label">Subtotal:</span>
+                        <span class="summary-value" id="summarySubtotal">R$ 0,00</span>
+                    </div>
+
+                    <div class="summary-item discount-item" id="discountItem" style="display: none;">
+                        <span class="summary-label">Desconto:</span>
+                        <span class="summary-value discount" id="summaryDiscount">- R$ 0,00</span>
+                    </div>
+
+                    <div class="summary-divider"></div>
+
+                    <div class="summary-item total-item">
+                        <span class="summary-label">Total:</span>
+                        <span class="summary-value total" id="summaryTotal">R$ 0,00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-actions">
+                <button type="button" class="btn btn-secondary" onclick="previousStep()">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </button>
+                <button type="button" class="btn btn-primary btn-lg" id="confirmBooking">
+                    <i class="fas fa-check"></i> Confirmar Agendamento
+                </button>
+            </div>
+        </div>
     </div>
-</section>
+</div>
+
+<!-- Success Modal -->
+<div id="successModal" class="modal">
+    <div class="modal-content success">
+        <div class="success-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <h2>Agendamento Confirmado!</h2>
+        <p>Seu horário foi reservado com sucesso.</p>
+        <p class="success-details" id="successDetails"></p>
+        <div class="modal-actions">
+            <a href="{% url 'home' %}" class="btn btn-secondary">Voltar ao Início</a>
+            <a href="{% url 'historico' %}" class="btn btn-primary">Ver Meus Agendamentos</a>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script src="{% static 'js/booking.js' %}"></script>
 {% endblock %}
-
