@@ -1,55 +1,137 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load static %}
 
 {% block title %}Logs de Auditoria - Admin{% endblock %}
 
-{% block content %}
-<div class="admin-page">
-    <div class="container">
-        <h1 class="page-title">📜 Logs de Auditoria</h1>
-        
-        <div class="filters-bar">
-            <select id="actionFilter" class="form-control" onchange="filterLogs()">
-                <option value="all">Todas Ações</option>
-                <option value="CREATE">Criar</option>
-                <option value="UPDATE">Atualizar</option>
-                <option value="DELETE">Deletar</option>
-            </select>
-        </div>
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
 
-        <div id="logsList" class="logs-list">
-            <!-- Loaded dynamically -->
-        </div>
+{% block content %}
+<div class="admin-audit-logs-container">
+    <header class="admin-header">
+        <h1>Logs de Auditoria</h1>
+        <button class="btn btn-secondary" onclick="exportLogs()">
+            <i class="fas fa-download"></i> Exportar
+        </button>
+    </header>
+
+    <!-- Filtros -->
+    <div class="filters-section">
+        <input type="date" id="filterDate" class="form-control">
+        <select id="filterAction" class="form-control">
+            <option value="">Todas as Ações</option>
+            <option value="create">Criação</option>
+            <option value="update">Atualização</option>
+            <option value="delete">Exclusão</option>
+            <option value="login">Login</option>
+            <option value="logout">Logout</option>
+        </select>
+        <select id="filterUser" class="form-control">
+            <option value="">Todos os Usuários</option>
+        </select>
+        <input type="text" id="searchLog" class="form-control" placeholder="Buscar...">
     </div>
+
+    <!-- Tabela de Logs -->
+    <div class="logs-table-container">
+        <table class="logs-table" id="logsTable">
+            <thead>
+                <tr>
+                    <th>Data/Hora</th>
+                    <th>Usuário</th>
+                    <th>Ação</th>
+                    <th>Recurso</th>
+                    <th>IP</th>
+                    <th>Detalhes</th>
+                </tr>
+            </thead>
+            <tbody id="logsBody">
+                <tr>
+                    <td colspan="6" class="loading-cell">
+                        <div class="loading-spinner"></div>
+                        Carregando logs...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Paginação -->
+    <div class="pagination-container" id="paginationContainer"></div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', loadLogs);
+    // Funcionalidade básica de audit logs
+    async function loadAuditLogs(page = 1) {
+        try {
+            const filters = {
+                date: document.getElementById('filterDate').value,
+                action: document.getElementById('filterAction').value,
+                user: document.getElementById('filterUser').value,
+                search: document.getElementById('searchLog').value
+            };
 
-async function loadLogs() {
-    try {
-        const response = await fetchAPI('/api/admin/audit-logs/');
-        const logs = await response.json();
-        
-        document.getElementById('logsList').innerHTML = logs.map(log => `
-            <div class="log-card">
-                <span class="log-action ${log.action.toLowerCase()}">${log.action}</span>
-                <p><strong>${log.user_name}</strong> ${log.description}</p>
-                <span class="log-time">${new Date(log.created_at).toLocaleString('pt-BR')}</span>
-            </div>
-        `).join('');
-    } catch (error) {
-        console.error(error);
+            const params = new URLSearchParams({ page, ...filters });
+            const response = await fetch(`/api/admin/audit-logs/?${params}`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Erro ao carregar logs');
+            }
+
+            const data = await response.json();
+            renderLogs(data.results || []);
+            renderPagination(data);
+        } catch (error) {
+            console.error('Erro:', error);
+            document.getElementById('logsBody').innerHTML = `
+                <tr><td colspan="6" class="error-state">Erro ao carregar logs. Tente novamente.</td></tr>
+            `;
+        }
     }
-}
 
-function filterLogs() {
-    loadLogs(); // Simplificado
-}
+    function renderLogs(logs) {
+        const tbody = document.getElementById('logsBody');
+        if (!logs.length) {
+            tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Nenhum log encontrado</td></tr>';
+            return;
+        }
 
-window.filterLogs = filterLogs;
+        tbody.innerHTML = logs.map(log => `
+            <tr>
+                <td>${formatDateTime(log.timestamp)}</td>
+                <td>${log.user_name}</td>
+                <td><span class="badge ${getActionClass(log.action)}">${log.action}</span></td>
+                <td>${log.resource}</td>
+                <td>${log.ip_address}</td>
+                <td><button class="btn-icon" onclick="showDetails(${log.id})"><i class="fas fa-eye"></i></button></td>
+            </tr>
+        `).join('');
+    }
+
+    function getActionClass(action) {
+        const classes = {
+            'create': 'success',
+            'update': 'info',
+            'delete': 'danger',
+            'login': 'primary',
+            'logout': 'secondary'
+        };
+        return classes[action] || 'default';
+    }
+
+    // Event listeners
+    document.getElementById('filterDate').addEventListener('change', () => loadAuditLogs());
+    document.getElementById('filterAction').addEventListener('change', () => loadAuditLogs());
+    document.getElementById('filterUser').addEventListener('change', () => loadAuditLogs());
+    document.getElementById('searchLog').addEventListener('input', debounce(() => loadAuditLogs(), 500));
+
+    document.addEventListener('DOMContentLoaded', loadAuditLogs);
 </script>
 {% endblock %}
-

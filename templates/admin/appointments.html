@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load static %}
 
 {% block title %}Gerenciar Agendamentos - Admin{% endblock %}
@@ -8,125 +8,200 @@
 {% endblock %}
 
 {% block content %}
-<div class="admin-page">
-    <div class="container">
-        <!-- Header -->
-        <div class="page-header">
-            <div>
-                <h1 class="page-title">Gerenciar Agendamentos</h1>
-                <p class="page-subtitle">Visualize e gerencie todos os agendamentos</p>
-            </div>
-            
-            <button class="btn btn-outline" onclick="exportAppointments()">
-                ⬇️ Exportar Relatório
+<div class="admin-appointments-container">
+    <header class="admin-header">
+        <h1>Gerenciar Agendamentos</h1>
+        <div class="header-actions">
+            <button class="btn btn-secondary" onclick="exportAppointments()">
+                <i class="fas fa-download"></i> Exportar
+            </button>
+            <button class="btn btn-primary" onclick="showCreateModal()">
+                <i class="fas fa-plus"></i> Novo Agendamento
             </button>
         </div>
+    </header>
 
-        <!-- Filters -->
-        <div class="filters-bar">
-            <div class="filters-group">
-                <button class="filter-chip active" data-status="all" onclick="setStatusFilter('all')">
-                    Todos
-                </button>
-                <button class="filter-chip" data-status="pending" onclick="setStatusFilter('pending')">
-                    🕐 Pendentes
-                </button>
-                <button class="filter-chip" data-status="confirmed" onclick="setStatusFilter('confirmed')">
-                    ✅ Confirmados
-                </button>
-                <button class="filter-chip" data-status="completed" onclick="setStatusFilter('completed')">
-                    ✅ Concluídos
-                </button>
-                <button class="filter-chip" data-status="cancelled" onclick="setStatusFilter('cancelled')">
-                    ❌ Cancelados
-                </button>
-            </div>
-            
-            <div class="search-bar">
-                <input type="text" id="searchInput" placeholder="Buscar por nome ou telefone..." class="search-input">
-            </div>
-        </div>
-
-        <!-- Loading -->
-        <div id="loadingState" class="loading-grid">
-            <div class="skeleton-row"></div>
-            <div class="skeleton-row"></div>
-            <div class="skeleton-row"></div>
-        </div>
-
-        <!-- Table -->
-        <div id="appointmentsTable" class="appointments-table" style="display: none;">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Data/Hora</th>
-                        <th>Cliente</th>
-                        <th>Serviço</th>
-                        <th>Barbeiro</th>
-                        <th>Valor</th>
-                        <th>Status</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody id="appointmentsBody">
-                    <!-- Rows loaded dynamically -->
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Empty -->
-        <div id="emptyState" class="empty-state" style="display: none;">
-            <span class="empty-icon">📅</span>
-            <h3>Nenhum agendamento encontrado</h3>
-            <p id="emptyMessage">Nenhum agendamento no filtro selecionado.</p>
+    <!-- Filtros -->
+    <div class="filters-section">
+        <div class="filters-group">
+            <input type="date" id="filterDate" class="form-control" placeholder="Data">
+            <select id="filterStatus" class="form-control">
+                <option value="">Todos os Status</option>
+                <option value="pending">Pendente</option>
+                <option value="confirmed">Confirmado</option>
+                <option value="completed">Concluído</option>
+                <option value="cancelled">Cancelado</option>
+            </select>
+            <select id="filterBarber" class="form-control">
+                <option value="">Todos os Barbeiros</option>
+            </select>
+            <input type="text" id="searchCustomer" class="form-control" placeholder="Buscar cliente...">
+            <button class="btn btn-secondary" onclick="clearFilters()">Limpar</button>
         </div>
     </div>
-</div>
 
-<!-- Details Modal -->
-<div id="detailsModal" class="modal" style="display: none;">
-    <div class="modal-overlay" onclick="closeDetailsModal()"></div>
-    <div class="modal-content modal-lg">
-        <div class="modal-header">
-            <h3>Detalhes do Agendamento</h3>
-            <button class="modal-close" onclick="closeDetailsModal()">&times;</button>
+    <!-- Estatísticas Rápidas -->
+    <div class="stats-cards">
+        <div class="stat-card">
+            <div class="stat-icon pending">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-info">
+                <h3 id="statPending">0</h3>
+                <p>Pendentes</p>
+            </div>
         </div>
-        <div class="modal-body" id="appointmentDetails">
-            <!-- Loaded dynamically -->
+        <div class="stat-card">
+            <div class="stat-icon confirmed">
+                <i class="fas fa-check"></i>
+            </div>
+            <div class="stat-info">
+                <h3 id="statConfirmed">0</h3>
+                <p>Confirmados</p>
+            </div>
         </div>
-        <div class="modal-footer">
-            <button class="btn btn-outline" onclick="closeDetailsModal()">Fechar</button>
+        <div class="stat-card">
+            <div class="stat-icon completed">
+                <i class="fas fa-check-double"></i>
+            </div>
+            <div class="stat-info">
+                <h3 id="statCompleted">0</h3>
+                <p>Concluídos Hoje</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon revenue">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+            <div class="stat-info">
+                <h3 id="statRevenue">R$ 0</h3>
+                <p>Faturamento Hoje</p>
+            </div>
         </div>
     </div>
+
+    <!-- Tabela de Agendamentos -->
+    <div class="appointments-table-container">
+        <table class="appointments-table" id="appointmentsTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Data/Hora</th>
+                    <th>Cliente</th>
+                    <th>Serviço</th>
+                    <th>Barbeiro</th>
+                    <th>Valor</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="appointmentsBody">
+                <tr>
+                    <td colspan="8" class="loading-cell">
+                        <div class="loading-spinner"></div>
+                        Carregando agendamentos...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Paginação -->
+    <div class="pagination-container" id="paginationContainer"></div>
 </div>
 
-<!-- Status Update Modal -->
-<div id="statusModal" class="modal" style="display: none;">
-    <div class="modal-overlay" onclick="closeStatusModal()"></div>
+<!-- Modal: Criar/Editar Agendamento -->
+<div id="appointmentModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h3>Atualizar Status</h3>
-            <button class="modal-close" onclick="closeStatusModal()">&times;</button>
+            <h2 id="modalTitle">Novo Agendamento</h2>
+            <button class="close-btn" onclick="closeModal()">&times;</button>
         </div>
-        <form class="modal-body">
-            <input type="hidden" id="statusAppointmentId">
-            <div class="form-group">
-                <label>Novo Status *</label>
-                <select id="newStatus" class="form-control">
-                    <option value="pending">Pendente</option>
-                    <option value="confirmed">Confirmado</option>
-                    <option value="completed">Concluído</option>
-                    <option value="cancelled">Cancelado</option>
-                </select>
+        <form id="appointmentForm">
+            <input type="hidden" id="appointmentId">
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="customerName">Nome do Cliente *</label>
+                    <input type="text" id="customerName" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="customerPhone">Telefone *</label>
+                    <input type="tel" id="customerPhone" class="form-control" required>
+                </div>
             </div>
-            <div class="form-group" id="reasonGroup" style="display: none;">
-                <label>Motivo do Cancelamento</label>
-                <textarea id="cancelReason" class="form-control" rows="3"></textarea>
+
+            <div class="form-group">
+                <label for="customerEmail">Email</label>
+                <input type="email" id="customerEmail" class="form-control">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="service">Serviço *</label>
+                    <select id="service" class="form-control" required>
+                        <option value="">Selecione...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="barber">Barbeiro *</label>
+                    <select id="barber" class="form-control" required>
+                        <option value="">Selecione...</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="appointmentDate">Data *</label>
+                    <input type="date" id="appointmentDate" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="appointmentTime">Horário *</label>
+                    <select id="appointmentTime" class="form-control" required>
+                        <option value="">Selecione...</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="price">Valor</label>
+                    <input type="number" id="price" class="form-control" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="paymentMethod">Forma de Pagamento</label>
+                    <select id="paymentMethod" class="form-control">
+                        <option value="cash">Dinheiro</option>
+                        <option value="credit_card">Cartão de Crédito</option>
+                        <option value="debit_card">Cartão de Débito</option>
+                        <option value="pix">PIX</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="notes">Observações</label>
+                <textarea id="notes" class="form-control" rows="3"></textarea>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Salvar</button>
             </div>
         </form>
-        <div class="modal-footer">
-            <button class="btn btn-outline" onclick="closeStatusModal()">Cancelar</button>
-            <button class="btn btn-primary" onclick="updateStatus()">Atualizar</button>
+    </div>
+</div>
+
+<!-- Modal: Detalhes do Agendamento -->
+<div id="detailsModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Detalhes do Agendamento</h2>
+            <button class="close-btn" onclick="closeDetailsModal()">&times;</button>
+        </div>
+        <div id="detailsContent" class="details-content">
+            <!-- Conteúdo carregado dinamicamente -->
         </div>
     </div>
 </div>
@@ -135,4 +210,3 @@
 {% block extra_js %}
 <script src="{% static 'js/admin-appointments.js' %}"></script>
 {% endblock %}
-

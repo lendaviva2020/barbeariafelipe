@@ -1,32 +1,195 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load static %}
 
 {% block title %}Performance - Admin{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/admin-reports.css' %}">
+{% endblock %}
+
 {% block content %}
-<div class="admin-page">
-    <div class="container">
-        <h1 class="page-title">⚡ Performance do Sistema</h1>
-        
-        <div class="metrics-grid">
-            <div class="metric-card">
-                <h3>🚀 Uptime</h3>
-                <p class="metric-value">99.9%</p>
+<div class="admin-performance-container">
+    <header class="admin-header">
+        <h1>Análise de Performance</h1>
+        <select id="periodSelect" class="form-control" onchange="loadPerformance()">
+            <option value="week">Última Semana</option>
+            <option value="month" selected>Último Mês</option>
+            <option value="quarter">Último Trimestre</option>
+            <option value="year">Último Ano</option>
+        </select>
+    </header>
+
+    <!-- KPIs Principais -->
+    <div class="kpis-grid">
+        <div class="kpi-card">
+            <div class="kpi-icon revenue">
+                <i class="fas fa-chart-line"></i>
             </div>
-            <div class="metric-card">
-                <h3>⏱️ Tempo de Resposta</h3>
-                <p class="metric-value">120ms</p>
-            </div>
-            <div class="metric-card">
-                <h3>📊 Requisições/min</h3>
-                <p class="metric-value">45</p>
-            </div>
-            <div class="metric-card">
-                <h3>💾 Uso de Cache</h3>
-                <p class="metric-value">85%</p>
+            <div class="kpi-content">
+                <h3 id="kpiRevenue">R$ 0,00</h3>
+                <p>Faturamento</p>
+                <span class="kpi-trend" id="revenueTrend"></span>
             </div>
         </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon appointments">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <div class="kpi-content">
+                <h3 id="kpiAppointments">0</h3>
+                <p>Agendamentos</p>
+                <span class="kpi-trend" id="appointmentsTrend"></span>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon conversion">
+                <i class="fas fa-percentage"></i>
+            </div>
+            <div class="kpi-content">
+                <h3 id="kpiConversion">0%</h3>
+                <p>Taxa de Conversão</p>
+                <span class="kpi-trend" id="conversionTrend"></span>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon satisfaction">
+                <i class="fas fa-star"></i>
+            </div>
+            <div class="kpi-content">
+                <h3 id="kpiSatisfaction">0.0</h3>
+                <p>Satisfação Média</p>
+                <span class="kpi-trend" id="satisfactionTrend"></span>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon retention">
+                <i class="fas fa-redo"></i>
+            </div>
+            <div class="kpi-content">
+                <h3 id="kpiRetention">0%</h3>
+                <p>Taxa de Retenção</p>
+                <span class="kpi-trend" id="retentionTrend"></span>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon cancellation">
+                <i class="fas fa-times-circle"></i>
+            </div>
+            <div class="kpi-content">
+                <h3 id="kpiCancellation">0%</h3>
+                <p>Taxa de Cancelamento</p>
+                <span class="kpi-trend" id="cancellationTrend"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos de Performance -->
+    <div class="performance-charts">
+        <div class="chart-container full-width">
+            <h3>Evolução de Faturamento e Agendamentos</h3>
+            <canvas id="evolutionChart"></canvas>
+        </div>
+
+        <div class="chart-container">
+            <h3>Performance por Barbeiro</h3>
+            <canvas id="barbersPerformanceChart"></canvas>
+        </div>
+
+        <div class="chart-container">
+            <h3>Distribuição de Horários</h3>
+            <canvas id="timeDistributionChart"></canvas>
+        </div>
+
+        <div class="chart-container">
+            <h3>Serviços Mais Rentáveis</h3>
+            <canvas id="servicesRevenueChart"></canvas>
+        </div>
+
+        <div class="chart-container">
+            <h3>Taxa de Ocupação</h3>
+            <canvas id="occupancyChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Ranking de Barbeiros -->
+    <div class="rankings-section">
+        <div class="ranking-card">
+            <h3>🏆 Top Barbeiros do Mês</h3>
+            <div id="topBarbers" class="ranking-list"></div>
+        </div>
+
+        <div class="ranking-card">
+            <h3>⭐ Melhores Avaliações</h3>
+            <div id="topRated" class="ranking-list"></div>
+        </div>
+
+        <div class="ranking-card">
+            <h3>💰 Maior Faturamento</h3>
+            <div id="topRevenue" class="ranking-list"></div>
+        </div>
+    </div>
+
+    <!-- Metas e Objetivos -->
+    <div class="goals-section">
+        <h2>Metas e Objetivos</h2>
+        <div id="goalsGrid" class="goals-grid"></div>
     </div>
 </div>
 {% endblock %}
 
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    async function loadPerformance() {
+        const period = document.getElementById('periodSelect').value;
+        
+        try {
+            const response = await fetch(`/api/admin/performance/?period=${period}`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                }
+            });
+            const data = await response.json();
+            
+            renderKPIs(data.kpis);
+            renderCharts(data);
+            renderRankings(data.rankings);
+            renderGoals(data.goals);
+        } catch (error) {
+            console.error('Erro ao carregar performance:', error);
+        }
+    }
+
+    function renderKPIs(kpis) {
+        document.getElementById('kpiRevenue').textContent = formatCurrency(kpis.revenue);
+        document.getElementById('kpiAppointments').textContent = kpis.appointments;
+        document.getElementById('kpiConversion').textContent = `${kpis.conversion}%`;
+        document.getElementById('kpiSatisfaction').textContent = kpis.satisfaction.toFixed(1);
+        document.getElementById('kpiRetention').textContent = `${kpis.retention}%`;
+        document.getElementById('kpiCancellation').textContent = `${kpis.cancellation}%`;
+        
+        // Trends
+        updateTrend('revenueTrend', kpis.revenueTrend);
+        updateTrend('appointmentsTrend', kpis.appointmentsTrend);
+        updateTrend('conversionTrend', kpis.conversionTrend);
+        updateTrend('satisfactionTrend', kpis.satisfactionTrend);
+        updateTrend('retentionTrend', kpis.retentionTrend);
+        updateTrend('cancellationTrend', kpis.cancellationTrend);
+    }
+
+    function updateTrend(elementId, value) {
+        const element = document.getElementById(elementId);
+        const icon = value >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+        const className = value >= 0 ? 'positive' : 'negative';
+        element.innerHTML = `<i class="fas ${icon}"></i> ${Math.abs(value)}%`;
+        element.className = `kpi-trend ${className}`;
+    }
+
+    document.addEventListener('DOMContentLoaded', loadPerformance);
+</script>
+{% endblock %}

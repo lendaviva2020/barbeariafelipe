@@ -1,48 +1,117 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load static %}
 
 {% block title %}Lista de Espera - Admin{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
 {% block content %}
-<div class="admin-page">
-    <div class="container">
-        <h1 class="page-title">⏳ Lista de Espera</h1>
-        
-        <div id="waitingList" class="waiting-list">
-            <!-- Loaded dynamically -->
-        </div>
+<div class="admin-waiting-list-container">
+    <header class="admin-header">
+        <h1>Lista de Espera</h1>
+        <button class="btn btn-primary" onclick="refreshList()">
+            <i class="fas fa-sync"></i> Atualizar
+        </button>
+    </header>
+
+    <!-- Tabela de Lista de Espera -->
+    <div class="waiting-list-table-container">
+        <table class="waiting-list-table" id="waitingListTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Cliente</th>
+                    <th>Telefone</th>
+                    <th>Serviço</th>
+                    <th>Barbeiro</th>
+                    <th>Data/Hora Preferida</th>
+                    <th>Criado em</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="waitingListBody">
+                <tr>
+                    <td colspan="9" class="loading-cell">
+                        <div class="loading-spinner"></div>
+                        Carregando lista de espera...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', async () => {
-    const response = await fetchAPI('/api/waiting-list/');
-    const waitingList = await response.json();
-    
-    document.getElementById('waitingList').innerHTML = waitingList.map(item => `
-        <div class="waiting-card">
-            <h3>${item.customer_name}</h3>
-            <p>Prefere: ${item.preferred_date} às ${item.preferred_time}</p>
-            <p>Serviço: ${item.service_name}</p>
-            <button class="btn btn-primary btn-sm" onclick="notifyUser(${item.id})">
-                📲 Notificar
-            </button>
-        </div>
-    `).join('');
-});
-
-async function notifyUser(id) {
-    try {
-        await fetchAPI(`/api/waiting-list/${id}/notify/`, { method: 'POST' });
-        showToast('Sucesso', 'Cliente notificado', 'success');
-    } catch (error) {
-        showToast('Erro', 'Erro ao notificar', 'error');
+    // Código inline para lista de espera
+    async function loadWaitingList() {
+        try {
+            const response = await fetch('/api/waiting-list/', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                }
+            });
+            const data = await response.json();
+            renderWaitingList(data);
+        } catch (error) {
+            console.error('Erro ao carregar lista:', error);
+        }
     }
-}
 
-window.notifyUser = notifyUser;
+    function renderWaitingList(data) {
+        const tbody = document.getElementById('waitingListBody');
+        if (!data.length) {
+            tbody.innerHTML = '<tr><td colspan="9" class="empty-state">Nenhum cliente na lista de espera</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = data.map(item => `
+            <tr>
+                <td>${item.id}</td>
+                <td>${item.customer_name}</td>
+                <td>${item.customer_phone}</td>
+                <td>${item.service_name}</td>
+                <td>${item.barber_name || 'Qualquer'}</td>
+                <td>${formatDateTime(item.preferred_date, item.preferred_time)}</td>
+                <td>${formatDate(item.created_at)}</td>
+                <td><span class="badge ${item.notified ? 'success' : 'warning'}">${item.notified ? 'Notificado' : 'Pendente'}</span></td>
+                <td>
+                    <button class="btn-icon" onclick="notifyCustomer(${item.id})" title="Notificar">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                    <button class="btn-icon danger" onclick="removeFromList(${item.id})" title="Remover">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    async function notifyCustomer(id) {
+        if (!confirm('Enviar notificação para este cliente?')) return;
+        
+        try {
+            await fetch(`/api/waiting-list/${id}/notify/`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                }
+            });
+            showToast('Cliente notificado com sucesso!', 'success');
+            loadWaitingList();
+        } catch (error) {
+            showToast('Erro ao notificar cliente', 'error');
+        }
+    }
+
+    function refreshList() {
+        loadWaitingList();
+    }
+
+    document.addEventListener('DOMContentLoaded', loadWaitingList);
 </script>
 {% endblock %}
-

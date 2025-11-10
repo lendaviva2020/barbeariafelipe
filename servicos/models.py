@@ -26,6 +26,10 @@ class Servico(models.Model):
         verbose_name = "Serviço"
         verbose_name_plural = "Serviços"
         ordering = ["category", "name"]
+        indexes = [
+            models.Index(fields=['active', 'category']),
+            models.Index(fields=['name']),
+        ]
 
     def __str__(self):
         return f"{self.name} - R$ {self.price}"

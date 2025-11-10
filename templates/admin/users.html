@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load static %}
 
 {% block title %}Gerenciar Usuários - Admin{% endblock %}
@@ -8,57 +8,109 @@
 {% endblock %}
 
 {% block content %}
-<div class="admin-page">
-    <div class="container">
-        <div class="page-header">
-            <div>
-                <h1 class="page-title">Gerenciar Usuários</h1>
-                <p class="page-subtitle">Administre todos os usuários do sistema</p>
+<div class="admin-users-container">
+    <header class="admin-header">
+        <h1>Gerenciar Usuários</h1>
+        <button class="btn btn-primary" onclick="exportUsers()">
+            <i class="fas fa-download"></i> Exportar
+        </button>
+    </header>
+
+    <!-- Filtros -->
+    <div class="filters-section">
+        <input type="text" id="searchUser" class="form-control" placeholder="Buscar por nome ou email...">
+        <select id="filterRole" class="form-control">
+            <option value="">Todos os Perfis</option>
+            <option value="customer">Cliente</option>
+            <option value="barber">Barbeiro</option>
+            <option value="admin">Admin</option>
+        </select>
+        <select id="filterActive" class="form-control">
+            <option value="">Todos</option>
+            <option value="true">Ativos</option>
+            <option value="false">Inativos</option>
+        </select>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="stats-cards">
+        <div class="stat-card">
+            <div class="stat-icon customers">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-info">
+                <h3 id="statCustomers">0</h3>
+                <p>Clientes</p>
             </div>
         </div>
-
-        <!-- Filters -->
-        <div class="filters-bar">
-            <div class="tabs-bar">
-                <button class="tab-btn active" data-role="all" onclick="setRoleFilter('all')">Todos</button>
-                <button class="tab-btn" data-role="admin" onclick="setRoleFilter('admin')">🛡️ Admins</button>
-                <button class="tab-btn" data-role="barber" onclick="setRoleFilter('barber')">✂️ Barbeiros</button>
-                <button class="tab-btn" data-role="user" onclick="setRoleFilter('user')">👤 Clientes</button>
+        <div class="stat-card">
+            <div class="stat-icon barbers">
+                <i class="fas fa-cut"></i>
             </div>
-            <input type="text" id="searchInput" class="search-input" placeholder="Buscar por nome ou email...">
+            <div class="stat-info">
+                <h3 id="statBarbers">0</h3>
+                <p>Barbeiros</p>
+            </div>
         </div>
-
-        <!-- Users Table -->
-        <div class="users-table">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Usuário</th>
-                        <th>Email</th>
-                        <th>Telefone</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th>Cadastrado</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody id="usersBody"></tbody>
-            </table>
+        <div class="stat-card">
+            <div class="stat-icon active">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-info">
+                <h3 id="statActive">0</h3>
+                <p>Ativos</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon new">
+                <i class="fas fa-user-plus"></i>
+            </div>
+            <div class="stat-info">
+                <h3 id="statNew">0</h3>
+                <p>Novos (30d)</p>
+            </div>
         </div>
     </div>
+
+    <!-- Tabela de Usuários -->
+    <div class="users-table-container">
+        <table class="users-table" id="usersTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Email</th>
+                    <th>Telefone</th>
+                    <th>Perfil</th>
+                    <th>Data Cadastro</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="usersBody">
+                <tr>
+                    <td colspan="8" class="loading-cell">
+                        <div class="loading-spinner"></div>
+                        Carregando usuários...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Paginação -->
+    <div class="pagination-container" id="paginationContainer"></div>
 </div>
 
-<!-- User Details Modal -->
-<div id="userDetailsModal" class="modal" style="display: none;">
-    <div class="modal-overlay" onclick="closeUserDetails()"></div>
-    <div class="modal-content modal-lg">
+<!-- Modal: Detalhes do Usuário -->
+<div id="userModal" class="modal">
+    <div class="modal-content large">
         <div class="modal-header">
-            <h3>Detalhes do Usuário</h3>
-            <button class="modal-close" onclick="closeUserDetails()">&times;</button>
+            <h2>Detalhes do Usuário</h2>
+            <button class="close-btn" onclick="closeModal()">&times;</button>
         </div>
-        <div class="modal-body" id="userDetailsContent"></div>
-        <div class="modal-footer">
-            <button class="btn btn-outline" onclick="closeUserDetails()">Fechar</button>
+        <div id="userDetails" class="user-details">
+            <!-- Conteúdo carregado dinamicamente -->
         </div>
     </div>
 </div>
@@ -67,4 +119,3 @@
 {% block extra_js %}
 <script src="{% static 'js/admin-users.js' %}"></script>
 {% endblock %}
-

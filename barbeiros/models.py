@@ -35,6 +35,10 @@ class Barbeiro(models.Model):
         verbose_name = "Barbeiro"
         verbose_name_plural = "Barbeiros"
         ordering = ["name"]
+        indexes = [
+            models.Index(fields=['active']),
+            models.Index(fields=['name']),
+        ]
 
     def __str__(self):
         return self.name

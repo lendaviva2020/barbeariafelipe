@@ -33,6 +33,10 @@ class Cupom(models.Model):
         verbose_name = "Cupom"
         verbose_name_plural = "Cupons"
         ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=['code']),
+            models.Index(fields=['active', 'expiry_date']),
+        ]
 
     def __str__(self):
         return f'{self.code} - {self.discount}{"%" if self.discount_type == "percentage" else " R$"}'

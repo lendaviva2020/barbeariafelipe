@@ -1,149 +1,119 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load static %}
 
-{% block title %}Gerenciar Cupons - Admin - Barbearia Francisco{% endblock %}
+{% block title %}Gerenciar Cupons - Admin{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/admin-coupons.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="min-h-screen py-8">
-    <div class="container mx-auto px-4 max-w-6xl">
-        <!-- Header -->
-        <div class="page-header">
-            <div>
-                <h1 class="page-title">Cupons de Desconto</h1>
-                <p class="page-subtitle">Gerencie os cupons promocionais da sua barbearia</p>
-            </div>
-            
-            <button class="btn btn-primary" onclick="openCouponDialog()">
-                ➕ Novo Cupom
-            </button>
-        </div>
+<div class="admin-coupons-container">
+    <header class="admin-header">
+        <h1>Gerenciar Cupons</h1>
+        <button class="btn btn-primary" onclick="showCreateModal()">
+            <i class="fas fa-plus"></i> Novo Cupom
+        </button>
+    </header>
 
-        <!-- Loading State -->
-        <div id="loadingState" class="loading-coupons">
-            <div class="skeleton-coupon"></div>
-            <div class="skeleton-coupon"></div>
-            <div class="skeleton-coupon"></div>
-        </div>
+    <!-- Filtros -->
+    <div class="filters-section">
+        <input type="text" id="searchCoupon" class="form-control" placeholder="Buscar cupom...">
+        <select id="filterActive" class="form-control">
+            <option value="">Todos</option>
+            <option value="true">Ativos</option>
+            <option value="false">Inativos</option>
+        </select>
+        <select id="filterType" class="form-control">
+            <option value="">Todos os Tipos</option>
+            <option value="percentage">Percentual</option>
+            <option value="fixed">Valor Fixo</option>
+        </select>
+    </div>
 
-        <!-- Empty State -->
-        <div id="emptyState" class="empty-state" style="display: none;">
-            <span class="empty-icon">🎫</span>
-            <h3>Nenhum cupom cadastrado</h3>
-            <p>Crie seu primeiro cupom de desconto para começar</p>
-        </div>
-
-        <!-- Coupons List -->
-        <div id="couponsList" class="coupons-list"></div>
+    <!-- Tabela de Cupons -->
+    <div class="coupons-table-container">
+        <table class="coupons-table" id="couponsTable">
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Desconto</th>
+                    <th>Tipo</th>
+                    <th>Usos</th>
+                    <th>Validade</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="couponsBody">
+                <tr>
+                    <td colspan="7" class="loading-cell">
+                        <div class="loading-spinner"></div>
+                        Carregando cupons...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 </div>
 
-<!-- Coupon Form Modal -->
-<div id="couponDialog" class="modal" style="display: none;">
-    <div class="modal-overlay" onclick="closeCouponDialog()"></div>
-    <div class="modal-content modal-md">
+<!-- Modal: Criar/Editar Cupom -->
+<div id="couponModal" class="modal">
+    <div class="modal-content">
         <div class="modal-header">
-            <h3 id="couponModalTitle">Novo Cupom</h3>
-            <button class="modal-close" onclick="closeCouponDialog()">&times;</button>
+            <h2 id="modalTitle">Novo Cupom</h2>
+            <button class="close-btn" onclick="closeModal()">&times;</button>
         </div>
-        
-        <form id="couponForm" class="modal-body">
+        <form id="couponForm">
             <input type="hidden" id="couponId">
             
-            <!-- Código -->
             <div class="form-group">
                 <label for="code">Código do Cupom *</label>
-                <input 
-                    type="text" 
-                    id="code" 
-                    class="form-control" 
-                    placeholder="EXEMPLO20" 
-                    maxlength="20"
-                    style="text-transform: uppercase;"
-                    required
-                >
-                <p class="form-help">Apenas letras maiúsculas e números. Máx: 20 caracteres</p>
+                <input type="text" id="code" class="form-control" required placeholder="Ex: PRIMEIRAVISITA">
             </div>
-            
-            <!-- Tipo e Valor -->
+
+            <div class="form-group">
+                <label for="description">Descrição</label>
+                <textarea id="description" class="form-control" rows="2"></textarea>
+            </div>
+
             <div class="form-row">
                 <div class="form-group">
-                    <label for="discount_type">Tipo de Desconto *</label>
-                    <select id="discount_type" class="form-control" required>
+                    <label for="discountType">Tipo de Desconto *</label>
+                    <select id="discountType" class="form-control" required onchange="updateDiscountLabel()">
                         <option value="percentage">Percentual (%)</option>
                         <option value="fixed">Valor Fixo (R$)</option>
                     </select>
                 </div>
-                
                 <div class="form-group">
                     <label for="discount" id="discountLabel">Desconto (%) *</label>
-                    <input 
-                        type="number" 
-                        id="discount" 
-                        class="form-control" 
-                        step="1" 
-                        min="0"
-                        placeholder="10"
-                        required
-                    >
+                    <input type="number" id="discount" class="form-control" step="0.01" required>
                 </div>
             </div>
-            
-            <!-- Descrição -->
-            <div class="form-group">
-                <label for="description">Descrição</label>
-                <input 
-                    type="text" 
-                    id="description" 
-                    class="form-control" 
-                    placeholder="Descreva o propósito deste cupom"
-                    maxlength="100"
-                >
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="expiryDate">Data de Validade</label>
+                    <input type="date" id="expiryDate" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="maxUses">Limite de Usos</label>
+                    <input type="number" id="maxUses" class="form-control" placeholder="Deixe vazio para ilimitado">
+                </div>
             </div>
-            
-            <!-- Data de Expiração -->
+
             <div class="form-group">
-                <label for="expiry_date">Data de Expiração</label>
-                <input 
-                    type="date" 
-                    id="expiry_date" 
-                    class="form-control"
-                >
-            </div>
-            
-            <!-- Usos Máximos -->
-            <div class="form-group">
-                <label for="max_uses">Usos Máximos</label>
-                <input 
-                    type="number" 
-                    id="max_uses" 
-                    class="form-control" 
-                    min="0"
-                    placeholder="0 para ilimitado"
-                >
-            </div>
-            
-            <!-- Ativo -->
-            <div class="form-group form-checkbox">
                 <label class="checkbox-label">
                     <input type="checkbox" id="active" checked>
-                    <span class="checkbox-text">
-                        <strong>Cupom Ativo</strong>
-                        <small>Cupom disponível para uso pelos clientes</small>
-                    </span>
+                    Cupom Ativo
                 </label>
             </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Salvar</button>
+            </div>
         </form>
-        
-        <div class="modal-footer">
-            <button type="button" class="btn btn-outline" onclick="closeCouponDialog()">Cancelar</button>
-            <button type="submit" class="btn btn-primary" onclick="submitCoupon()" id="submitBtn">
-                ➕ Criar Cupom
-            </button>
-        </div>
     </div>
 </div>
 {% endblock %}
@@ -151,4 +121,3 @@
 {% block extra_js %}
 <script src="{% static 'js/admin-coupons.js' %}"></script>
 {% endblock %}
-

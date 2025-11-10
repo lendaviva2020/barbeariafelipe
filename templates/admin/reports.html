@@ -1,83 +1,157 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load static %}
 
 {% block title %}Relatórios - Admin{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/admin-reports.css' %}">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}
 
 {% block content %}
-<div class="admin-page">
-    <div class="container">
-        <div class="page-header">
-            <div>
-                <h1 class="page-title">Relatórios e Análises</h1>
-                <p class="page-subtitle">Visão completa do desempenho da barbearia</p>
+<div class="admin-reports-container">
+    <header class="admin-header">
+        <h1>Relatórios e Análises</h1>
+        <div class="header-actions">
+            <button class="btn btn-secondary" onclick="exportPDF()">
+                <i class="fas fa-file-pdf"></i> Exportar PDF
+            </button>
+            <button class="btn btn-secondary" onclick="exportExcel()">
+                <i class="fas fa-file-excel"></i> Exportar Excel
+            </button>
+        </div>
+    </header>
+
+    <!-- Filtros de Período -->
+    <div class="period-selector">
+        <button class="period-btn active" data-period="today" onclick="selectPeriod('today')">Hoje</button>
+        <button class="period-btn" data-period="week" onclick="selectPeriod('week')">Semana</button>
+        <button class="period-btn" data-period="month" onclick="selectPeriod('month')">Mês</button>
+        <button class="period-btn" data-period="year" onclick="selectPeriod('year')">Ano</button>
+        <button class="period-btn" data-period="custom" onclick="selectPeriod('custom')">Personalizado</button>
+    </div>
+
+    <div id="customPeriod" class="custom-period" style="display: none;">
+        <input type="date" id="startDate" class="form-control">
+        <span>até</span>
+        <input type="date" id="endDate" class="form-control">
+        <button class="btn btn-primary" onclick="applyCustomPeriod()">Aplicar</button>
+    </div>
+
+    <!-- Resumo Financeiro -->
+    <div class="financial-summary">
+        <div class="summary-card revenue">
+            <div class="card-icon">
+                <i class="fas fa-dollar-sign"></i>
             </div>
-            <div class="header-actions">
-                <select id="timeRange" class="form-control" onchange="changeTimeRange()">
-                    <option value="month">Este Mês</option>
-                    <option value="quarter">Este Trimestre</option>
-                    <option value="year">Este Ano</option>
-                </select>
-                <button class="btn btn-outline" onclick="exportPDF()">📄 Export PDF</button>
-                <button class="btn btn-outline" onclick="exportExcel()">📊 Export Excel</button>
+            <div class="card-content">
+                <h3 id="totalRevenue">R$ 0,00</h3>
+                <p>Faturamento Total</p>
+                <span class="trend up" id="revenueTrend">
+                    <i class="fas fa-arrow-up"></i> 0%
+                </span>
             </div>
         </div>
 
-        <!-- Report Type Tabs -->
-        <div class="tabs-bar">
-            <button class="tab-btn active" data-type="financial" onclick="setReportType('financial')">💰 Financeiro</button>
-            <button class="tab-btn" data-type="services" onclick="setReportType('services')">✂️ Serviços</button>
-            <button class="tab-btn" data-type="performance" onclick="setReportType('performance')">📈 Desempenho</button>
-            <button class="tab-btn" data-type="clients" onclick="setReportType('clients')">👥 Clientes</button>
+        <div class="summary-card appointments">
+            <div class="card-icon">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+            <div class="card-content">
+                <h3 id="totalAppointments">0</h3>
+                <p>Agendamentos</p>
+                <span class="trend up" id="appointmentsTrend">
+                    <i class="fas fa-arrow-up"></i> 0%
+                </span>
+            </div>
         </div>
 
-        <!-- Charts Container -->
-        <div id="chartsContainer" class="charts-container">
-            <!-- Financial Charts -->
-            <div class="report-section" id="financialSection">
-                <div class="chart-card">
-                    <h3>Faturamento Mensal</h3>
-                    <canvas id="revenueChart" height="80"></canvas>
-                </div>
-                <div class="chart-card">
-                    <h3>Distribuição por Método de Pagamento</h3>
-                    <canvas id="paymentChart" height="80"></canvas>
-                </div>
+        <div class="summary-card customers">
+            <div class="card-icon">
+                <i class="fas fa-users"></i>
             </div>
+            <div class="card-content">
+                <h3 id="totalCustomers">0</h3>
+                <p>Clientes Atendidos</p>
+                <span class="trend" id="customersTrend">
+                    <i class="fas fa-minus"></i> 0%
+                </span>
+            </div>
+        </div>
 
-            <!-- Services Charts -->
-            <div class="report-section" id="servicesSection" style="display: none;">
-                <div class="chart-card">
-                    <h3>Serviços Mais Populares</h3>
-                    <canvas id="popularServicesChart" height="80"></canvas>
-                </div>
+        <div class="summary-card average">
+            <div class="card-icon">
+                <i class="fas fa-chart-line"></i>
             </div>
+            <div class="card-content">
+                <h3 id="averageTicket">R$ 0,00</h3>
+                <p>Ticket Médio</p>
+                <span class="trend" id="ticketTrend">
+                    <i class="fas fa-minus"></i> 0%
+                </span>
+            </div>
+        </div>
+    </div>
 
-            <!-- Performance Charts -->
-            <div class="report-section" id="performanceSection" style="display: none;">
-                <div class="chart-card">
-                    <h3>Desempenho por Barbeiro</h3>
-                    <canvas id="barberPerformanceChart" height="80"></canvas>
-                </div>
-            </div>
+    <!-- Gráficos -->
+    <div class="charts-section">
+        <div class="chart-container">
+            <h3>Faturamento por Período</h3>
+            <canvas id="revenueChart"></canvas>
+        </div>
 
-            <!-- Clients Charts -->
-            <div class="report-section" id="clientsSection" style="display: none;">
-                <div class="chart-card">
-                    <h3>Novos Clientes</h3>
-                    <canvas id="newClientsChart" height="80"></canvas>
-                </div>
-            </div>
+        <div class="chart-container">
+            <h3>Serviços Mais Populares</h3>
+            <canvas id="servicesChart"></canvas>
+        </div>
+    </div>
+
+    <div class="charts-section">
+        <div class="chart-container">
+            <h3>Desempenho por Barbeiro</h3>
+            <canvas id="barbersChart"></canvas>
+        </div>
+
+        <div class="chart-container">
+            <h3>Horários de Maior Movimento</h3>
+            <canvas id="hoursChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Tabelas de Detalhamento -->
+    <div class="details-section">
+        <div class="details-card">
+            <h3>Top 10 Clientes</h3>
+            <table class="details-table" id="topCustomersTable">
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Visitas</th>
+                        <th>Total Gasto</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div class="details-card">
+            <h3>Desempenho dos Barbeiros</h3>
+            <table class="details-table" id="barbersPerformanceTable">
+                <thead>
+                    <tr>
+                        <th>Barbeiro</th>
+                        <th>Atendimentos</th>
+                        <th>Faturamento</th>
+                        <th>Comissão</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
         </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="{% static 'js/admin-reports.js' %}"></script>
 {% endblock %}
-
