@@ -5,6 +5,50 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/booking.css' %}">
+<style>
+    /* Garantir que apenas uma etapa seja exibida por vez */
+    .booking-step-content {
+        display: none;
+        animation: fadeIn 0.3s ease-in;
+    }
+    
+    .booking-step-content:first-of-type {
+        display: block;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Melhorar espaçamento entre elementos */
+    .booking-content {
+        min-height: 500px;
+        position: relative;
+    }
+    
+    .step-heading {
+        margin-bottom: 0.5rem;
+    }
+    
+    .step-description {
+        margin-bottom: 2rem;
+        color: var(--color-cream);
+        opacity: 0.8;
+    }
+    
+    .step-actions {
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 1px solid rgba(196, 167, 124, 0.2);
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -50,7 +94,7 @@
     <!-- Booking Form -->
     <div class="booking-content">
         <!-- Step 1: Service Selection -->
-        <div class="booking-step-content active" id="step-1">
+        <div class="booking-step-content" id="step-1" style="display: block;">
             <h2 class="step-heading">Escolha o Serviço</h2>
             <p class="step-description">Selecione o serviço que deseja realizar</p>
             
@@ -70,7 +114,7 @@
         </div>
 
         <!-- Step 2: Barber Selection -->
-        <div class="booking-step-content" id="step-2">
+        <div class="booking-step-content" id="step-2" style="display: none;">
             <h2 class="step-heading">Escolha o Barbeiro</h2>
             <p class="step-description">Selecione seu barbeiro preferido (ou deixe em branco para qualquer um)</p>
             
@@ -92,7 +136,7 @@
         </div>
 
         <!-- Step 3: Date & Time Selection -->
-        <div class="booking-step-content" id="step-3">
+        <div class="booking-step-content" id="step-3" style="display: none;">
             <h2 class="step-heading">Escolha Data e Horário</h2>
             <p class="step-description">Selecione quando deseja ser atendido</p>
             
@@ -121,7 +165,7 @@
         </div>
 
         <!-- Step 4: Customer Info & Confirmation -->
-        <div class="booking-step-content" id="step-4">
+        <div class="booking-step-content" id="step-4" style="display: none;">
             <div class="confirmation-layout">
                 <!-- Formulário -->
                 <div class="customer-form">
