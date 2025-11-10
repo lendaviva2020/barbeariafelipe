@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gerenciar Barbeiros - Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/admin-barbers.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Gerenciar Barbeiros</h1>
+                <p class="page-subtitle">Equipe de profissionais da barbearia</p>
+            </div>
+            <button class="btn btn-primary" onclick="openBarberDialog()">➕ Novo Barbeiro</button>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-icon">👥</span>
+                <div>
+                    <p class="stat-value" id="totalBarbers">0</p>
+                    <p class="stat-label">Total</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-icon">✅</span>
+                <div>
+                    <p class="stat-value" id="activeBarbers">0</p>
+                    <p class="stat-label">Ativos</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-icon">⭐</span>
+                <div>
+                    <p class="stat-value" id="avgRating">0.0</p>
+                    <p class="stat-label">Avaliação Média</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs-bar">
+            <button class="tab-btn active" data-tab="all" onclick="setTab('all')">Todos</button>
+            <button class="tab-btn" data-tab="active" onclick="setTab('active')">Ativos</button>
+            <button class="tab-btn" data-tab="inactive" onclick="setTab('inactive')">Inativos</button>
+        </div>
+
+        <!-- Barbers Grid -->
+        <div id="barbersGrid" class="barbers-grid"></div>
+    </div>
+</div>
+
+<!-- Barber Form Modal -->
+<div id="barberDialog" class="modal" style="display: none;">
+    <div class="modal-overlay" onclick="closeBarberDialog()"></div>
+    <div class="modal-content modal-lg">
+        <div class="modal-header">
+            <h3 id="barberModalTitle">Novo Barbeiro</h3>
+            <button class="modal-close" onclick="closeBarberDialog()">&times;</button>
+        </div>
+        <form class="modal-body">
+            <input type="hidden" id="barberId">
+            <div class="form-group">
+                <label>Nome Completo *</label>
+                <input type="text" id="barberName" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>Email *</label>
+                <input type="email" id="barberEmail" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>Telefone</label>
+                <input type="tel" id="barberPhone" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Especialidade</label>
+                <select id="barberSpecialty" class="form-control">
+                    <option value="Cortes Clássicos">Cortes Clássicos</option>
+                    <option value="Barbas">Barbas</option>
+                    <option value="Penteados">Penteados</option>
+                    <option value="Degradê">Degradê</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Bio</label>
+                <textarea id="barberBio" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="form-checkbox">
+                <label>
+                    <input type="checkbox" id="barberActive" checked>
+                    <span>Barbeiro Ativo</span>
+                </label>
+            </div>
+        </form>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeBarberDialog()">Cancelar</button>
+            <button class="btn btn-primary" onclick="submitBarber()">Salvar</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/admin-barbers.js' %}"></script>
+{% endblock %}
+

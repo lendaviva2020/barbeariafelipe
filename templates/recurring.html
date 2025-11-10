@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Agendamentos Recorrentes{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/recurring.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="recurring-page">
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">🔄 Agendamentos Recorrentes</h1>
+                <p class="page-subtitle">Agende automaticamente seus horários</p>
+            </div>
+            <button class="btn btn-primary" onclick="openRecurringDialog()">➕ Novo Recorrente</button>
+        </div>
+
+        <div id="recurringList" class="recurring-list"></div>
+    </div>
+</div>
+
+<div id="recurringDialog" class="modal" style="display: none;">
+    <div class="modal-overlay" onclick="closeRecurringDialog()"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Novo Agendamento Recorrente</h3>
+            <button class="modal-close" onclick="closeRecurringDialog()">&times;</button>
+        </div>
+        <form class="modal-body">
+            <div class="form-group">
+                <label>Frequência *</label>
+                <select id="frequency" class="form-control">
+                    <option value="weekly">Semanal</option>
+                    <option value="biweekly">Quinzenal</option>
+                    <option value="monthly">Mensal</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Dia da Semana *</label>
+                <select id="dayOfWeek" class="form-control">
+                    <option value="0">Segunda-feira</option>
+                    <option value="1">Terça-feira</option>
+                    <option value="2">Quarta-feira</option>
+                    <option value="3">Quinta-feira</option>
+                    <option value="4">Sexta-feira</option>
+                    <option value="5">Sábado</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Horário *</label>
+                <input type="time" id="time" class="form-control" required>
+            </div>
+        </form>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeRecurringDialog()">Cancelar</button>
+            <button class="btn btn-primary" onclick="submitRecurring()">Criar</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/recurring.js' %}"></script>
+{% endblock %}
+

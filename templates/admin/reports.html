@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Relatórios - Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/admin-reports.css' %}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Relatórios e Análises</h1>
+                <p class="page-subtitle">Visão completa do desempenho da barbearia</p>
+            </div>
+            <div class="header-actions">
+                <select id="timeRange" class="form-control" onchange="changeTimeRange()">
+                    <option value="month">Este Mês</option>
+                    <option value="quarter">Este Trimestre</option>
+                    <option value="year">Este Ano</option>
+                </select>
+                <button class="btn btn-outline" onclick="exportPDF()">📄 Export PDF</button>
+                <button class="btn btn-outline" onclick="exportExcel()">📊 Export Excel</button>
+            </div>
+        </div>
+
+        <!-- Report Type Tabs -->
+        <div class="tabs-bar">
+            <button class="tab-btn active" data-type="financial" onclick="setReportType('financial')">💰 Financeiro</button>
+            <button class="tab-btn" data-type="services" onclick="setReportType('services')">✂️ Serviços</button>
+            <button class="tab-btn" data-type="performance" onclick="setReportType('performance')">📈 Desempenho</button>
+            <button class="tab-btn" data-type="clients" onclick="setReportType('clients')">👥 Clientes</button>
+        </div>
+
+        <!-- Charts Container -->
+        <div id="chartsContainer" class="charts-container">
+            <!-- Financial Charts -->
+            <div class="report-section" id="financialSection">
+                <div class="chart-card">
+                    <h3>Faturamento Mensal</h3>
+                    <canvas id="revenueChart" height="80"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>Distribuição por Método de Pagamento</h3>
+                    <canvas id="paymentChart" height="80"></canvas>
+                </div>
+            </div>
+
+            <!-- Services Charts -->
+            <div class="report-section" id="servicesSection" style="display: none;">
+                <div class="chart-card">
+                    <h3>Serviços Mais Populares</h3>
+                    <canvas id="popularServicesChart" height="80"></canvas>
+                </div>
+            </div>
+
+            <!-- Performance Charts -->
+            <div class="report-section" id="performanceSection" style="display: none;">
+                <div class="chart-card">
+                    <h3>Desempenho por Barbeiro</h3>
+                    <canvas id="barberPerformanceChart" height="80"></canvas>
+                </div>
+            </div>
+
+            <!-- Clients Charts -->
+            <div class="report-section" id="clientsSection" style="display: none;">
+                <div class="chart-card">
+                    <h3>Novos Clientes</h3>
+                    <canvas id="newClientsChart" height="80"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/admin-reports.js' %}"></script>
+{% endblock %}
+

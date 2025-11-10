@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gerenciar Agendamentos - Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/admin-appointments.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <div class="container">
+        <!-- Header -->
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Gerenciar Agendamentos</h1>
+                <p class="page-subtitle">Visualize e gerencie todos os agendamentos</p>
+            </div>
+            
+            <button class="btn btn-outline" onclick="exportAppointments()">
+                ⬇️ Exportar Relatório
+            </button>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-bar">
+            <div class="filters-group">
+                <button class="filter-chip active" data-status="all" onclick="setStatusFilter('all')">
+                    Todos
+                </button>
+                <button class="filter-chip" data-status="pending" onclick="setStatusFilter('pending')">
+                    🕐 Pendentes
+                </button>
+                <button class="filter-chip" data-status="confirmed" onclick="setStatusFilter('confirmed')">
+                    ✅ Confirmados
+                </button>
+                <button class="filter-chip" data-status="completed" onclick="setStatusFilter('completed')">
+                    ✅ Concluídos
+                </button>
+                <button class="filter-chip" data-status="cancelled" onclick="setStatusFilter('cancelled')">
+                    ❌ Cancelados
+                </button>
+            </div>
+            
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Buscar por nome ou telefone..." class="search-input">
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loadingState" class="loading-grid">
+            <div class="skeleton-row"></div>
+            <div class="skeleton-row"></div>
+            <div class="skeleton-row"></div>
+        </div>
+
+        <!-- Table -->
+        <div id="appointmentsTable" class="appointments-table" style="display: none;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data/Hora</th>
+                        <th>Cliente</th>
+                        <th>Serviço</th>
+                        <th>Barbeiro</th>
+                        <th>Valor</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="appointmentsBody">
+                    <!-- Rows loaded dynamically -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Empty -->
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <span class="empty-icon">📅</span>
+            <h3>Nenhum agendamento encontrado</h3>
+            <p id="emptyMessage">Nenhum agendamento no filtro selecionado.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Details Modal -->
+<div id="detailsModal" class="modal" style="display: none;">
+    <div class="modal-overlay" onclick="closeDetailsModal()"></div>
+    <div class="modal-content modal-lg">
+        <div class="modal-header">
+            <h3>Detalhes do Agendamento</h3>
+            <button class="modal-close" onclick="closeDetailsModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="appointmentDetails">
+            <!-- Loaded dynamically -->
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeDetailsModal()">Fechar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Status Update Modal -->
+<div id="statusModal" class="modal" style="display: none;">
+    <div class="modal-overlay" onclick="closeStatusModal()"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Atualizar Status</h3>
+            <button class="modal-close" onclick="closeStatusModal()">&times;</button>
+        </div>
+        <form class="modal-body">
+            <input type="hidden" id="statusAppointmentId">
+            <div class="form-group">
+                <label>Novo Status *</label>
+                <select id="newStatus" class="form-control">
+                    <option value="pending">Pendente</option>
+                    <option value="confirmed">Confirmado</option>
+                    <option value="completed">Concluído</option>
+                    <option value="cancelled">Cancelado</option>
+                </select>
+            </div>
+            <div class="form-group" id="reasonGroup" style="display: none;">
+                <label>Motivo do Cancelamento</label>
+                <textarea id="cancelReason" class="form-control" rows="3"></textarea>
+            </div>
+        </form>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeStatusModal()">Cancelar</button>
+            <button class="btn btn-primary" onclick="updateStatus()">Atualizar</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/admin-appointments.js' %}"></script>
+{% endblock %}
+

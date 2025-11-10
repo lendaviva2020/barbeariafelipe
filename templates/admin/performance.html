@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Performance - Admin{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <div class="container">
+        <h1 class="page-title">⚡ Performance do Sistema</h1>
+        
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <h3>🚀 Uptime</h3>
+                <p class="metric-value">99.9%</p>
+            </div>
+            <div class="metric-card">
+                <h3>⏱️ Tempo de Resposta</h3>
+                <p class="metric-value">120ms</p>
+            </div>
+            <div class="metric-card">
+                <h3>📊 Requisições/min</h3>
+                <p class="metric-value">45</p>
+            </div>
+            <div class="metric-card">
+                <h3>💾 Uso de Cache</h3>
+                <p class="metric-value">85%</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

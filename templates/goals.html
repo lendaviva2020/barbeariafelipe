@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Metas e Objetivos - Barbearia Francisco{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/goals.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="mb-8 text-center goals-header">
+        <h1 class="text-3xl font-playfair font-bold mb-4">Metas e Objetivos</h1>
+        <p class="text-muted max-w-2xl mx-auto">Defina e acompanhe as metas da barbearia e dos barbeiros</p>
+    </div>
+
+    <!-- Actions -->
+    <div class="mb-6 flex justify-between items-center actions-bar">
+        <button class="btn btn-primary" onclick="openGoalDialog()">
+            ➕ Nova Meta
+        </button>
+        
+        <div class="text-sm text-muted" id="goalsCount">
+            Carregando...
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loadingState" class="loading-skeleton">
+        <div class="skeleton-goal-card"></div>
+        <div class="skeleton-goal-card"></div>
+        <div class="skeleton-goal-card"></div>
+        <div class="skeleton-goal-card"></div>
+    </div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="empty-state" style="display: none;">
+        <div class="empty-icon">🎯</div>
+        <h3>Nenhuma meta cadastrada</h3>
+        <p>Crie sua primeira meta para acompanhar o progresso da sua barbearia e barbeiros</p>
+    </div>
+
+    <!-- Goals Grid -->
+    <div id="goalsGrid" class="goals-grid"></div>
+</div>
+
+<!-- Goal Form Modal -->
+<div id="goalDialog" class="modal" style="display: none;">
+    <div class="modal-overlay" onclick="closeGoalDialog()"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="goalModalTitle">Nova Meta</h3>
+            <button class="modal-close" onclick="closeGoalDialog()">&times;</button>
+        </div>
+        
+        <form id="goalForm" class="modal-body">
+            <input type="hidden" id="goalId">
+            
+            <!-- Barbeiro (opcional) -->
+            <div class="form-group">
+                <label for="barber_id">Barbeiro (opcional)</label>
+                <select id="barber_id" class="form-control">
+                    <option value="">Meta Geral da Barbearia</option>
+                    <!-- Options loaded dynamically -->
+                </select>
+            </div>
+            
+            <!-- Tipo de Meta -->
+            <div class="form-group">
+                <label for="goal_type">Tipo de Meta *</label>
+                <select id="goal_type" class="form-control" required>
+                    <option value="revenue">Faturamento (R$)</option>
+                    <option value="appointments">Número de Atendimentos</option>
+                    <option value="customer_satisfaction">Satisfação do Cliente (%)</option>
+                </select>
+            </div>
+            
+            <!-- Valor da Meta -->
+            <div class="form-group">
+                <label for="target_value" id="target_value_label">Valor da Meta (R$) *</label>
+                <input 
+                    type="number" 
+                    id="target_value" 
+                    class="form-control" 
+                    step="0.01" 
+                    min="0" 
+                    placeholder="5000.00" 
+                    required
+                >
+            </div>
+            
+            <!-- Período -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="period_start">Data Início *</label>
+                    <input 
+                        type="date" 
+                        id="period_start" 
+                        class="form-control" 
+                        required
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label for="period_end">Data Fim *</label>
+                    <input 
+                        type="date" 
+                        id="period_end" 
+                        class="form-control" 
+                        required
+                    >
+                </div>
+            </div>
+            
+            <!-- Error Alert -->
+            <div id="formError" class="alert alert-error" style="display: none;"></div>
+        </form>
+        
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="closeGoalDialog()">Cancelar</button>
+            <button type="submit" class="btn btn-primary" onclick="submitGoal()" id="submitBtn">
+                Criar Meta
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/goals.js' %}"></script>
+{% endblock %}
+

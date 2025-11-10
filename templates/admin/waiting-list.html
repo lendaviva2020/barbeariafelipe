@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Lista de Espera - Admin{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <div class="container">
+        <h1 class="page-title">⏳ Lista de Espera</h1>
+        
+        <div id="waitingList" class="waiting-list">
+            <!-- Loaded dynamically -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    const response = await fetchAPI('/api/waiting-list/');
+    const waitingList = await response.json();
+    
+    document.getElementById('waitingList').innerHTML = waitingList.map(item => `
+        <div class="waiting-card">
+            <h3>${item.customer_name}</h3>
+            <p>Prefere: ${item.preferred_date} às ${item.preferred_time}</p>
+            <p>Serviço: ${item.service_name}</p>
+            <button class="btn btn-primary btn-sm" onclick="notifyUser(${item.id})">
+                📲 Notificar
+            </button>
+        </div>
+    `).join('');
+});
+
+async function notifyUser(id) {
+    try {
+        await fetchAPI(`/api/waiting-list/${id}/notify/`, { method: 'POST' });
+        showToast('Sucesso', 'Cliente notificado', 'success');
+    } catch (error) {
+        showToast('Erro', 'Erro ao notificar', 'error');
+    }
+}
+
+window.notifyUser = notifyUser;
+</script>
+{% endblock %}
+

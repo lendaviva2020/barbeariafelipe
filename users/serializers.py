@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from core.validators import validate_brazilian_phone
+from core.validators import validate_phone
 
 from .models import User
 
@@ -10,7 +10,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ("id", "email", "name", "phone", "role", "is_active", "created_at")
         read_only_fields = ("id", "created_at")
-        extra_kwargs = {"phone": {"validators": [validate_brazilian_phone]}}
+        extra_kwargs = {"phone": {"validators": [validate_phone]}}
 
 
 class RegisterSerializer(serializers.ModelSerializer):

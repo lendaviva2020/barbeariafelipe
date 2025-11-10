@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Avaliações - Barbearia Francisco{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/reviews.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="reviews-page">
+    <div class="container">
+        <!-- Header -->
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">⭐ Avaliações</h1>
+                <p class="page-subtitle">Compartilhe sua experiência conosco</p>
+            </div>
+            <button class="btn btn-primary" onclick="openReviewDialog()" id="newReviewBtn">
+                ➕ Nova Avaliação
+            </button>
+        </div>
+
+        <!-- Rating Summary -->
+        <div class="rating-summary">
+            <div class="rating-overview">
+                <div class="rating-score">
+                    <span class="rating-number" id="avgRating">0.0</span>
+                    <div class="rating-stars" id="avgStars"></div>
+                    <p class="rating-count" id="totalReviews">0 avaliações</p>
+                </div>
+            </div>
+            
+            <div class="rating-distribution">
+                <div class="rating-bar-item">
+                    <span>5 ⭐</span>
+                    <div class="rating-bar"><div class="rating-fill" style="width: 80%"></div></div>
+                    <span class="rating-percent">80%</span>
+                </div>
+                <div class="rating-bar-item">
+                    <span>4 ⭐</span>
+                    <div class="rating-bar"><div class="rating-fill" style="width: 15%"></div></div>
+                    <span class="rating-percent">15%</span>
+                </div>
+                <div class="rating-bar-item">
+                    <span>3 ⭐</span>
+                    <div class="rating-bar"><div class="rating-fill" style="width: 3%"></div></div>
+                    <span class="rating-percent">3%</span>
+                </div>
+                <div class="rating-bar-item">
+                    <span>2 ⭐</span>
+                    <div class="rating-bar"><div class="rating-fill" style="width: 1%"></div></div>
+                    <span class="rating-percent">1%</span>
+                </div>
+                <div class="rating-bar-item">
+                    <span>1 ⭐</span>
+                    <div class="rating-bar"><div class="rating-fill" style="width: 1%"></div></div>
+                    <span class="rating-percent">1%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="tabs-bar">
+            <button class="tab-btn active" data-rating="all" onclick="setRatingFilter('all')">Todas</button>
+            <button class="tab-btn" data-rating="5" onclick="setRatingFilter(5)">5 ⭐</button>
+            <button class="tab-btn" data-rating="4" onclick="setRatingFilter(4)">4 ⭐</button>
+            <button class="tab-btn" data-rating="3" onclick="setRatingFilter(3)">3 ⭐</button>
+            <button class="tab-btn" data-rating="2" onclick="setRatingFilter(2)">2 ⭐</button>
+            <button class="tab-btn" data-rating="1" onclick="setRatingFilter(1)">1 ⭐</button>
+        </div>
+
+        <!-- Reviews List -->
+        <div id="reviewsList" class="reviews-list"></div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <span class="empty-icon">⭐</span>
+            <h3>Nenhuma avaliação encontrada</h3>
+            <p>Seja o primeiro a avaliar nosso serviço!</p>
+        </div>
+    </div>
+</div>
+
+<!-- Review Form Modal -->
+<div id="reviewDialog" class="modal" style="display: none;">
+    <div class="modal-overlay" onclick="closeReviewDialog()"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Nova Avaliação</h3>
+            <button class="modal-close" onclick="closeReviewDialog()">&times;</button>
+        </div>
+        <form class="modal-body">
+            <!-- Rating -->
+            <div class="form-group">
+                <label>Sua Avaliação *</label>
+                <div class="star-rating" id="starRating">
+                    <button type="button" class="star-btn" data-rating="1" onclick="setRating(1)">⭐</button>
+                    <button type="button" class="star-btn" data-rating="2" onclick="setRating(2)">⭐</button>
+                    <button type="button" class="star-btn" data-rating="3" onclick="setRating(3)">⭐</button>
+                    <button type="button" class="star-btn" data-rating="4" onclick="setRating(4)">⭐</button>
+                    <button type="button" class="star-btn" data-rating="5" onclick="setRating(5)">⭐</button>
+                </div>
+                <input type="hidden" id="rating" required>
+            </div>
+
+            <!-- Barber (opcional) -->
+            <div class="form-group">
+                <label>Barbeiro (opcional)</label>
+                <select id="barber_id" class="form-control">
+                    <option value="">Selecione um barbeiro</option>
+                </select>
+            </div>
+
+            <!-- Service (opcional) -->
+            <div class="form-group">
+                <label>Serviço (opcional)</label>
+                <select id="service_id" class="form-control">
+                    <option value="">Selecione um serviço</option>
+                </select>
+            </div>
+
+            <!-- Comment -->
+            <div class="form-group">
+                <label>Comentário *</label>
+                <textarea id="comment" class="form-control" rows="4" placeholder="Conte-nos sobre sua experiência..." required></textarea>
+            </div>
+        </form>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeReviewDialog()">Cancelar</button>
+            <button class="btn btn-primary" onclick="submitReview()">Enviar Avaliação</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/reviews.js' %}"></script>
+{% endblock %}
+

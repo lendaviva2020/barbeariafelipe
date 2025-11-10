@@ -3,113 +3,107 @@
 
 {% block title %}Galeria - Barbearia Francisco{% endblock %}
 
-{% block content %}
-<section class="gallery-section">
-    <div class="container">
-        <div class="section-header">
-            <h1>Nossa Galeria</h1>
-            <p>Confira alguns dos nossos melhores trabalhos</p>
-        </div>
-        
-        <div class="gallery-grid">
-            <div class="gallery-item">
-                <div class="gallery-placeholder">
-                    <p>Corte Social</p>
-                </div>
-            </div>
-            <div class="gallery-item">
-                <div class="gallery-placeholder">
-                    <p>Barba Completa</p>
-                </div>
-            </div>
-            <div class="gallery-item">
-                <div class="gallery-placeholder">
-                    <p>Corte + Barba</p>
-                </div>
-            </div>
-            <div class="gallery-item">
-                <div class="gallery-placeholder">
-                    <p>Degradê Moderno</p>
-                </div>
-            </div>
-            <div class="gallery-item">
-                <div class="gallery-placeholder">
-                    <p>Barba Desenhada</p>
-                </div>
-            </div>
-            <div class="gallery-item">
-                <div class="gallery-placeholder">
-                    <p>Combo Premium</p>
-                </div>
-            </div>
-        </div>
-        
-        <div class="gallery-cta">
-            <h2>Gostou do que viu?</h2>
-            <p>Agende agora e tenha o mesmo resultado!</p>
-            <a href="/agendar/" class="btn btn-primary btn-lg">Agendar Horário</a>
-        </div>
-    </div>
-</section>
-
-<style>
-.gallery-section {
-    padding: 4rem 0;
-}
-
-.gallery-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-    margin-bottom: 4rem;
-}
-
-.gallery-item {
-    aspect-ratio: 1;
-    border-radius: 0.75rem;
-    overflow: hidden;
-    box-shadow: var(--shadow);
-    transition: transform 0.3s;
-}
-
-.gallery-item:hover {
-    transform: translateY(-10px);
-}
-
-.gallery-placeholder {
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 1.5rem;
-    font-weight: 700;
-}
-
-.gallery-cta {
-    text-align: center;
-    padding: 3rem;
-    background: var(--background);
-    border-radius: 1rem;
-}
-
-.gallery-cta h2 {
-    font-size: 2rem;
-    margin-bottom: 1rem;
-}
-
-.gallery-cta p {
-    color: var(--text-muted);
-    margin-bottom: 2rem;
-}
-
-@media (max-width: 768px) {
-    .gallery-grid {
-        grid-template-columns: 1fr;
-    }
-}
-</style>
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/gallery.css' %}">
 {% endblock %}
 
+{% block content %}
+<div class="min-h-screen py-8">
+    <!-- Header -->
+    <div class="container mx-auto px-4 mb-12">
+        <div class="text-center animate-slide-down">
+            <p class="section-subtitle">Portfólio</p>
+            <h1 class="section-title">Nossos Trabalhos</h1>
+            <p class="section-description">
+                Cada corte é uma obra de arte. Confira nosso portfólio de transformações.
+            </p>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="container mx-auto px-4 mb-8">
+        <div class="filter-buttons animate-slide-up" id="filterButtons">
+            <button class="filter-btn active" data-category="all">Todos</button>
+            <button class="filter-btn" data-category="cortes">Cortes</button>
+            <button class="filter-btn" data-category="barbas">Barbas</button>
+            <button class="filter-btn" data-category="antes-depois">Antes/Depois</button>
+            <button class="filter-btn" data-category="ambiente">Ambiente</button>
+        </div>
+        
+        <!-- Counter -->
+        <div class="text-center mt-4">
+            <p class="text-sm text-muted" id="imageCounter">
+                Carregando imagens...
+            </p>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loadingState" class="container mx-auto px-4">
+        <div class="gallery-loading">
+            <div class="loading-spinner"></div>
+            <p>Carregando galeria...</p>
+        </div>
+    </div>
+
+    <!-- Gallery Grid (Masonry) -->
+    <div class="container mx-auto px-4 mb-16" id="galleryContainer" style="display: none;">
+        <div class="gallery-masonry" id="galleryGrid">
+            <!-- Images loaded dynamically -->
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="container mx-auto px-4" style="display: none;">
+        <div class="empty-gallery">
+            <span class="empty-icon">🖼️</span>
+            <h3>Nenhuma imagem encontrada</h3>
+            <p id="emptyMessage">Nenhuma imagem na categoria selecionada.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Lightbox Modal -->
+<div id="lightbox" class="lightbox" style="display: none;">
+    <button class="lightbox-close" onclick="closeLightbox()" aria-label="Fechar">
+        <span>&times;</span>
+    </button>
+    
+    <button class="lightbox-nav lightbox-prev" onclick="previousImage()" aria-label="Anterior">
+        <span>‹</span>
+    </button>
+    
+    <button class="lightbox-nav lightbox-next" onclick="nextImage()" aria-label="Próximo">
+        <span>›</span>
+    </button>
+    
+    <div class="lightbox-container">
+        <div class="lightbox-image-wrapper">
+            <div class="lightbox-loading">
+                <div class="loading-spinner"></div>
+            </div>
+            <img id="lightboxImage" src="" alt="" class="lightbox-image">
+        </div>
+        
+        <div class="lightbox-info">
+            <h3 id="lightboxTitle" class="lightbox-title"></h3>
+            <span id="lightboxCategory" class="lightbox-category"></span>
+            
+            <div class="lightbox-actions">
+                <button class="lightbox-btn" onclick="shareImage()">
+                    <span>🔗</span> Compartilhar
+                </button>
+                <button class="lightbox-btn" onclick="downloadImage()">
+                    <span>⬇️</span> Baixar
+                </button>
+            </div>
+            
+            <p class="lightbox-counter" id="lightboxCounter">1 de 1</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/gallery.js' %}"></script>
+{% endblock %}

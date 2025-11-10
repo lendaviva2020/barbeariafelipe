@@ -1,37 +1,61 @@
+# Core Django
 Django==5.1
+
+# Django REST Framework
 djangorestframework==3.15.2
 djangorestframework-simplejwt==5.3.1
-python-decouple==3.8
-whitenoise==6.7.0
-gunicorn==23.0.0
-requests==2.32.3
-django-cors-headers==4.4.0
 
 # Database
-dj-database-url==2.1.0
-# psycopg2-binary==2.9.9  # Instalar em produção com PostgreSQL
+dj-database-url==1.5.0
+psycopg2-binary==2.9.9
 
 # Cache
 django-redis==5.4.0
 redis==5.0.1
 
-# Security & Rate Limiting
-django-ratelimit==4.1.0
-
 # API Documentation
 drf-spectacular==0.27.0
 
-# Development Tools
-django-debug-toolbar==4.2.0
+# Security & Config
+python-decouple==3.8
+django-cors-headers==4.4.0
+django-ratelimit==4.1.0
+
+# Static Files
+whitenoise==6.7.0
+
+# Server
+gunicorn==23.0.0
+
+# HTTP Requests
+requests==2.32.3
 
 # Testing
-pytest==8.4.2
-pytest-django==4.11.1
-pytest-cov==7.0.0
+pytest==8.0.0
+pytest-django==4.8.0
+pytest-cov==4.1.0
+coverage==7.4.0
+factory-boy==3.3.0
 
 # Code Quality
-flake8==7.3.0
-black==25.9.0
-isort==7.0.0
-autoflake==2.3.1
-radon==6.0.1
+black==24.1.0
+flake8==7.0.0
+isort==5.13.2
+mypy==1.8.0
+django-stubs==4.2.7
+
+# Error Tracking
+sentry-sdk==1.40.0
+
+# Image Processing
+pillow==10.2.0
+
+# Reports
+reportlab==4.0.9
+openpyxl==3.1.2
+
+# Task Queue (optional)
+celery==5.3.6
+
+# Development Tools
+django-debug-toolbar==4.3.0

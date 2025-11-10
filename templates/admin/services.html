@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gerenciar Serviços - Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/admin-services.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Gerenciar Serviços</h1>
+                <p class="page-subtitle">Catálogo de serviços oferecidos</p>
+            </div>
+            <button class="btn btn-primary" onclick="openServiceDialog()">➕ Novo Serviço</button>
+        </div>
+
+        <!-- Search and Filters -->
+        <div class="filters-bar">
+            <input type="text" id="searchInput" class="search-input" placeholder="Buscar serviços...">
+            <select id="categoryFilter" class="form-control" onchange="filterServices()">
+                <option value="all">Todas Categorias</option>
+                <option value="haircut">Cortes</option>
+                <option value="beard">Barbas</option>
+                <option value="combo">Combos</option>
+                <option value="treatment">Tratamentos</option>
+            </select>
+        </div>
+
+        <!-- Services Grid -->
+        <div id="servicesGrid" class="services-grid"></div>
+    </div>
+</div>
+
+<!-- Service Form Modal -->
+<div id="serviceDialog" class="modal" style="display: none;">
+    <div class="modal-overlay" onclick="closeServiceDialog()"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="serviceModalTitle">Novo Serviço</h3>
+            <button class="modal-close" onclick="closeServiceDialog()">&times;</button>
+        </div>
+        <form class="modal-body">
+            <input type="hidden" id="serviceId">
+            <div class="form-group">
+                <label>Nome do Serviço *</label>
+                <input type="text" id="serviceName" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>Descrição</label>
+                <textarea id="serviceDescription" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Preço (R$) *</label>
+                    <input type="number" id="servicePrice" class="form-control" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>Duração (min) *</label>
+                    <input type="number" id="serviceDuration" class="form-control" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Categoria *</label>
+                <select id="serviceCategory" class="form-control" required>
+                    <option value="haircut">Corte</option>
+                    <option value="beard">Barba</option>
+                    <option value="combo">Combo</option>
+                    <option value="treatment">Tratamento</option>
+                </select>
+            </div>
+            <div class="form-checkbox">
+                <label>
+                    <input type="checkbox" id="serviceActive" checked>
+                    <span>Serviço Ativo</span>
+                </label>
+            </div>
+        </form>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeServiceDialog()">Cancelar</button>
+            <button class="btn btn-primary" onclick="submitService()">Salvar</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/admin-services.js' %}"></script>
+{% endblock %}
+

@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Promoções Automáticas - Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/admin-promotions.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">⚡ Promoções Automáticas</h1>
+                <p class="page-subtitle">Configure promoções que se aplicam automaticamente</p>
+            </div>
+            <button class="btn btn-primary" onclick="openPromotionDialog()">➕ Nova Promoção</button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs-bar">
+            <button class="tab-btn active" data-filter="active" onclick="setFilter('active')">
+                ✅ Ativas (<span id="countActive">0</span>)
+            </button>
+            <button class="tab-btn" data-filter="inactive" onclick="setFilter('inactive')">
+                ⏸️ Inativas (<span id="countInactive">0</span>)
+            </button>
+            <button class="tab-btn" data-filter="expired" onclick="setFilter('expired')">
+                ⏱️ Expiradas (<span id="countExpired">0</span>)
+            </button>
+        </div>
+
+        <!-- Promotions Grid -->
+        <div id="promotionsGrid" class="promotions-grid"></div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <span class="empty-icon">⚡</span>
+            <h3>Nenhuma promoção encontrada</h3>
+            <p>Crie sua primeira promoção automática</p>
+        </div>
+    </div>
+</div>
+
+<!-- Promotion Form Modal -->
+<div id="promotionDialog" class="modal" style="display: none;">
+    <div class="modal-overlay" onclick="closePromotionDialog()"></div>
+    <div class="modal-content modal-lg">
+        <div class="modal-header">
+            <h3 id="promotionModalTitle">Nova Promoção</h3>
+            <button class="modal-close" onclick="closePromotionDialog()">&times;</button>
+        </div>
+        
+        <form class="modal-body">
+            <input type="hidden" id="promotionId">
+            
+            <!-- Nome e Descrição -->
+            <div class="form-group">
+                <label>Nome da Promoção *</label>
+                <input type="text" id="name" class="form-control" required placeholder="Ex: Happy Hour Matinal">
+            </div>
+            
+            <div class="form-group">
+                <label>Descrição</label>
+                <textarea id="description" class="form-control" rows="2" placeholder="Descreva a promoção..."></textarea>
+            </div>
+            
+            <!-- Tipo de Promoção -->
+            <div class="form-group">
+                <label>Tipo de Promoção *</label>
+                <select id="promotion_type" class="form-control" required onchange="updateConditionsHelp()">
+                    <option value="happy_hour">⏰ Happy Hour (horário específico)</option>
+                    <option value="first_visit">🎁 Primeira Visita</option>
+                    <option value="birthday">🎂 Aniversário</option>
+                    <option value="bulk_discount">👥 Desconto em Massa</option>
+                    <option value="loyalty_bonus">⭐ Bônus Fidelidade</option>
+                    <option value="seasonal">🌟 Sazonal</option>
+                </select>
+            </div>
+            
+            <!-- Desconto -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Tipo de Desconto *</label>
+                    <select id="discount_type" class="form-control" required onchange="updateDiscountLabel()">
+                        <option value="percentage">Percentual (%)</option>
+                        <option value="fixed">Valor Fixo (R$)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label id="discountLabel">Valor do Desconto (%) *</label>
+                    <input type="number" id="discount_value" class="form-control" step="0.01" min="0" required>
+                </div>
+            </div>
+            
+            <!-- Condições (JSON) -->
+            <div class="form-group">
+                <label>Condições (JSON)</label>
+                <p class="form-help" id="conditionsHelp">Ex: {"days_of_week": [1, 3, 5], "time_start": "08:00", "time_end": "12:00"}</p>
+                <textarea id="conditions" class="form-control code-editor" rows="4" placeholder='{"days_of_week": [], "time_start": "", "time_end": ""}'></textarea>
+            </div>
+            
+            <!-- Período -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Data Início</label>
+                    <input type="date" id="start_date" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label>Data Fim</label>
+                    <input type="date" id="end_date" class="form-control">
+                </div>
+            </div>
+            
+            <!-- Ativo -->
+            <div class="form-checkbox">
+                <label>
+                    <input type="checkbox" id="active" checked>
+                    <span>
+                        <strong>Promoção Ativa</strong>
+                        <small>Aplicada automaticamente aos agendamentos elegíveis</small>
+                    </span>
+                </label>
+            </div>
+        </form>
+        
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closePromotionDialog()">Cancelar</button>
+            <button class="btn btn-primary" onclick="submitPromotion()">Salvar Promoção</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/admin-promotions.js' %}"></script>
+{% endblock %}
+

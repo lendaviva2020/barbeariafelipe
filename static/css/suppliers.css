@@ -1,0 +1,52 @@
+/* Suppliers Page */
+
+.suppliers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
+
+.supplier-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.supplier-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.supplier-card h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.supplier-company {
+    color: var(--muted-foreground);
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+}
+
+.supplier-contacts {
+    text-align: left;
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: var(--muted);
+    border-radius: 0.5rem;
+}
+
+.supplier-contacts p {
+    margin-bottom: 0.5rem;
+}
+
+.supplier-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+}
+

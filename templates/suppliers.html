@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Fornecedores - Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/suppliers.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">🏢 Fornecedores</h1>
+                <p class="page-subtitle">Gerencie seus fornecedores de produtos</p>
+            </div>
+            <button class="btn btn-primary" onclick="openSupplierDialog()">➕ Novo Fornecedor</button>
+        </div>
+
+        <!-- Suppliers Grid -->
+        <div id="suppliersGrid" class="suppliers-grid"></div>
+    </div>
+</div>
+
+<!-- Supplier Form Modal -->
+<div id="supplierDialog" class="modal" style="display: none;">
+    <div class="modal-overlay" onclick="closeSupplierDialog()"></div>
+    <div class="modal-content modal-lg">
+        <div class="modal-header">
+            <h3>Novo Fornecedor</h3>
+            <button class="modal-close" onclick="closeSupplierDialog()">&times;</button>
+        </div>
+        <form class="modal-body">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nome *</label>
+                    <input type="text" id="supplierName" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Empresa</label>
+                    <input type="text" id="supplierCompany" class="form-control">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>CNPJ</label>
+                <input type="text" id="supplierCnpj" class="form-control">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Telefone *</label>
+                    <input type="tel" id="supplierPhone" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" id="supplierEmail" class="form-control" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Endereço</label>
+                <textarea id="supplierAddress" class="form-control" rows="2"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Termos de Pagamento</label>
+                <input type="text" id="supplierPaymentTerms" class="form-control" placeholder="Ex: 30 dias">
+            </div>
+        </form>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeSupplierDialog()">Cancelar</button>
+            <button class="btn btn-primary" onclick="submitSupplier()">Salvar</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/suppliers.js' %}"></script>
+{% endblock %}
+

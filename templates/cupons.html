@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Cupons Disponíveis - Barbearia Francisco{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/coupons-public.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="coupons-page">
+    <div class="container">
+        <!-- Hero Section -->
+        <div class="hero-section">
+            <div class="hero-icon">🎟️</div>
+            <h1 class="hero-title">Cupons e Ofertas Especiais</h1>
+            <p class="hero-subtitle">Aproveite nossos descontos exclusivos para economizar no seu próximo corte!</p>
+        </div>
+
+        <!-- Active Coupons Grid -->
+        <div class="section-header">
+            <h2>✅ Cupons Ativos</h2>
+            <span class="coupon-count" id="activeCount">0 disponíveis</span>
+        </div>
+        
+        <div id="activeCoupons" class="coupons-grid">
+            <!-- Loading State -->
+            <div class="loading-state">
+                <div class="loader"></div>
+                <p>Carregando cupons...</p>
+            </div>
+        </div>
+
+        <!-- Expired Coupons (Collapsed) -->
+        <div class="section-header mt-5">
+            <h2>⏱️ Cupons Expirados</h2>
+            <button class="btn-toggle" onclick="toggleExpired()">Mostrar</button>
+        </div>
+        
+        <div id="expiredCoupons" class="coupons-grid" style="display: none;">
+            <!-- Will be populated by JS -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <span class="empty-icon">🎫</span>
+            <h3>Nenhum cupom disponível no momento</h3>
+            <p>Fique de olho! Novos cupons são adicionados regularmente</p>
+        </div>
+
+        <!-- How to Use -->
+        <div class="info-card">
+            <h3>📋 Como usar os cupons?</h3>
+            <ol>
+                <li>Clique em "Copiar Código" no cupom desejado</li>
+                <li>Faça seu agendamento normalmente</li>
+                <li>Cole o código no campo de cupom durante o checkout</li>
+                <li>Confirme e aproveite seu desconto!</li>
+            </ol>
+        </div>
+    </div>
+</div>
+
+<!-- Copy Success Toast (simple) -->
+<div id="copyToast" class="toast-notification" style="display: none;">
+    ✅ Código copiado! Cole no checkout.
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/coupons-public.js' %}"></script>
+{% endblock %}
+

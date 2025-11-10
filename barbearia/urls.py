@@ -31,6 +31,8 @@ urlpatterns = [
     path("api/agendamentos/", include("agendamentos.urls")),
     path("api/servicos/", include("servicos.urls")),
     path("api/barbeiros/", include("barbeiros.urls")),
+    path("api/cupons/", include("cupons.urls")),
+    path("api/", include("core.urls")),
     path("api/admin/", include("admin_painel.urls")),
     # Views HTML
     path("", TemplateView.as_view(template_name="home.html"), name="home"),
@@ -56,6 +58,11 @@ urlpatterns = [
         "historico/",
         TemplateView.as_view(template_name="historico.html"),
         name="historico",
+    ),
+    path(
+        "goals/",
+        TemplateView.as_view(template_name="goals.html"),
+        name="goals",
     ),
     path(
         "admin-painel/",

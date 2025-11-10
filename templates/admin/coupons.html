@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gerenciar Cupons - Admin - Barbearia Francisco{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/admin-coupons.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen py-8">
+    <div class="container mx-auto px-4 max-w-6xl">
+        <!-- Header -->
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Cupons de Desconto</h1>
+                <p class="page-subtitle">Gerencie os cupons promocionais da sua barbearia</p>
+            </div>
+            
+            <button class="btn btn-primary" onclick="openCouponDialog()">
+                ➕ Novo Cupom
+            </button>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="loading-coupons">
+            <div class="skeleton-coupon"></div>
+            <div class="skeleton-coupon"></div>
+            <div class="skeleton-coupon"></div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <span class="empty-icon">🎫</span>
+            <h3>Nenhum cupom cadastrado</h3>
+            <p>Crie seu primeiro cupom de desconto para começar</p>
+        </div>
+
+        <!-- Coupons List -->
+        <div id="couponsList" class="coupons-list"></div>
+    </div>
+</div>
+
+<!-- Coupon Form Modal -->
+<div id="couponDialog" class="modal" style="display: none;">
+    <div class="modal-overlay" onclick="closeCouponDialog()"></div>
+    <div class="modal-content modal-md">
+        <div class="modal-header">
+            <h3 id="couponModalTitle">Novo Cupom</h3>
+            <button class="modal-close" onclick="closeCouponDialog()">&times;</button>
+        </div>
+        
+        <form id="couponForm" class="modal-body">
+            <input type="hidden" id="couponId">
+            
+            <!-- Código -->
+            <div class="form-group">
+                <label for="code">Código do Cupom *</label>
+                <input 
+                    type="text" 
+                    id="code" 
+                    class="form-control" 
+                    placeholder="EXEMPLO20" 
+                    maxlength="20"
+                    style="text-transform: uppercase;"
+                    required
+                >
+                <p class="form-help">Apenas letras maiúsculas e números. Máx: 20 caracteres</p>
+            </div>
+            
+            <!-- Tipo e Valor -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="discount_type">Tipo de Desconto *</label>
+                    <select id="discount_type" class="form-control" required>
+                        <option value="percentage">Percentual (%)</option>
+                        <option value="fixed">Valor Fixo (R$)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="discount" id="discountLabel">Desconto (%) *</label>
+                    <input 
+                        type="number" 
+                        id="discount" 
+                        class="form-control" 
+                        step="1" 
+                        min="0"
+                        placeholder="10"
+                        required
+                    >
+                </div>
+            </div>
+            
+            <!-- Descrição -->
+            <div class="form-group">
+                <label for="description">Descrição</label>
+                <input 
+                    type="text" 
+                    id="description" 
+                    class="form-control" 
+                    placeholder="Descreva o propósito deste cupom"
+                    maxlength="100"
+                >
+            </div>
+            
+            <!-- Data de Expiração -->
+            <div class="form-group">
+                <label for="expiry_date">Data de Expiração</label>
+                <input 
+                    type="date" 
+                    id="expiry_date" 
+                    class="form-control"
+                >
+            </div>
+            
+            <!-- Usos Máximos -->
+            <div class="form-group">
+                <label for="max_uses">Usos Máximos</label>
+                <input 
+                    type="number" 
+                    id="max_uses" 
+                    class="form-control" 
+                    min="0"
+                    placeholder="0 para ilimitado"
+                >
+            </div>
+            
+            <!-- Ativo -->
+            <div class="form-group form-checkbox">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="active" checked>
+                    <span class="checkbox-text">
+                        <strong>Cupom Ativo</strong>
+                        <small>Cupom disponível para uso pelos clientes</small>
+                    </span>
+                </label>
+            </div>
+        </form>
+        
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="closeCouponDialog()">Cancelar</button>
+            <button type="submit" class="btn btn-primary" onclick="submitCoupon()" id="submitBtn">
+                ➕ Criar Cupom
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/admin-coupons.js' %}"></script>
+{% endblock %}
+

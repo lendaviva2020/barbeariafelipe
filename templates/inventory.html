@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Inventário - Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/inventory.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">📦 Inventário de Produtos</h1>
+                <p class="page-subtitle">Controle de estoque e produtos</p>
+            </div>
+            <button class="btn btn-primary" onclick="openProductDialog()">➕ Novo Produto</button>
+        </div>
+
+        <!-- Low Stock Alert -->
+        <div id="lowStockAlert" class="alert alert-warning" style="display: none;">
+            ⚠️ <strong id="lowStockCount">0</strong> produtos com estoque baixo!
+        </div>
+
+        <!-- Categories Filter -->
+        <div class="tabs-bar">
+            <button class="tab-btn active" data-category="all" onclick="setCategory('all')">Todos</button>
+            <button class="tab-btn" data-category="hair_care" onclick="setCategory('hair_care')">Cuidados Capilares</button>
+            <button class="tab-btn" data-category="beard_care" onclick="setCategory('beard_care')">Barba</button>
+            <button class="tab-btn" data-category="styling" onclick="setCategory('styling')">Styling</button>
+            <button class="tab-btn" data-category="tools" onclick="setCategory('tools')">Ferramentas</button>
+        </div>
+
+        <!-- Products Grid -->
+        <div id="productsGrid" class="products-grid"></div>
+    </div>
+</div>
+
+<!-- Product Form Modal -->
+<div id="productDialog" class="modal" style="display: none;">
+    <div class="modal-overlay" onclick="closeProductDialog()"></div>
+    <div class="modal-content modal-lg">
+        <div class="modal-header">
+            <h3 id="productModalTitle">Novo Produto</h3>
+            <button class="modal-close" onclick="closeProductDialog()">&times;</button>
+        </div>
+        <form class="modal-body">
+            <input type="hidden" id="productId">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nome do Produto *</label>
+                    <input type="text" id="productName" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>SKU *</label>
+                    <input type="text" id="productSku" class="form-control" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Categoria *</label>
+                <select id="productCategory" class="form-control">
+                    <option value="hair_care">Cuidados Capilares</option>
+                    <option value="beard_care">Cuidados com Barba</option>
+                    <option value="styling">Styling</option>
+                    <option value="tools">Ferramentas</option>
+                    <option value="other">Outros</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Descrição</label>
+                <textarea id="productDescription" class="form-control" rows="2"></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Marca</label>
+                    <input type="text" id="productBrand" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Preço Custo (R$) *</label>
+                    <input type="number" id="productCost" class="form-control" step="0.01" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Preço Venda (R$) *</label>
+                    <input type="number" id="productPrice" class="form-control" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>Estoque *</label>
+                    <input type="number" id="productStock" class="form-control" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Estoque Mínimo *</label>
+                <input type="number" id="productMinStock" class="form-control" value="5" required>
+            </div>
+            <div class="form-checkbox">
+                <label>
+                    <input type="checkbox" id="productActive" checked>
+                    <span>Produto Ativo</span>
+                </label>
+            </div>
+        </form>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeProductDialog()">Cancelar</button>
+            <button class="btn btn-primary" onclick="submitProduct()">Salvar</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/inventory.js' %}"></script>
+{% endblock %}
+

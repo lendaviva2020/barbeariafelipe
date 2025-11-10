@@ -1,0 +1,27 @@
+/* Recurring Appointments */
+
+.recurring-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.recurring-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.recurring-card h3 {
+    font-size: 1.125rem;
+    margin-bottom: 0.5rem;
+}
+
+.recurring-card p {
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+}
+

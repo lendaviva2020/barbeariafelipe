@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Comissões - Barbearia Francisco{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/commissions.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="commissions-page">
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">💰 Comissões</h1>
+            <p class="page-subtitle">Acompanhe suas comissões mensais</p>
+        </div>
+
+        <!-- Month Selector -->
+        <div class="month-selector">
+            <button class="month-nav-btn" onclick="previousMonth()">‹</button>
+            <select id="monthSelect" class="form-control" onchange="loadCommissions()">
+                <!-- Loaded dynamically -->
+            </select>
+            <select id="yearSelect" class="form-control" onchange="loadCommissions()">
+                <!-- Loaded dynamically -->
+            </select>
+            <button class="month-nav-btn" onclick="nextMonth()">›</button>
+        </div>
+
+        <!-- Summary Card -->
+        <div class="commission-summary">
+            <div class="summary-item">
+                <span class="summary-label">Total de Atendimentos</span>
+                <span class="summary-value" id="totalServices">0</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Faturamento Total</span>
+                <span class="summary-value" id="totalRevenue">R$ 0,00</span>
+            </div>
+            <div class="summary-item highlight">
+                <span class="summary-label">Sua Comissão (50%)</span>
+                <span class="summary-value" id="commissionAmount">R$ 0,00</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Status</span>
+                <span class="summary-value" id="paymentStatus">Pendente</span>
+            </div>
+        </div>
+
+        <!-- Commissions List -->
+        <div id="commissionsList" class="commissions-list"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/commissions.js' %}"></script>
+{% endblock %}
+

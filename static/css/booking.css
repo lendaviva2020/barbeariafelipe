@@ -1,371 +1,632 @@
-/* Booking Styles */
+/**
+ * BOOKING SYSTEM STYLES
+ * Extraído de BookingOptimized.tsx - Design exato do React
+ */
 
-.booking-section {
-    padding: 3rem 0;
-    min-height: 80vh;
-}
-
-.booking-header {
-    text-align: center;
-    margin-bottom: 3rem;
-}
-
-.booking-header h1 {
-    font-size: 2.5rem;
-    margin-bottom: 0.5rem;
-}
-
-.booking-header p {
-    color: var(--text-muted);
+/* ========== BOOKING CONTAINER ========== */
+.booking-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
 }
 
 /* Progress Bar */
-.progress-container {
-    max-width: 800px;
-    margin: 0 auto 3rem;
+.booking-progress-wrapper {
+    margin-bottom: 3rem;
 }
 
-.progress-steps {
+.booking-progress-bar {
+    width: 100%;
+    height: 4px;
+    background: var(--color-brown-medium);
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.booking-progress-fill {
+    height: 100%;
+    background: var(--gradient-gold);
+    transition: width 0.5s ease;
+    width: 25%; /* Initial: Step 1 of 4 */
+}
+
+/* Step Indicators */
+.booking-steps-indicators {
     display: flex;
     justify-content: space-between;
-    position: relative;
+    margin-bottom: 3rem;
 }
 
-.progress-step {
+.step-indicator {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 0.5rem;
     flex: 1;
+    position: relative;
+}
+
+.step-indicator::after {
+    content: '';
+    position: absolute;
+    top: 1.5rem;
+    left: 50%;
+    width: 100%;
+    height: 2px;
+    background: var(--color-brown-medium);
+    z-index: -1;
+}
+
+.step-indicator:last-child::after {
+    display: none;
 }
 
 .step-number {
     width: 3rem;
     height: 3rem;
     border-radius: 50%;
-    background: var(--border);
-    color: var(--text-muted);
+    background: var(--color-brown-medium);
+    color: var(--color-cream);
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
     font-size: 1.25rem;
+    transition: var(--transition-smooth);
 }
 
-.progress-step.active .step-number {
-    background: var(--primary);
-    color: white;
+.step-indicator.active .step-number {
+    background: var(--gradient-gold);
+    color: var(--color-brown-darker);
+    box-shadow: var(--shadow-gold);
+    transform: scale(1.1);
 }
 
-.progress-step.completed .step-number {
-    background: var(--success);
-    color: white;
+.step-indicator.completed .step-number {
+    background: var(--color-gold);
+    color: var(--color-brown-darker);
 }
 
-.progress-step span {
+.step-label {
     font-size: 0.875rem;
-    color: var(--text-muted);
+    color: var(--color-brown-light);
+    font-weight: 500;
+    text-align: center;
 }
 
-/* Booking Form */
-.booking-form {
-    max-width: 800px;
-    margin: 0 auto;
-    background: white;
-    padding: 2rem;
-    border-radius: 1rem;
-    box-shadow: var(--shadow);
+.step-indicator.active .step-label {
+    color: var(--color-gold);
+    font-weight: 600;
 }
 
-.booking-step h2 {
-    font-size: 1.75rem;
-    margin-bottom: 2rem;
-    color: var(--primary);
+/* ========== BOOKING STEPS ========== */
+.booking-step {
+    display: none;
 }
 
-/* Services Grid */
-.services-grid {
+.booking-step.active {
+    display: block;
+    animation: slide-up 0.6s ease-out;
+}
+
+.step-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.step-header h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: var(--color-gold);
+}
+
+.step-header p {
+    font-size: 1.125rem;
+    color: var(--color-brown-light);
+}
+
+/* ========== STEP 1: SERVICE & BARBER ========== */
+.services-grid,
+.barbers-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 1.5rem;
+    margin-bottom: 2rem;
 }
 
-.service-card {
+.service-card,
+.barber-card {
+    position: relative;
+    background: var(--color-card);
+    border: 2px solid hsl(var(--border));
+    border-radius: var(--radius);
     padding: 1.5rem;
-    border: 2px solid var(--border);
-    border-radius: 0.75rem;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: var(--transition-smooth);
+    text-align: center;
 }
 
-.service-card:hover {
-    border-color: var(--primary);
-    transform: translateY(-5px);
-    box-shadow: var(--shadow);
+.service-card:hover,
+.barber-card:hover {
+    transform: translateY(-4px);
+    border-color: hsla(43, 38%, 59%, 0.5);
+    box-shadow: var(--shadow-glow);
 }
 
-.service-card.selected {
-    border-color: var(--primary);
-    background: rgba(139, 115, 85, 0.05);
+.service-card.selected,
+.barber-card.selected {
+    border-color: var(--color-gold);
+    background: hsla(43, 38%, 59%, 0.05);
+    box-shadow: var(--shadow-gold);
 }
 
-.service-card h3 {
-    margin-bottom: 0.5rem;
-    color: var(--text);
-}
-
-.service-card p {
-    color: var(--text-muted);
-    font-size: 0.875rem;
+.service-icon {
+    font-size: 3rem;
     margin-bottom: 1rem;
 }
 
-.service-info {
+.service-name,
+.barber-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    font-family: 'Playfair Display', serif;
+}
+
+.service-description {
+    font-size: 0.875rem;
+    color: var(--color-brown-light);
+    margin-bottom: 1rem;
+    min-height: 3rem;
+}
+
+.service-details {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid hsla(20, 29%, 29%, 0.5);
 }
 
 .service-price {
     font-size: 1.5rem;
     font-weight: 700;
-    color: var(--primary);
+    color: var(--color-gold);
 }
 
 .service-duration {
     font-size: 0.875rem;
-    color: var(--text-muted);
+    color: var(--color-brown-light);
+    background: hsla(43, 38%, 59%, 0.1);
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
 }
 
-/* Form Groups */
-.form-group {
+.barber-avatar {
+    width: 6rem;
+    height: 6rem;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    background: hsla(43, 38%, 59%, 0.1);
+    border: 4px solid hsla(43, 38%, 59%, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    color: var(--color-gold);
+    transition: var(--transition-smooth);
+}
+
+.barber-card:hover .barber-avatar {
+    transform: scale(1.1);
+    border-color: var(--color-gold);
+}
+
+.barber-specialty {
+    font-size: 0.875rem;
+    color: var(--color-brown-light);
+    margin-top: 0.5rem;
+}
+
+.selected-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: var(--color-gold);
+    color: var(--color-brown-darker);
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+/* ========== STEP 2: DATE & TIME ========== */
+.date-time-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+}
+
+.date-picker-section,
+.time-picker-section {
+    background: var(--color-card);
+    border: 2px solid hsl(var(--border));
+    border-radius: var(--radius);
+    padding: 2rem;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    font-family: 'Playfair Display', serif;
+    color: var(--color-gold);
+}
+
+.quick-dates {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
     margin-bottom: 1.5rem;
 }
 
-.form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 600;
-    color: var(--text);
+.date-input-wrapper {
+    position: relative;
 }
 
-.form-group input,
-.form-group select,
-.form-group textarea {
+.date-input-wrapper input[type="date"] {
     width: 100%;
-    padding: 0.75rem;
-    border: 1px solid var(--border);
+    padding: 0.75rem 1rem;
+    background: var(--color-brown-dark);
+    border: 1px solid hsla(20, 29%, 29%, 1);
     border-radius: 0.5rem;
+    color: var(--color-cream);
     font-size: 1rem;
+    transition: var(--transition-smooth);
 }
 
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
+.date-input-wrapper input[type="date"]:focus {
     outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(139, 115, 85, 0.1);
+    border-color: var(--color-gold);
+    box-shadow: 0 0 0 3px hsla(43, 38%, 59%, 0.1);
 }
 
-/* Time Slots */
-.time-slots {
+.time-slots-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     gap: 0.75rem;
 }
 
 .time-slot {
-    padding: 0.75rem;
-    border: 1px solid var(--border);
+    padding: 0.75rem 1rem;
+    background: var(--color-brown-dark);
+    border: 2px solid hsla(20, 29%, 29%, 1);
     border-radius: 0.5rem;
-    background: white;
-    cursor: pointer;
-    text-align: center;
+    color: var(--color-cream);
     font-weight: 600;
-    transition: all 0.3s;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
 }
 
 .time-slot:hover:not(.disabled) {
-    border-color: var(--primary);
-    background: rgba(139, 115, 85, 0.05);
+    border-color: var(--color-gold);
+    background: hsla(43, 38%, 59%, 0.1);
+    transform: translateY(-2px);
 }
 
 .time-slot.selected {
-    background: var(--primary);
-    color: white;
-    border-color: var(--primary);
+    background: var(--color-gold);
+    color: var(--color-brown-darker);
+    border-color: var(--color-gold);
+    box-shadow: var(--shadow-gold);
 }
 
 .time-slot.disabled {
-    background: #f3f4f6;
-    color: #9ca3af;
+    opacity: 0.3;
     cursor: not-allowed;
-    opacity: 0.5;
+    background: var(--color-brown-medium);
 }
 
-/* Booking Summary */
-.booking-summary {
-    background: rgba(139, 115, 85, 0.05);
-    padding: 2rem;
-    border-radius: 0.75rem;
+/* ========== STEP 3: CUSTOMER INFO ========== */
+.customer-info-form {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
     margin-bottom: 2rem;
+}
+
+.form-grid-full {
+    grid-column: 1 / -1;
+}
+
+.coupon-section {
+    background: hsla(43, 38%, 59%, 0.05);
+    border: 2px dashed hsla(43, 38%, 59%, 0.3);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-top: 2rem;
+}
+
+.coupon-input-group {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.coupon-input-group input {
+    flex: 1;
+    text-transform: uppercase;
+}
+
+.applied-coupon {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    background: hsla(142, 76%, 36%, 0.1);
+    border: 1px solid hsla(142, 76%, 36%, 0.3);
+    border-radius: 0.5rem;
+    margin-top: 1rem;
+}
+
+.applied-coupon .discount-info {
+    color: hsl(142, 76%, 36%);
+    font-weight: 600;
+}
+
+.remove-coupon-btn {
+    background: none;
+    border: none;
+    color: hsl(0, 84%, 60%);
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* ========== STEP 4: PAYMENT & SUMMARY ========== */
+.payment-summary-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+}
+
+.payment-methods-section,
+.booking-summary-section {
+    background: var(--color-card);
+    border: 2px solid hsl(var(--border));
+    border-radius: var(--radius);
+    padding: 2rem;
+}
+
+.payment-methods-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.payment-method {
+    position: relative;
+    padding: 1.5rem 1rem;
+    background: var(--color-brown-dark);
+    border: 2px solid hsla(20, 29%, 29%, 1);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.payment-method:hover {
+    border-color: hsla(43, 38%, 59%, 0.5);
+    transform: translateY(-2px);
+}
+
+.payment-method.selected {
+    border-color: var(--color-gold);
+    background: hsla(43, 38%, 59%, 0.05);
+    box-shadow: var(--shadow-gold);
+}
+
+.payment-icon {
+    font-size: 2rem;
+}
+
+.payment-label {
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.selected-check {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    background: var(--color-gold);
+    color: var(--color-brown-darker);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    font-weight: 700;
 }
 
 .summary-item {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     padding: 0.75rem 0;
-    border-bottom: 1px solid var(--border);
 }
 
-.summary-item:last-child {
-    border-bottom: none;
+.summary-item:not(:last-child) {
+    border-bottom: 1px solid hsla(20, 29%, 29%, 0.3);
 }
 
-.summary-label {
-    color: var(--text-muted);
-    font-weight: 500;
+.summary-item span:first-child {
+    color: var(--color-brown-light);
 }
 
-.summary-total {
+.summary-item strong,
+.summary-item span:last-child {
+    color: var(--color-cream);
+}
+
+.summary-divider {
+    height: 1px;
+    background: var(--color-gold);
+    margin: 1rem 0;
+    opacity: 0.3;
+}
+
+.summary-item.discount {
+    color: hsl(142, 76%, 36%);
+}
+
+.summary-item.total {
     font-size: 1.25rem;
     font-weight: 700;
-    color: var(--primary);
+    color: var(--color-gold);
+    padding: 1rem 0;
+    border-top: 2px solid var(--color-gold);
 }
 
-.whatsapp-info {
-    background: #d1fae5;
-    border: 1px solid var(--success);
-    padding: 1rem;
-    border-radius: 0.5rem;
-    text-align: center;
-}
-
-/* Booking Navigation */
-.booking-nav {
+/* ========== NAVIGATION BUTTONS ========== */
+.booking-navigation {
     display: flex;
     justify-content: space-between;
+    margin-top: 3rem;
     gap: 1rem;
-    margin-top: 2rem;
-    padding-top: 2rem;
-    border-top: 1px solid var(--border);
 }
 
-.booking-nav .btn {
-    min-width: 150px;
+.booking-navigation .btn {
+    min-width: 200px;
 }
 
-/* Auth Form Styles */
-.auth-section {
-    padding: 3rem 0;
-    min-height: 80vh;
-    display: flex;
-    align-items: center;
+/* ========== LOADER ========== */
+.loader {
+    width: 2rem;
+    height: 2rem;
+    border: 3px solid var(--color-gold);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 2rem auto;
 }
 
-.auth-card {
-    max-width: 500px;
-    margin: 0 auto;
-    background: white;
-    padding: 3rem;
-    border-radius: 1rem;
-    box-shadow: var(--shadow);
+/* ========== TOAST NOTIFICATIONS ========== */
+.toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: var(--color-card);
+    border: 2px solid var(--color-gold);
+    border-radius: var(--radius);
+    padding: 1rem 1.5rem;
+    box-shadow: var(--shadow-dark);
+    max-width: 400px;
+    transform: translateX(500px);
+    transition: transform 0.3s ease;
+    z-index: 10000;
 }
 
-.auth-card h2 {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-    text-align: center;
+.toast.show {
+    transform: translateX(0);
 }
 
-.auth-subtitle {
-    text-align: center;
-    color: var(--text-muted);
-    margin-bottom: 2rem;
+.toast.toast-success {
+    border-color: hsl(142, 76%, 36%);
 }
 
-.auth-form {
-    margin-bottom: 1.5rem;
+.toast.toast-error {
+    border-color: hsl(0, 84%, 60%);
 }
 
-.auth-divider {
-    text-align: center;
-    color: var(--text-muted);
-    margin: 1.5rem 0;
-    position: relative;
+.toast.toast-info {
+    border-color: hsl(217, 91%, 60%);
 }
 
-.auth-divider::before,
-.auth-divider::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    width: 40%;
-    height: 1px;
-    background: var(--border);
+.toast strong {
+    display: block;
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
 }
 
-.auth-divider::before {
-    left: 0;
+.toast p {
+    font-size: 0.875rem;
+    color: var(--color-brown-light);
 }
 
-.auth-divider::after {
-    right: 0;
+/* ========== RESPONSIVE ========== */
+@media (max-width: 1024px) {
+    .date-time-section,
+    .payment-summary-container {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
 }
 
-.auth-toggle {
-    text-align: center;
-    margin-top: 1.5rem;
-}
-
-.auth-toggle a {
-    color: var(--primary);
-    font-weight: 600;
-}
-
-/* Responsive */
 @media (max-width: 768px) {
-    .booking-form {
-        padding: 1.5rem;
+    .booking-container {
+        padding: 1rem;
     }
     
-    .progress-steps {
-        gap: 0.5rem;
+    .booking-steps-indicators {
+        display: none; /* Hide on mobile, keep progress bar */
     }
     
-    .step-number {
-        width: 2.5rem;
-        height: 2.5rem;
-    }
-    
-    .progress-step span {
-        font-size: 0.75rem;
-    }
-    
-    .services-grid {
+    .services-grid,
+    .barbers-grid {
         grid-template-columns: 1fr;
     }
     
-    .time-slots {
-        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    .form-grid {
+        grid-template-columns: 1fr;
     }
     
-    .booking-nav {
+    .time-slots-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .payment-methods-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .booking-navigation {
         flex-direction: column;
     }
     
-    .auth-card {
-        padding: 2rem 1.5rem;
+    .booking-navigation .btn {
+        width: 100%;
+    }
+    
+    .toast {
+        left: 1rem;
+        right: 1rem;
+        bottom: 1rem;
     }
 }
 
 @media (max-width: 480px) {
-    .booking-header h1 {
-        font-size: 2rem;
+    .step-header h2 {
+        font-size: 1.75rem;
     }
     
-    .booking-step h2 {
-        font-size: 1.5rem;
+    .time-slots-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
-

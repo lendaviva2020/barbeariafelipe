@@ -1,0 +1,340 @@
+<!-- Testimonials Carousel Component -->
+<div class="testimonials-carousel">
+    <div class="carousel-container">
+        <div class="carousel-track" id="testimonialsTrack">
+            <!-- Testimonial 1 -->
+            <div class="testimonial-slide">
+                <div class="card-classic testimonial-card">
+                    <div class="avatar-container">
+                        <div class="avatar">CES</div>
+                    </div>
+                    <h3 class="testimonial-name">Carlos Eduardo Silva</h3>
+                    <div class="stars">⭐⭐⭐⭐⭐</div>
+                    <p class="testimonial-text">"Melhor barbearia de SP! Atendimento impecável, ambiente diferenciado e profissionais de primeira. Virei cliente VIP!"</p>
+                    <div class="testimonial-meta">
+                        <span class="service-badge">Corte + Barba</span>
+                        <span>•</span>
+                        <span>Outubro 2024</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Testimonial 2 -->
+            <div class="testimonial-slide">
+                <div class="card-classic testimonial-card">
+                    <div class="avatar-container">
+                        <div class="avatar">RA</div>
+                    </div>
+                    <h3 class="testimonial-name">Roberto Almeida</h3>
+                    <div class="stars">⭐⭐⭐⭐⭐</div>
+                    <p class="testimonial-text">"A experiência vai muito além do corte. É um momento de cuidado e relaxamento. Recomendo demais!"</p>
+                    <div class="testimonial-meta">
+                        <span class="service-badge">Day SPA</span>
+                        <span>•</span>
+                        <span>Setembro 2024</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Testimonial 3 -->
+            <div class="testimonial-slide">
+                <div class="card-classic testimonial-card">
+                    <div class="avatar-container">
+                        <div class="avatar">FC</div>
+                    </div>
+                    <h3 class="testimonial-name">Fernando Costa</h3>
+                    <div class="stars">⭐⭐⭐⭐⭐</div>
+                    <p class="testimonial-text">"Sempre saio de lá renovado! Equipe atenciosa e o ambiente vintage é sensacional."</p>
+                    <div class="testimonial-meta">
+                        <span class="service-badge">Corte Premium</span>
+                        <span>•</span>
+                        <span>Outubro 2024</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mais 5 testimonials -->
+            <div class="testimonial-slide">
+                <div class="card-classic testimonial-card">
+                    <div class="avatar-container">
+                        <div class="avatar">JPS</div>
+                    </div>
+                    <h3 class="testimonial-name">João Pedro Santos</h3>
+                    <div class="stars">⭐⭐⭐⭐⭐</div>
+                    <p class="testimonial-text">"Cortei o cabelo para meu casamento aqui. Ficou perfeito! Todas as fotos ficaram incríveis."</p>
+                    <div class="testimonial-meta">
+                        <span class="service-badge">Evento Especial</span>
+                        <span>•</span>
+                        <span>Agosto 2024</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Navigation Buttons -->
+    <button class="carousel-btn carousel-prev" onclick="testimonialsCarousel.prev()">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 18l-6-6 6-6"/>
+        </svg>
+    </button>
+    <button class="carousel-btn carousel-next" onclick="testimonialsCarousel.next()">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 18l6-6-6-6"/>
+        </svg>
+    </button>
+    
+    <!-- Dots Navigation -->
+    <div class="carousel-dots" id="testimonialsDots"></div>
+    
+    <!-- Auto-play Toggle -->
+    <div class="carousel-control">
+        <button onclick="testimonialsCarousel.toggleAutoPlay()" id="autoPlayBtn">
+            ⏸ Pausar rotação automática
+        </button>
+    </div>
+</div>
+
+<style>
+.testimonials-carousel {
+    position: relative;
+    max-width: 64rem;
+    margin: 0 auto;
+}
+
+.carousel-container {
+    overflow: hidden;
+    border-radius: var(--radius);
+}
+
+.carousel-track {
+    display: flex;
+    transition: transform 0.7s ease-out;
+}
+
+.testimonial-slide {
+    min-width: 100%;
+    padding: 0 1rem;
+}
+
+.testimonial-card {
+    padding: 2rem;
+    text-align: center;
+    border: 2px solid hsla(43, 38%, 59%, 0.2);
+}
+
+.avatar-container {
+    margin-bottom: 1.5rem;
+}
+
+.avatar {
+    width: 5rem;
+    height: 5rem;
+    margin: 0 auto;
+    border-radius: 50%;
+    background: hsla(43, 38%, 59%, 0.1);
+    border: 4px solid hsla(43, 38%, 59%, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    color: var(--color-gold);
+}
+
+.testimonial-name {
+    font-size: 1.25rem;
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.stars {
+    margin-bottom: 1rem;
+    font-size: 1rem;
+}
+
+.testimonial-text {
+    font-size: 1.125rem;
+    font-style: italic;
+    color: var(--color-brown-light);
+    margin-bottom: 1rem;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.testimonial-meta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+    color: var(--color-brown-light);
+}
+
+.service-badge {
+    background: hsla(43, 38%, 59%, 0.1);
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-weight: 500;
+}
+
+.carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: hsla(25, 43%, 13%, 0.8);
+    backdrop-filter: blur(8px);
+    border: 1px solid hsla(43, 38%, 59%, 0.3);
+    color: var(--color-gold);
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    box-shadow: var(--shadow-lg);
+}
+
+.carousel-btn:hover {
+    border-color: var(--color-gold);
+    background: hsla(43, 38%, 59%, 0.1);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-prev {
+    left: -1rem;
+}
+
+.carousel-next {
+    right: -1rem;
+}
+
+.carousel-dots {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+}
+
+.carousel-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 9999px;
+    background: var(--color-brown-medium);
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.carousel-dot.active {
+    width: 2rem;
+    background: var(--color-gold);
+}
+
+.carousel-control {
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.carousel-control button {
+    background: none;
+    border: none;
+    color: var(--color-brown-light);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.carousel-control button:hover {
+    color: var(--color-gold);
+}
+
+@media (max-width: 768px) {
+    .carousel-btn {
+        width: 2.5rem;
+        height: 2.5rem;
+    }
+    
+    .carousel-prev {
+        left: 0;
+    }
+    
+    .carousel-next {
+        right: 0;
+    }
+}
+</style>
+
+<script>
+// Testimonials Carousel JavaScript
+const testimonialsCarousel = {
+    currentIndex: 0,
+    totalSlides: 4,
+    isAutoPlaying: true,
+    autoPlayInterval: null,
+    
+    init() {
+        this.createDots();
+        this.startAutoPlay();
+    },
+    
+    createDots() {
+        const dotsContainer = document.getElementById('testimonialsDots');
+        for (let i = 0; i < this.totalSlides; i++) {
+            const dot = document.createElement('button');
+            dot.className = 'carousel-dot';
+            if (i === 0) dot.classList.add('active');
+            dot.onclick = () => this.goToSlide(i);
+            dotsContainer.appendChild(dot);
+        }
+    },
+    
+    goToSlide(index) {
+        this.currentIndex = index;
+        this.updateCarousel();
+    },
+    
+    next() {
+        this.currentIndex = (this.currentIndex + 1) % this.totalSlides;
+        this.updateCarousel();
+    },
+    
+    prev() {
+        this.currentIndex = (this.currentIndex - 1 + this.totalSlides) % this.totalSlides;
+        this.updateCarousel();
+    },
+    
+    updateCarousel() {
+        const track = document.getElementById('testimonialsTrack');
+        track.style.transform = `translateX(-${this.currentIndex * 100}%)`;
+        
+        // Update dots
+        document.querySelectorAll('.carousel-dot').forEach((dot, index) => {
+            dot.classList.toggle('active', index === this.currentIndex);
+        });
+    },
+    
+    startAutoPlay() {
+        if (this.autoPlayInterval) return;
+        this.autoPlayInterval = setInterval(() => {
+            if (this.isAutoPlaying) {
+                this.next();
+            }
+        }, 5000);
+    },
+    
+    toggleAutoPlay() {
+        this.isAutoPlaying = !this.isAutoPlaying;
+        const btn = document.getElementById('autoPlayBtn');
+        btn.textContent = this.isAutoPlaying ? '⏸ Pausar rotação automática' : '▶ Ativar rotação automática';
+    }
+};
+
+// Initialize on load
+if (document.getElementById('testimonialsTrack')) {
+    testimonialsCarousel.init();
+}
+</script>
+

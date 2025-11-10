@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gerenciar Usuários - Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/admin-users.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Gerenciar Usuários</h1>
+                <p class="page-subtitle">Administre todos os usuários do sistema</p>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-bar">
+            <div class="tabs-bar">
+                <button class="tab-btn active" data-role="all" onclick="setRoleFilter('all')">Todos</button>
+                <button class="tab-btn" data-role="admin" onclick="setRoleFilter('admin')">🛡️ Admins</button>
+                <button class="tab-btn" data-role="barber" onclick="setRoleFilter('barber')">✂️ Barbeiros</button>
+                <button class="tab-btn" data-role="user" onclick="setRoleFilter('user')">👤 Clientes</button>
+            </div>
+            <input type="text" id="searchInput" class="search-input" placeholder="Buscar por nome ou email...">
+        </div>
+
+        <!-- Users Table -->
+        <div class="users-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Usuário</th>
+                        <th>Email</th>
+                        <th>Telefone</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Cadastrado</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="usersBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- User Details Modal -->
+<div id="userDetailsModal" class="modal" style="display: none;">
+    <div class="modal-overlay" onclick="closeUserDetails()"></div>
+    <div class="modal-content modal-lg">
+        <div class="modal-header">
+            <h3>Detalhes do Usuário</h3>
+            <button class="modal-close" onclick="closeUserDetails()">&times;</button>
+        </div>
+        <div class="modal-body" id="userDetailsContent"></div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeUserDetails()">Fechar</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/admin-users.js' %}"></script>
+{% endblock %}
+

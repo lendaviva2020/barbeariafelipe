@@ -1,0 +1,76 @@
+/* Admin Users Page */
+
+.users-table {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    overflow-x: auto;
+}
+
+.users-table table {
+    width: 100%;
+    min-width: 800px;
+}
+
+.users-table th,
+.users-table td {
+    padding: 1rem;
+    text-align: left;
+}
+
+.users-table thead {
+    background: var(--muted);
+}
+
+.users-table tbody tr:hover {
+    background: var(--muted);
+}
+
+.user-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.user-avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+.role-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.role-admin {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.role-barber {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.role-user {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.status-badge.active {
+    color: #065f46;
+}
+
+.status-badge.inactive {
+    color: #991b1b;
+}
+

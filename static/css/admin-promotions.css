@@ -1,0 +1,146 @@
+/* Admin Promotions Page */
+
+.promotions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 1.5rem;
+}
+
+.promotion-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    transition: all 0.3s;
+}
+
+.promotion-card:hover {
+    box-shadow: var(--shadow-glow);
+}
+
+.promotion-card.inactive {
+    opacity: 0.6;
+}
+
+.promotion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.promotion-header h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.promotion-type-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.promotion-type-badge.happy_hour {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.promotion-type-badge.first_visit {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.promotion-type-badge.birthday {
+    background: #fce7f3;
+    color: #9f1239;
+}
+
+.promotion-type-badge.bulk_discount {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.promotion-type-badge.loyalty_bonus {
+    background: #e9d5ff;
+    color: #6b21a8;
+}
+
+.promotion-type-badge.seasonal {
+    background: #fef08a;
+    color: #854d0e;
+}
+
+.promotion-toggle input[type="checkbox"] {
+    width: 3rem;
+    height: 1.5rem;
+    cursor: pointer;
+}
+
+.promotion-description {
+    color: var(--muted-foreground);
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+}
+
+.promotion-discount {
+    background: linear-gradient(135deg, rgba(201, 169, 97, 0.1), rgba(201, 169, 97, 0.05));
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border-left: 4px solid var(--primary);
+    margin-bottom: 1rem;
+    font-size: 1.125rem;
+}
+
+.promotion-discount strong {
+    color: var(--primary);
+    font-size: 1.5rem;
+}
+
+.promotion-conditions {
+    background: var(--muted);
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+}
+
+.promotion-conditions pre {
+    margin: 0.5rem 0 0 0;
+    font-family: 'Courier New', monospace;
+    font-size: 0.75rem;
+    white-space: pre-wrap;
+}
+
+.promotion-period {
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+    margin-bottom: 1rem;
+}
+
+.promotion-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.code-editor {
+    font-family: 'Courier New', monospace;
+    font-size: 0.875rem;
+}
+
+.form-help {
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+    margin-bottom: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .promotions-grid {
+        grid-template-columns: 1fr;
+    }
+}
+

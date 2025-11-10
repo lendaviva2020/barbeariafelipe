@@ -2,6 +2,7 @@ from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
 
 from . import views
+from .upload_views import UploadAvatarView
 
 app_name = "users"
 
@@ -11,4 +12,5 @@ urlpatterns = [
     path("logout/", views.LogoutView.as_view(), name="logout"),
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("me/", views.UserDetailView.as_view(), name="user_detail"),
+    path("upload-avatar/", UploadAvatarView.as_view(), name="upload_avatar"),
 ]

@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Configurações{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/settings.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="settings-page">
+    <div class="container max-w-4xl">
+        <div class="page-header">
+            <h1 class="page-title">⚙️ Configurações</h1>
+            <p class="page-subtitle">Personalize sua experiência</p>
+        </div>
+
+        <div class="settings-tabs">
+            <button class="settings-tab active" data-tab="notifications" onclick="switchTab('notifications')">🔔 Notificações</button>
+            <button class="settings-tab" data-tab="privacy" onclick="switchTab('privacy')">🔒 Privacidade</button>
+            <button class="settings-tab" data-tab="preferences" onclick="switchTab('preferences')">🎨 Preferências</button>
+        </div>
+
+        <!-- Notifications -->
+        <div class="settings-section active" id="notificationsSection">
+            <h2>Notificações</h2>
+            <div class="settings-group">
+                <div class="setting-item">
+                    <div>
+                        <strong>Email</strong>
+                        <p>Receber confirmações por email</p>
+                    </div>
+                    <input type="checkbox" id="emailNotif" checked>
+                </div>
+                <div class="setting-item">
+                    <div>
+                        <strong>WhatsApp</strong>
+                        <p>Receber lembretes via WhatsApp</p>
+                    </div>
+                    <input type="checkbox" id="whatsappNotif" checked>
+                </div>
+            </div>
+        </div>
+
+        <!-- Privacy -->
+        <div class="settings-section" id="privacySection" style="display: none;">
+            <h2>Privacidade</h2>
+            <div class="settings-group">
+                <div class="setting-item">
+                    <div>
+                        <strong>Perfil Público</strong>
+                        <p>Permitir que outros vejam seu perfil</p>
+                    </div>
+                    <input type="checkbox" id="publicProfile">
+                </div>
+            </div>
+        </div>
+
+        <!-- Preferences -->
+        <div class="settings-section" id="preferencesSection" style="display: none;">
+            <h2>Preferências</h2>
+            <div class="settings-group">
+                <div class="form-group">
+                    <label>Tema</label>
+                    <select id="theme" class="form-control">
+                        <option value="light">Claro</option>
+                        <option value="dark">Escuro</option>
+                        <option value="auto">Automático</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn btn-primary btn-block" onclick="saveSettings()">💾 Salvar Configurações</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/settings.js' %}"></script>
+{% endblock %}
+

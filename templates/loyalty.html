@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Programa de Fidelidade{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/loyalty.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="loyalty-page">
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">🏆 Programa de Fidelidade</h1>
+            <p class="page-subtitle">Acumule pontos e ganhe recompensas</p>
+        </div>
+
+        <!-- Loyalty Card -->
+        <div class="loyalty-card">
+            <div class="tier-badge" id="tierBadge">Bronze</div>
+            <div class="points-display">
+                <span class="points-label">Seus Pontos</span>
+                <span class="points-value" id="pointsValue">0</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+            <p class="next-tier" id="nextTier">Faltam 50 pontos para o nível Silver</p>
+        </div>
+
+        <!-- Tiers Info -->
+        <div class="tiers-grid">
+            <div class="tier-card bronze">
+                <h3>🥉 Bronze</h3>
+                <p>0-199 pontos</p>
+                <ul>
+                    <li>5% desconto</li>
+                    <li>Aniversário especial</li>
+                </ul>
+            </div>
+            <div class="tier-card silver">
+                <h3>🥈 Silver</h3>
+                <p>200-499 pontos</p>
+                <ul>
+                    <li>10% desconto</li>
+                    <li>Prioridade no agendamento</li>
+                </ul>
+            </div>
+            <div class="tier-card gold">
+                <h3>🥇 Gold</h3>
+                <p>500+ pontos</p>
+                <ul>
+                    <li>15% desconto</li>
+                    <li>Produtos exclusivos</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- History -->
+        <div class="points-history">
+            <h2>Histórico de Pontos</h2>
+            <div id="pointsHistory"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/loyalty.js' %}"></script>
+{% endblock %}
+
