@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from core.validators import (validate_appointment_interval,
-                             validate_brazilian_phone, validate_business_hours,
+                             validate_phone, validate_business_hours,
                              validate_future_date)
 
 from .models import Agendamento
@@ -42,7 +42,7 @@ class CreateAgendamentoSerializer(serializers.ModelSerializer):
             "appointment_time": {
                 "validators": [validate_business_hours, validate_appointment_interval]
             },
-            "customer_phone": {"validators": [validate_brazilian_phone]},
+            "customer_phone": {"validators": [validate_phone]},
         }
 
     def validate(self, data):

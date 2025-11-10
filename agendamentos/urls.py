@@ -1,6 +1,6 @@
 from django.urls import path
 
-from cupons.admin_views import ValidateCupomView
+from cupons.views import CupomValidateView
 
 from . import views
 
@@ -13,5 +13,5 @@ urlpatterns = [
     path(
         "available-slots/", views.AvailableSlotsView.as_view(), name="available_slots"
     ),
-    path("validate-cupom/", ValidateCupomView.as_view(), name="validate_cupom"),
+    path("validate-cupom/", CupomValidateView.as_view(), name="validate_cupom"),
 ]

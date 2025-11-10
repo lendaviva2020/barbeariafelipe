@@ -112,3 +112,40 @@ def format_phone(phone):
     elif len(phone) == 10:
         return f'({phone[:2]}) {phone[2:6]}-{phone[6:]}'
     return phone
+
+
+def validate_price_positive(value):
+    """Valida se o preço é positivo"""
+    if value <= 0:
+        raise ValidationError('O preço deve ser maior que zero')
+    return value
+
+
+def validate_duration_positive(value):
+    """Valida se a duração é positiva"""
+    if value <= 0:
+        raise ValidationError('A duração deve ser maior que zero')
+    return value
+
+
+def validate_future_date(value):
+    """Valida se a data é futura"""
+    from datetime import date
+    if value < date.today():
+        raise ValidationError('A data deve ser no futuro')
+    return value
+
+
+def validate_business_hours(value):
+    """Valida se o horário está dentro do horário comercial (8h-20h)"""
+    from datetime import time
+    if value < time(8, 0) or value > time(20, 0):
+        raise ValidationError('Horário deve ser entre 08:00 e 20:00')
+    return value
+
+
+def validate_appointment_interval(value):
+    """Valida se o horário está em intervalos de 30 minutos"""
+    if value.minute not in [0, 30]:
+        raise ValidationError('Agendamentos devem ser em intervalos de 30 minutos')
+    return value
