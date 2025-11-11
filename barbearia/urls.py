@@ -64,10 +64,103 @@ urlpatterns = [
         TemplateView.as_view(template_name="goals.html"),
         name="goals",
     ),
+    # Páginas de usuário
+    path(
+        "cupons/",
+        TemplateView.as_view(template_name="cupons.html"),
+        name="cupons",
+    ),
+    path(
+        "reviews/",
+        TemplateView.as_view(template_name="reviews.html"),
+        name="reviews",
+    ),
+    path(
+        "loyalty/",
+        TemplateView.as_view(template_name="loyalty.html"),
+        name="loyalty",
+    ),
+    path(
+        "recurring/",
+        TemplateView.as_view(template_name="recurring.html"),
+        name="recurring",
+    ),
+    path(
+        "settings/",
+        TemplateView.as_view(template_name="settings.html"),
+        name="settings",
+    ),
+    # Páginas de barbeiro/admin
+    path(
+        "commissions/",
+        TemplateView.as_view(template_name="commissions.html"),
+        name="commissions",
+    ),
+    path(
+        "inventory/",
+        TemplateView.as_view(template_name="inventory.html"),
+        name="inventory",
+    ),
+    path(
+        "suppliers/",
+        TemplateView.as_view(template_name="suppliers.html"),
+        name="suppliers",
+    ),
+    # Admin Panel
     path(
         "admin-painel/",
         TemplateView.as_view(template_name="admin/dashboard.html"),
         name="admin_painel",
+    ),
+    path(
+        "admin-painel/appointments/",
+        TemplateView.as_view(template_name="admin/appointments.html"),
+        name="admin_appointments",
+    ),
+    path(
+        "admin-painel/barbers/",
+        TemplateView.as_view(template_name="admin/barbers.html"),
+        name="admin_barbers",
+    ),
+    path(
+        "admin-painel/services/",
+        TemplateView.as_view(template_name="admin/services.html"),
+        name="admin_services",
+    ),
+    path(
+        "admin-painel/coupons/",
+        TemplateView.as_view(template_name="admin/coupons.html"),
+        name="admin_coupons",
+    ),
+    path(
+        "admin-painel/users/",
+        TemplateView.as_view(template_name="admin/users.html"),
+        name="admin_users",
+    ),
+    path(
+        "admin-painel/reports/",
+        TemplateView.as_view(template_name="admin/reports.html"),
+        name="admin_reports",
+    ),
+    path(
+        "admin-painel/waiting-list/",
+        TemplateView.as_view(template_name="admin/waiting-list.html"),
+        name="admin_waiting_list",
+    ),
+    path(
+        "admin-painel/audit-logs/",
+        TemplateView.as_view(template_name="admin/audit-logs.html"),
+        name="admin_audit_logs",
+    ),
+    path(
+        "admin-painel/performance/",
+        TemplateView.as_view(template_name="admin/performance.html"),
+        name="admin_performance",
+    ),
+    path(
+        "admin-painel/promotions/",
+        TemplateView.as_view(template_name="admin/promotions.html"),
+        name="admin_promotions",
     ),
 ]
 
