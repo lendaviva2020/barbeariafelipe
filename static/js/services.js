@@ -20,8 +20,12 @@ function initializeServicesPage() {
 
 // ========== LOAD SERVICES ==========
 async function loadServices() {
+    console.log('=== INICIO loadServices() ===');
     const servicesGrid = document.getElementById('servicesGrid');
     const combosGrid = document.getElementById('combosGrid');
+    
+    console.log('servicesGrid encontrado:', servicesGrid !== null);
+    console.log('combosGrid encontrado:', combosGrid !== null);
     
     // Mostrar loading
     if (servicesGrid) {
@@ -29,17 +33,25 @@ async function loadServices() {
     }
     
     try {
+        console.log('Fazendo fetch para:', `${API_BASE}/servicos/`);
         const response = await fetch(`${API_BASE}/servicos/`);
+        console.log('Response status:', response.status);
+        console.log('Response OK:', response.ok);
         
         if (!response.ok) {
-            throw new Error('Erro ao carregar serviços');
+            throw new Error(`HTTP ${response.status}: Erro ao carregar serviços`);
         }
         
         allServices = await response.json();
+        console.log('Total de serviços recebidos:', allServices.length);
+        console.log('Dados dos serviços:', allServices);
         
         // Separar serviços individuais e combos
         const individualServices = allServices.filter(s => !s.is_combo);
         const combos = allServices.filter(s => s.is_combo);
+        
+        console.log('Serviços individuais:', individualServices.length);
+        console.log('Combos:', combos.length);
         
         // Renderizar serviços
         if (servicesGrid) {
@@ -51,10 +63,22 @@ async function loadServices() {
             renderCombos(combos, combosGrid);
         }
         
+        console.log('=== FIM loadServices() - Sucesso ===');
+        
     } catch (error) {
-        console.error('Erro ao carregar serviços:', error);
+        console.error('=== ERRO em loadServices() ===');
+        console.error('Tipo do erro:', error.name);
+        console.error('Mensagem:', error.message);
+        console.error('Stack:', error.stack);
+        
         if (servicesGrid) {
-            servicesGrid.innerHTML = '<p class="empty-state">Erro ao carregar serviços. Tente novamente.</p>';
+            servicesGrid.innerHTML = `
+                <div class="empty-state">
+                    <p style="color: red;">Erro ao carregar serviços</p>
+                    <p>${error.message}</p>
+                    <button class="btn" onclick="loadServices()">Tentar Novamente</button>
+                </div>
+            `;
         }
     }
 }
