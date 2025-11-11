@@ -63,8 +63,19 @@ async function apiCall(endpoint, options = {}) {
 async function loadServices() {
     const servicesGrid = document.getElementById('servicesGrid');
     
+    if (!servicesGrid) {
+        console.error('servicesGrid element not found');
+        return;
+    }
+    
     try {
-        const services = await apiCall('/servicos/');
+        console.log('Carregando serviços da API...');
+        const allServices = await apiCall('/servicos/');
+        console.log('Serviços recebidos:', allServices);
+        
+        // Filtrar apenas serviços individuais (não combos)
+        const services = allServices.filter(s => !s.is_combo);
+        console.log('Serviços individuais:', services);
         
         servicesGrid.innerHTML = '';
         
@@ -94,8 +105,11 @@ async function loadServices() {
             servicesGrid.appendChild(serviceCard);
         });
         
+        console.log(`${services.length} serviços renderizados`);
+        
     } catch (error) {
-        servicesGrid.innerHTML = '<p class="empty-state">Erro ao carregar serviços. Tente novamente.</p>';
+        console.error('Erro ao carregar serviços:', error);
+        servicesGrid.innerHTML = `<p class="empty-state">Erro ao carregar serviços: ${error.message}</p>`;
     }
 }
 
