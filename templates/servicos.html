@@ -1,53 +1,65 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load static %}
 
-{% block title %}Nossos Serviços - Barbearia Francisco{% endblock %}
+{% block title %}Serviços - Barbearia Francisco{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/services.css' %}">
+{% endblock %}
 
 {% block content %}
-<section class="services-section">
+<!-- Hero Section -->
+<section class="services-hero">
     <div class="container">
-        <div class="section-header">
-            <h1>Nossos Serviços</h1>
-            <p>Conheça nosso catálogo completo de serviços premium</p>
+        <h2>Nossos Serviços</h2>
+        <p>Descubra nossa gama completa de serviços masculinos, realizados por profissionais especializados com os melhores produtos do mercado.</p>
+        <a href="{% url 'agendar' %}" class="btn">Agendar Horário</a>
+    </div>
+</section>
+
+<!-- Services Section -->
+<section class="services-container">
+    <div class="container">
+        <div class="page-title">
+            <h2>Serviços Premium</h2>
+            <p>Oferecemos uma variedade de serviços para cuidar do seu visual com qualidade e precisão</p>
         </div>
         
-        <div id="servicesList" class="services-grid">
-            <div class="loader-container">
-                <div class="loader"></div>
+        <!-- Categories Filter -->
+        <div class="categories">
+            <button class="category-btn active" data-category="all">Todos os Serviços</button>
+            <button class="category-btn" data-category="haircut">Cortes de Cabelo</button>
+            <button class="category-btn" data-category="beard">Barba</button>
+            <button class="category-btn" data-category="treatment">Tratamentos</button>
+            <button class="category-btn" data-category="combo">Combos</button>
+        </div>
+        
+        <!-- Services Grid (populated by JS) -->
+        <div class="services-grid" id="servicesGrid">
+            <div class="loading-state">
+                <div class="spinner"></div>
                 <p>Carregando serviços...</p>
+            </div>
+        </div>
+        
+        <!-- Combos Section -->
+        <div class="combos-section">
+            <div class="page-title">
+                <h2>Combos Especiais</h2>
+                <p>Pacotes completos com serviços combinados por um preço especial</p>
+            </div>
+            
+            <div class="combos-grid" id="combosGrid">
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <p>Carregando combos...</p>
+                </div>
             </div>
         </div>
     </div>
 </section>
-
-<script>
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const response = await fetch('/api/servicos/');
-        const services = await response.json();
-        
-        const servicesList = document.getElementById('servicesList');
-        servicesList.innerHTML = '';
-        
-        services.forEach(service => {
-            const card = document.createElement('div');
-            card.className = 'service-card';
-            card.innerHTML = `
-                <h3>${service.name}</h3>
-                <p>${service.description}</p>
-                <div class="service-info">
-                    <span class="service-price">R$ ${parseFloat(service.price).toFixed(2)}</span>
-                    <span class="service-duration">${service.duration} min</span>
-                </div>
-                <a href="/agendar/" class="btn btn-primary btn-block">Agendar</a>
-            `;
-            servicesList.appendChild(card);
-        });
-    } catch (error) {
-        console.error('Error:', error);
-        document.getElementById('servicesList').innerHTML = '<p class="error">Erro ao carregar serviços</p>';
-    }
-});
-</script>
 {% endblock %}
 
+{% block extra_js %}
+<script src="{% static 'js/services.js' %}"></script>
+{% endblock %}
