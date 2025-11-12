@@ -3,6 +3,8 @@ from django.urls import path
 from cupons.views import CupomValidateView
 
 from . import views
+from .upload_views import upload_appointment_photo
+from .product_views import register_appointment_products, get_appointment_products
 
 app_name = "agendamentos"
 
@@ -14,4 +16,11 @@ urlpatterns = [
         "available-slots/", views.AvailableSlotsView.as_view(), name="available_slots"
     ),
     path("validate-cupom/", CupomValidateView.as_view(), name="validate_cupom"),
+    
+    # Upload de fotos
+    path("<int:pk>/upload-photo/", upload_appointment_photo, name="upload_photo"),
+    
+    # Registro de produtos usados
+    path("<int:pk>/register-products/", register_appointment_products, name="register_products"),
+    path("<int:pk>/products/", get_appointment_products, name="get_products"),
 ]

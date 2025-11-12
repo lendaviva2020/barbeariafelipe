@@ -41,6 +41,14 @@ from .chat_views import (
     NotificationListView,
     NotificationDetailView,
 )
+from .search_views import GlobalSearchView
+from .notification_views import (
+    NotificationUnreadView,
+    NotificationMarkReadView,
+    NotificationMarkAllReadView,
+    NotificationDeleteView,
+    NotificationStatsView,
+)
 
 app_name = 'core'
 
@@ -111,5 +119,13 @@ urlpatterns = [
     path('api/notifications/send/', SendNotificationView.as_view(), name='notification_send'),
     path('api/notifications/', NotificationListView.as_view(), name='notification_list'),
     path('api/notifications/<int:pk>/', NotificationDetailView.as_view(), name='notification_detail'),
+    path('api/notifications/unread/', NotificationUnreadView.as_view(), name='notification_unread'),
+    path('api/notifications/<int:pk>/mark-read/', NotificationMarkReadView.as_view(), name='notification_mark_read'),
+    path('api/notifications/mark-all-read/', NotificationMarkAllReadView.as_view(), name='notification_mark_all_read'),
+    path('api/notifications/<int:pk>/delete/', NotificationDeleteView.as_view(), name='notification_delete'),
+    path('api/notifications/stats/', NotificationStatsView.as_view(), name='notification_stats'),
+    
+    # Global Search
+    path('api/search/', GlobalSearchView.as_view(), name='global_search'),
 ]
 

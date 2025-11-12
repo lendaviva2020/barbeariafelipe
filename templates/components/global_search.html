@@ -1,0 +1,81 @@
+<!-- Global Search Component - Ativado por Cmd/Ctrl+K -->
+<div id="global-search-modal" class="search-modal hidden" role="dialog" aria-modal="true" aria-labelledby="search-title">
+    <div class="search-overlay" data-close-search></div>
+    <div class="search-dialog">
+        <div class="search-header">
+            <svg class="search-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor">
+                <circle cx="8.5" cy="8.5" r="5.5"/>
+                <path d="M12.5 12.5l5 5"/>
+            </svg>
+            <input 
+                type="text" 
+                id="global-search-input" 
+                class="search-input"
+                placeholder="Buscar agendamentos, clientes, serviços..."
+                autocomplete="off"
+                aria-label="Campo de busca global"
+            >
+            <kbd class="search-shortcut">⌘K</kbd>
+        </div>
+        
+        <div id="search-results" class="search-results" role="listbox">
+            <div class="search-empty">
+                <p>Digite para buscar...</p>
+            </div>
+        </div>
+        
+        <div class="search-footer">
+            <div class="search-hint">
+                <span><kbd>↑</kbd> <kbd>↓</kbd> navegar</span>
+                <span><kbd>↵</kbd> selecionar</span>
+                <span><kbd>esc</kbd> fechar</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Template para resultados -->
+<template id="search-result-template">
+    <div class="search-result-item" role="option" tabindex="-1">
+        <div class="result-icon">
+            <svg width="16" height="16" fill="currentColor"></svg>
+        </div>
+        <div class="result-content">
+            <div class="result-title"></div>
+            <div class="result-subtitle"></div>
+        </div>
+        <svg class="result-arrow" width="16" height="16" fill="none" stroke="currentColor">
+            <path d="M6 12l4-4-4-4"/>
+        </svg>
+    </div>
+</template>
+
+<!-- Template para grupos de categoria -->
+<template id="search-group-template">
+    <div class="search-group">
+        <div class="group-heading"></div>
+        <div class="group-items"></div>
+    </div>
+</template>
+
+<!-- Template para loading -->
+<template id="search-loading-template">
+    <div class="search-loading">
+        <div class="spinner"></div>
+        <p>Buscando...</p>
+    </div>
+</template>
+
+<!-- Template para nenhum resultado -->
+<template id="search-empty-template">
+    <div class="search-no-results">
+        <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="24" cy="24" r="10"/>
+            <path d="M30 30l8 8"/>
+            <path d="M24 21v6M24 30h.01"/>
+        </svg>
+        <p>Nenhum resultado encontrado</p>
+        <span class="text-sm">Tente usar termos diferentes</span>
+    </div>
+</template>
+

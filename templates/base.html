@@ -19,6 +19,8 @@
     <!-- Design System e Styles -->
     <link rel="stylesheet" href="{% static 'css/design-system.css' %}">
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'css/global-search.css' %}">
+    <link rel="stylesheet" href="{% static 'css/notification-center.css' %}">
     
     {% block extra_css %}{% endblock %}
     
@@ -81,6 +83,12 @@
                         </a>
                     </li>
                     {% if user.is_authenticated %}
+                    
+                    <!-- Global Search & Notifications -->
+                    <li class="nav-tools">
+                        {% include 'components/notification_center.html' %}
+                    </li>
+                    
                     <li>
                         <a href="{% url 'perfil' %}" class="{% if 'perfil' in request.path %}active{% endif %}">
                             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
@@ -133,10 +141,18 @@
         </div>
     </header>
 
+    <!-- Global Search Modal -->
+    {% if user.is_authenticated %}
+    {% include 'components/global_search.html' %}
+    {% endif %}
+    
     <!-- MAIN CONTENT -->
     <main id="main-content">
         {% block content %}{% endblock %}
     </main>
+    
+    <!-- Scroll to Top Button -->
+    {% include 'components/scroll_to_top.html' %}
 
     <!-- FOOTER (extraído de Layout.tsx linha 164-263) -->
     <footer class="footer">
@@ -204,6 +220,18 @@ isco.com.br
         </div>
     </footer>
 
+    <!-- Core JavaScript -->
+    <script src="{% static 'js/app-state.js' %}"></script>
+    <script src="{% static 'js/toast.js' %}"></script>
+    <script src="{% static 'js/form-validations.js' %}"></script>
+    
+    <!-- Component Scripts -->
+    {% if user.is_authenticated %}
+    <script src="{% static 'js/global-search.js' %}"></script>
+    <script src="{% static 'js/notification-center.js' %}"></script>
+    {% endif %}
+    <script src="{% static 'js/scroll-to-top.js' %}"></script>
+    
     <!-- Global Scripts -->
     <script src="{% static 'js/app.js' %}"></script>
     

@@ -1,9 +1,12 @@
-<!-- Testimonials Carousel Component -->
-<div class="testimonials-carousel">
+<!-- Testimonials Carousel Component - Enhanced -->
+<div class="testimonials-carousel" data-testimonials-carousel>
+    <!-- Anunciador para leitores de tela -->
+    <div id="carousel-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+    
     <div class="carousel-container">
         <div class="carousel-track" id="testimonialsTrack">
             <!-- Testimonial 1 -->
-            <div class="testimonial-slide">
+            <div class="testimonial-slide" data-slide="0">
                 <div class="card-classic testimonial-card">
                     <div class="avatar-container">
                         <div class="avatar">CES</div>
@@ -20,7 +23,7 @@
             </div>
             
             <!-- Testimonial 2 -->
-            <div class="testimonial-slide">
+            <div class="testimonial-slide" data-slide="1">
                 <div class="card-classic testimonial-card">
                     <div class="avatar-container">
                         <div class="avatar">RA</div>
@@ -37,7 +40,7 @@
             </div>
             
             <!-- Testimonial 3 -->
-            <div class="testimonial-slide">
+            <div class="testimonial-slide" data-slide="2">
                 <div class="card-classic testimonial-card">
                     <div class="avatar-container">
                         <div class="avatar">FC</div>
@@ -54,7 +57,7 @@
             </div>
             
             <!-- Mais 5 testimonials -->
-            <div class="testimonial-slide">
+            <div class="testimonial-slide" data-slide="3">
                 <div class="card-classic testimonial-card">
                     <div class="avatar-container">
                         <div class="avatar">JPS</div>
@@ -73,23 +76,23 @@
     </div>
     
     <!-- Navigation Buttons -->
-    <button class="carousel-btn carousel-prev" onclick="testimonialsCarousel.prev()">
+    <button class="carousel-btn carousel-prev" data-carousel-prev aria-label="Depoimento anterior">
         <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M15 18l-6-6 6-6"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6"/>
         </svg>
     </button>
-    <button class="carousel-btn carousel-next" onclick="testimonialsCarousel.next()">
+    <button class="carousel-btn carousel-next" data-carousel-next aria-label="Próximo depoimento">
         <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M9 18l6-6-6-6"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6"/>
         </svg>
     </button>
     
     <!-- Dots Navigation -->
-    <div class="carousel-dots" id="testimonialsDots"></div>
+    <div class="carousel-dots" data-carousel-dots aria-label="Navegação de depoimentos"></div>
     
     <!-- Auto-play Toggle -->
     <div class="carousel-control">
-        <button onclick="testimonialsCarousel.toggleAutoPlay()" id="autoPlayBtn">
+        <button data-carousel-toggle class="carousel-toggle-btn">
             ⏸ Pausar rotação automática
         </button>
     </div>
@@ -267,74 +270,6 @@
 }
 </style>
 
-<script>
-// Testimonials Carousel JavaScript
-const testimonialsCarousel = {
-    currentIndex: 0,
-    totalSlides: 4,
-    isAutoPlaying: true,
-    autoPlayInterval: null,
-    
-    init() {
-        this.createDots();
-        this.startAutoPlay();
-    },
-    
-    createDots() {
-        const dotsContainer = document.getElementById('testimonialsDots');
-        for (let i = 0; i < this.totalSlides; i++) {
-            const dot = document.createElement('button');
-            dot.className = 'carousel-dot';
-            if (i === 0) dot.classList.add('active');
-            dot.onclick = () => this.goToSlide(i);
-            dotsContainer.appendChild(dot);
-        }
-    },
-    
-    goToSlide(index) {
-        this.currentIndex = index;
-        this.updateCarousel();
-    },
-    
-    next() {
-        this.currentIndex = (this.currentIndex + 1) % this.totalSlides;
-        this.updateCarousel();
-    },
-    
-    prev() {
-        this.currentIndex = (this.currentIndex - 1 + this.totalSlides) % this.totalSlides;
-        this.updateCarousel();
-    },
-    
-    updateCarousel() {
-        const track = document.getElementById('testimonialsTrack');
-        track.style.transform = `translateX(-${this.currentIndex * 100}%)`;
-        
-        // Update dots
-        document.querySelectorAll('.carousel-dot').forEach((dot, index) => {
-            dot.classList.toggle('active', index === this.currentIndex);
-        });
-    },
-    
-    startAutoPlay() {
-        if (this.autoPlayInterval) return;
-        this.autoPlayInterval = setInterval(() => {
-            if (this.isAutoPlaying) {
-                this.next();
-            }
-        }, 5000);
-    },
-    
-    toggleAutoPlay() {
-        this.isAutoPlaying = !this.isAutoPlaying;
-        const btn = document.getElementById('autoPlayBtn');
-        btn.textContent = this.isAutoPlaying ? '⏸ Pausar rotação automática' : '▶ Ativar rotação automática';
-    }
-};
-
-// Initialize on load
-if (document.getElementById('testimonialsTrack')) {
-    testimonialsCarousel.init();
-}
-</script>
+<!-- Script carregado externamente via static/js/testimonials-carousel.js -->
+<script src="{% static 'js/testimonials-carousel.js' %}" defer></script>
 
