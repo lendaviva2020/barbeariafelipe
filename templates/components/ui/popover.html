@@ -1,0 +1,18 @@
+{# Popover Component #}
+{% comment %}
+Uso:
+<button data-popover-trigger="{{ popover_id }}">Trigger</button>
+{% include 'components/ui/popover.html' with id=popover_id align="center" %}
+    <p>Conteúdo do popover</p>
+{% endinclude %}
+{% endcomment %}
+
+<div class="popover-content hidden"
+     id="{{ id }}"
+     data-popover
+     data-state="closed"
+     data-align="{{ align|default:'center' }}"
+     role="dialog">
+    {{ content|safe }}
+</div>
+

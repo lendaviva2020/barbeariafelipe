@@ -1,4 +1,5 @@
 from django.urls import path
+from .auth_views import auth_page, login_view, register_view, logout_view
 from .views import (
     GoalListView,
     GoalCreateView,
@@ -28,8 +29,28 @@ from .views import (
     RecurringUpdateView,
     RecurringDeleteView,
 )
+from .chat_views import (
+    ChatSendMessageView,
+    ChatHistoryView,
+    AISettingsListCreateView,
+    AISettingsDetailView,
+    AIStatsView,
+    ChatRequiringAttentionView,
+    ChatMarkReadView,
+    SendNotificationView,
+    NotificationListView,
+    NotificationDetailView,
+)
+
+app_name = 'core'
 
 urlpatterns = [
+    # Auth Enhanced
+    path('auth/', auth_page, name='auth'),
+    path('api/auth/login/', login_view, name='api_login'),
+    path('api/auth/register/', register_view, name='api_register'),
+    path('logout/', logout_view, name='logout'),
+    
     # Goals
     path('goals/', GoalListView.as_view(), name='goal_list'),
     path('goals/create/', GoalCreateView.as_view(), name='goal_create'),
@@ -74,5 +95,21 @@ urlpatterns = [
     
     # Settings
     path('settings/', SettingsView.as_view(), name='settings'),
+    
+    # Chat e IA
+    path('api/chat/send/', ChatSendMessageView.as_view(), name='chat_send'),
+    path('api/chat/history/<int:appointment_id>/', ChatHistoryView.as_view(), name='chat_history'),
+    path('api/chat/attention/', ChatRequiringAttentionView.as_view(), name='chat_attention'),
+    path('api/chat/<int:message_id>/read/', ChatMarkReadView.as_view(), name='chat_mark_read'),
+    
+    # Configurações de IA
+    path('api/ai-settings/', AISettingsListCreateView.as_view(), name='ai_settings_list'),
+    path('api/ai-settings/<int:pk>/', AISettingsDetailView.as_view(), name='ai_settings_detail'),
+    path('api/ai/stats/', AIStatsView.as_view(), name='ai_stats'),
+    
+    # Notificações
+    path('api/notifications/send/', SendNotificationView.as_view(), name='notification_send'),
+    path('api/notifications/', NotificationListView.as_view(), name='notification_list'),
+    path('api/notifications/<int:pk>/', NotificationDetailView.as_view(), name='notification_detail'),
 ]
 

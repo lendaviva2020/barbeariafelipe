@@ -1,0 +1,15 @@
+{# Tooltip Component #}
+{% comment %}
+Uso:
+<button data-tooltip="{{ tooltip_id }}">Hover me</button>
+{% include 'components/ui/tooltip.html' with id=tooltip_id text="Texto do tooltip" %}
+{% endcomment %}
+
+<div class="tooltip-content hidden"
+     id="{{ id }}"
+     data-tooltip
+     data-state="hidden"
+     role="tooltip">
+    {{ text|default:content|safe }}
+</div>
+

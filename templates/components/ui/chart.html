@@ -1,0 +1,17 @@
+{# Chart Component - Wrapper para Chart.js #}
+{% comment %}
+Uso:
+{% include 'components/ui/chart.html' with chart_id="myChart" type="line" height="300" %}
+
+Requer Chart.js: <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+Dados configurados via JavaScript
+{% endcomment %}
+
+<div class="flex aspect-video justify-center" data-chart="{{ chart_id }}">
+    <canvas 
+        id="{{ chart_id }}"
+        style="{% if height %}height: {{ height }}px;{% endif %} {% if width %}width: {{ width }}px;{% endif %}"
+        {% if aria_label %}aria-label="{{ aria_label }}"{% endif %}
+    ></canvas>
+</div>
+

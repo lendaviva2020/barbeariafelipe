@@ -1,0 +1,39 @@
+{# Tabs Component #}
+{% comment %}
+Uso:
+{% include 'components/ui/tabs.html' with tabs=tab_items default_tab="tab1" %}
+
+tabs: [{'id': 'tab1', 'label': 'Tab 1', 'content': 'Content 1'}, ...]
+{% endcomment %}
+
+<div data-tabs="{{ default_tab|default:tabs.0.id }}">
+    <!-- Tab List -->
+    <div class="tabs-list">
+        {% for tab in tabs %}
+        <button
+            type="button"
+            class="tabs-trigger"
+            data-tabs-trigger="{{ tab.id }}"
+            data-state="{% if forloop.first and not default_tab or tab.id == default_tab %}active{% else %}inactive{% endif %}"
+            role="tab"
+            aria-selected="{% if forloop.first and not default_tab or tab.id == default_tab %}true{% else %}false{% endif %}"
+            aria-controls="tab-content-{{ tab.id }}"
+        >
+            {{ tab.label }}
+        </button>
+        {% endfor %}
+    </div>
+    
+    <!-- Tab Contents -->
+    {% for tab in tabs %}
+    <div
+        class="tabs-content {% if not forloop.first and tab.id != default_tab %}hidden{% endif %}"
+        data-tabs-content="{{ tab.id }}"
+        id="tab-content-{{ tab.id }}"
+        role="tabpanel"
+    >
+        {{ tab.content|safe }}
+    </div>
+    {% endfor %}
+</div>
+

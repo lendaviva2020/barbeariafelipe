@@ -1,0 +1,25 @@
+{# Progress Component #}
+{% comment %}
+Uso:
+{% include 'components/ui/progress.html' with value=75 max=100 %}
+{% endcomment %}
+
+<div class="progress {{ class|default:'' }}" data-progress data-value="{{ value|default:0 }}">
+    <div 
+        class="progress-indicator"
+        role="progressbar"
+        aria-valuemin="0"
+        aria-valuemax="{{ max|default:100 }}"
+        aria-valuenow="{{ value|default:0 }}"
+    ></div>
+</div>
+
+<script>
+(function() {
+    const progress = document.currentScript.previousElementSibling;
+    const indicator = progress.querySelector('.progress-indicator');
+    const value = parseInt(progress.dataset.value) || 0;
+    indicator.style.width = value + '%';
+})();
+</script>
+

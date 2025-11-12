@@ -1,0 +1,24 @@
+{# Button Component #}
+{% comment %}
+Uso:
+{% include 'components/ui/button.html' with variant="default" size="default" type="button" %}
+    Texto do Botão
+{% endinclude %}
+
+Variantes: default, destructive, outline, secondary, ghost, link, premium
+Tamanhos: sm, default, lg, xl, icon
+{% endcomment %}
+
+<button 
+    type="{{ type|default:'button' }}"
+    class="btn btn-{{ variant|default:'default' }} btn-{{ size|default:'default-size' }} {{ class|default:'' }}"
+    {% if disabled %}disabled{% endif %}
+    {% if onclick %}onclick="{{ onclick }}"{% endif %}
+    {% if id %}id="{{ id }}"{% endif %}
+    {{ attrs|safe }}
+>
+    {% if icon_before %}<span class="mr-2">{{ icon_before|safe }}</span>{% endif %}
+    {% if text %}{{ text }}{% else %}{{ content }}{% endif %}
+    {% if icon_after %}<span class="ml-2">{{ icon_after|safe }}</span>{% endif %}
+</button>
+

@@ -1,121 +1,215 @@
-{% extends "base.html" %}
+{% extends "admin/base_admin.html" %}
 {% load static %}
 
-{% block title %}Gerenciar Usuários - Admin{% endblock %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/admin-users.css' %}">
-{% endblock %}
+{% block title %}Gerenciar Usuários - Painel Administrativo{% endblock %}
 
 {% block content %}
-<div class="admin-users-container">
-    <header class="admin-header">
-        <h1>Gerenciar Usuários</h1>
-        <button class="btn btn-primary" onclick="exportUsers()">
-            <i class="fas fa-download"></i> Exportar
-        </button>
-    </header>
-
-    <!-- Filtros -->
-    <div class="filters-section">
-        <input type="text" id="searchUser" class="form-control" placeholder="Buscar por nome ou email...">
-        <select id="filterRole" class="form-control">
-            <option value="">Todos os Perfis</option>
-            <option value="customer">Cliente</option>
-            <option value="barber">Barbeiro</option>
-            <option value="admin">Admin</option>
-        </select>
-        <select id="filterActive" class="form-control">
-            <option value="">Todos</option>
-            <option value="true">Ativos</option>
-            <option value="false">Inativos</option>
-        </select>
+<div x-data="usersApp()" x-init="init()">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold">Gerenciar Usuários</h1>
+            <p class="text-gray-600">Administre permissões e acessos dos usuários</p>
+        </div>
     </div>
 
     <!-- Estatísticas -->
-    <div class="stats-cards">
-        <div class="stat-card">
-            <div class="stat-icon customers">
-                <i class="fas fa-users"></i>
-            </div>
-            <div class="stat-info">
-                <h3 id="statCustomers">0</h3>
-                <p>Clientes</p>
-            </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="card-metric">
+            <div class="text-2xl font-bold" x-text="stats.total">0</div>
+            <div class="text-sm text-gray-600">Total de Usuários</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-icon barbers">
-                <i class="fas fa-cut"></i>
-            </div>
-            <div class="stat-info">
-                <h3 id="statBarbers">0</h3>
-                <p>Barbeiros</p>
-            </div>
+        <div class="card-metric">
+            <div class="text-2xl font-bold text-red-600" x-text="stats.admins">0</div>
+            <div class="text-sm text-gray-600">Administradores</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-icon active">
-                <i class="fas fa-check-circle"></i>
-            </div>
-            <div class="stat-info">
-                <h3 id="statActive">0</h3>
-                <p>Ativos</p>
-            </div>
+        <div class="card-metric">
+            <div class="text-2xl font-bold text-green-600" x-text="stats.active">0</div>
+            <div class="text-sm text-gray-600">Ativos</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-icon new">
-                <i class="fas fa-user-plus"></i>
-            </div>
-            <div class="stat-info">
-                <h3 id="statNew">0</h3>
-                <p>Novos (30d)</p>
-            </div>
+        <div class="card-metric">
+            <div class="text-2xl font-bold text-yellow-600" x-text="stats.inactive">0</div>
+            <div class="text-sm text-gray-600">Inativos</div>
         </div>
     </div>
 
-    <!-- Tabela de Usuários -->
-    <div class="users-table-container">
-        <table class="users-table" id="usersTable">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nome</th>
-                    <th>Email</th>
-                    <th>Telefone</th>
-                    <th>Perfil</th>
-                    <th>Data Cadastro</th>
-                    <th>Status</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody id="usersBody">
-                <tr>
-                    <td colspan="8" class="loading-cell">
-                        <div class="loading-spinner"></div>
-                        Carregando usuários...
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+    <!-- Filtros -->
+    <div class="card mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <input type="text" x-model="filters.search" @input="loadUsers()" 
+                   placeholder="Buscar por nome ou email..." class="form-input">
+            
+            <select x-model="filters.role" @change="loadUsers()" class="form-select">
+                <option value="all">Todos os tipos</option>
+                <option value="admin">Administradores</option>
+                <option value="active">Ativos</option>
+                <option value="inactive">Inativos</option>
+            </select>
+            
+            <button @click="loadUsers()" class="btn btn-outline">
+                <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Atualizar
+            </button>
+        </div>
     </div>
 
-    <!-- Paginação -->
-    <div class="pagination-container" id="paginationContainer"></div>
-</div>
-
-<!-- Modal: Detalhes do Usuário -->
-<div id="userModal" class="modal">
-    <div class="modal-content large">
-        <div class="modal-header">
-            <h2>Detalhes do Usuário</h2>
-            <button class="close-btn" onclick="closeModal()">&times;</button>
+    <!-- Lista de Usuários -->
+    <div class="card">
+        <div x-show="loading" class="text-center py-12">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p class="text-gray-600 mt-4">Carregando usuários...</p>
         </div>
-        <div id="userDetails" class="user-details">
-            <!-- Conteúdo carregado dinamicamente -->
+
+        <div x-show="!loading && users.length === 0" class="text-center py-12">
+            <svg class="icon-lg text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <h3 class="text-lg font-semibold mb-2">Nenhum usuário encontrado</h3>
+        </div>
+
+        <div x-show="!loading && users.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <template x-for="user in users" :key="user.id">
+                <div class="border rounded-lg p-4 hover:shadow-md transition">
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex-1">
+                            <h4 class="font-semibold" x-text="user.name"></h4>
+                            <p class="text-sm text-gray-600" x-text="user.email"></p>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <span class="badge" :class="user.is_staff ? 'badge-red' : 'badge-gray'" 
+                                  x-text="user.is_staff ? 'Admin' : 'Usuário'"></span>
+                            <span class="badge" :class="user.is_active ? 'badge-green' : 'badge-yellow'" 
+                                  x-text="user.is_active ? 'Ativo' : 'Inativo'"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="text-sm text-gray-600 space-y-1 mb-3">
+                        <div x-show="user.phone"><strong>Telefone:</strong> <span x-text="user.phone"></span></div>
+                        <div><strong>Cadastro:</strong> <span x-text="formatDate(user.created_at)"></span></div>
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <button @click="toggleAdmin(user)" 
+                                class="btn btn-sm flex-1"
+                                :class="user.is_staff ? 'btn-outline' : 'btn-primary'"
+                                x-text="user.is_staff ? 'Remover Admin' : 'Tornar Admin'">
+                        </button>
+                    </div>
+                </div>
+            </template>
         </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/admin-users.js' %}"></script>
+<script>
+function usersApp() {
+    return {
+        loading: true,
+        users: [],
+        stats: {
+            total: 0,
+            admins: 0,
+            active: 0,
+            inactive: 0
+        },
+        filters: {
+            search: '',
+            role: 'all'
+        },
+        
+        init() {
+            this.loadUsers();
+        },
+        
+        async loadUsers() {
+            this.loading = true;
+            try {
+                const params = new URLSearchParams(this.filters);
+                const response = await fetch(`/admin-painel/api/users/?${params}`);
+                const data = await response.json();
+                this.users = data.users || [];
+                this.calculateStats();
+            } catch (error) {
+                console.error('Erro ao carregar usuários:', error);
+            } finally {
+                this.loading = false;
+            }
+        },
+        
+        calculateStats() {
+            this.stats = {
+                total: this.users.length,
+                admins: this.users.filter(u => u.is_staff).length,
+                active: this.users.filter(u => u.is_active).length,
+                inactive: this.users.filter(u => !u.is_active).length
+            };
+        },
+        
+        async toggleAdmin(user) {
+            const action = user.is_staff ? 'remover permissões de' : 'tornar';
+            if (!confirm(`Deseja ${action} administrador para ${user.name}?`)) return;
+            
+            try {
+                const response = await fetch(`/admin-painel/api/users/${user.id}/toggle-admin/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                });
+                
+                if (response.ok) {
+                    await this.loadUsers();
+                    alert('Permissões atualizadas!');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao atualizar permissões');
+            }
+        },
+        
+        formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('pt-BR');
+        }
+    }
+}
+</script>
+
+<style>
+.badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-align: center;
+}
+.badge-red { background: #fee2e2; color: #991b1b; }
+.badge-green { background: #d1fae5; color: #065f46; }
+.badge-yellow { background: #fef3c7; color: #92400e; }
+.badge-gray { background: #f3f4f6; color: #4b5563; }
+
+.form-input, .form-select {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+}
+
+.form-input:focus, .form-select:focus {
+    outline: none;
+    border-color: #C9A961;
+    box-shadow: 0 0 0 3px rgba(201, 169, 97, 0.15);
+}
+
+.icon-lg {
+    width: 3rem;
+    height: 3rem;
+}
+</style>
 {% endblock %}

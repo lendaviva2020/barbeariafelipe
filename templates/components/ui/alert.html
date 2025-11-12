@@ -1,0 +1,32 @@
+{# Alert Component #}
+{% comment %}
+Uso:
+{% include 'components/ui/alert.html' with variant="default" title="Atenção" description="Mensagem importante" %}
+
+Variantes: default, destructive
+{% endcomment %}
+
+<div class="alert alert-{{ variant|default:'default' }} {{ class|default:'' }}" role="alert">
+    {% if icon %}
+    <div class="absolute left-4 top-4">
+        {{ icon|safe }}
+    </div>
+    {% endif %}
+    
+    <div class="{% if icon %}pl-7{% endif %}">
+        {% if title %}
+        <h5 class="alert-title">{{ title }}</h5>
+        {% endif %}
+        
+        {% if description %}
+        <div class="alert-description">
+            {{ description|safe }}
+        </div>
+        {% endif %}
+        
+        {% if content %}
+        {{ content|safe }}
+        {% endif %}
+    </div>
+</div>
+

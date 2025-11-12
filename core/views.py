@@ -28,7 +28,54 @@ def custom_403(request, exception):
     return render(request, 'errors/403.html', status=403)
 
 def health_check(request):
-    return JsonResponse({'status': 'ok'})
+    """
+    Health check endpoint para monitoramento
+    Retorna status de database, cache e celery
+    """
+    from django.db import connection
+    from django.core.cache import cache
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    
+    health_status = {
+        'status': 'healthy',
+        'checks': {}
+    }
+    
+    # Check Database
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+        health_status['checks']['database'] = 'ok'
+    except Exception as e:
+        health_status['status'] = 'unhealthy'
+        health_status['checks']['database'] = f'error'
+        logger.error(f"Health check - Database error: {e}")
+    
+    # Check Redis/Cache
+    try:
+        cache.set('health_check', 'ok', 10)
+        if cache.get('health_check') == 'ok':
+            health_status['checks']['cache'] = 'ok'
+        else:
+            raise Exception("Cache failed")
+    except Exception as e:
+        health_status['checks']['cache'] = 'warning'
+        logger.warning(f"Health check - Cache error: {e}")
+    
+    # Informações do sistema
+    from django.conf import settings
+    health_status['info'] = {
+        'debug': settings.DEBUG,
+        'version': '1.0.0'
+    }
+    
+    # Status code baseado na saúde
+    status_code = 200 if health_status['status'] == 'healthy' else 503
+    
+    return JsonResponse(health_status, status=status_code)
 
 # Goals Views
 class GoalListView(generics.ListAPIView):

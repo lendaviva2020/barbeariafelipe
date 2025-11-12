@@ -1,0 +1,44 @@
+{# Dropdown Menu Component #}
+{% comment %}
+Uso:
+{% include 'components/ui/dropdown_menu.html' with trigger_text="Menu" items=menu_items %}
+
+items: [{'label': 'Item 1', 'url': '/url1', 'icon': '<svg...>'}, ...]
+{% endcomment %}
+
+<div class="relative inline-block text-left" data-dropdown>
+    <button
+        type="button"
+        class="btn btn-outline {{ trigger_class|default:'' }}"
+        data-dropdown-trigger
+        aria-haspopup="true"
+        aria-expanded="false"
+    >
+        {{ trigger_text|default:"Menu" }}
+        <svg class="h-4 w-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+    </button>
+    
+    <div class="dropdown-menu hidden absolute right-0 mt-2 min-w-[8rem]" 
+         data-dropdown-menu
+         data-state="closed"
+         role="menu">
+        {% for item in items %}
+        {% if item.separator %}
+        <div class="dropdown-menu-separator"></div>
+        {% elif item.label_only %}
+        <div class="dropdown-menu-label">{{ item.label }}</div>
+        {% else %}
+        <a href="{{ item.url|default:'#' }}" 
+           class="dropdown-menu-item"
+           role="menuitem"
+           {% if item.onclick %}onclick="{{ item.onclick }}"{% endif %}>
+            {% if item.icon %}{{ item.icon|safe }}{% endif %}
+            {{ item.label }}
+        </a>
+        {% endif %}
+        {% endfor %}
+    </div>
+</div>
+

@@ -1,0 +1,25 @@
+{# Checkbox Component #}
+{% comment %}
+Uso:
+{% include 'components/ui/checkbox.html' with name="accept_terms" id="accept" label="Aceito os termos" %}
+{% endcomment %}
+
+<div class="flex items-center space-x-2">
+    <input 
+        type="checkbox"
+        name="{{ name }}"
+        id="{{ id|default:name }}"
+        class="checkbox {{ class|default:'' }}"
+        value="{{ value|default:'on' }}"
+        {% if checked %}checked{% endif %}
+        {% if required %}required{% endif %}
+        {% if disabled %}disabled{% endif %}
+        {{ attrs|safe }}
+    />
+    {% if label %}
+    <label for="{{ id|default:name }}" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer">
+        {{ label }}
+    </label>
+    {% endif %}
+</div>
+

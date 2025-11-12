@@ -1,0 +1,36 @@
+{# Drawer Component - Similar ao Sheet mas otimizado para mobile #}
+{% comment %}
+Uso:
+{% include 'components/ui/drawer.html' with id="myDrawer" title="Menu" %}
+{% endcomment %}
+
+<div class="sheet-overlay hidden" 
+     id="{{ id }}"
+     data-state="closed"
+     data-drawer
+     onclick="if(event.target === this) UI.overlay.close(this)">
+    
+    <div class="fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] border bg-background"
+         data-drawer-content
+         onclick="event.stopPropagation()">
+        
+        <!-- Handle -->
+        <div class="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted"></div>
+        
+        {% if title or description %}
+        <div class="grid gap-1.5 p-4 text-center sm:text-left">
+            {% if title %}
+            <h2 class="text-lg font-semibold leading-none tracking-tight">{{ title }}</h2>
+            {% endif %}
+            {% if description %}
+            <p class="text-sm text-muted-foreground">{{ description }}</p>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <div class="p-4">
+            {{ content|safe }}
+        </div>
+    </div>
+</div>
+

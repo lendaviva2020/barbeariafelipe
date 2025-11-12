@@ -1,0 +1,14 @@
+{# Label Component #}
+{% comment %}
+Uso:
+{% include 'components/ui/label.html' with for="email" text="Email" %}
+{% endcomment %}
+
+<label
+    {% if for %}for="{{ for }}"{% endif %}
+    class="label {{ class|default:'' }}"
+    {{ attrs|safe }}
+>
+    {{ text }}{% if required %} <span class="text-destructive">*</span>{% endif %}
+</label>
+

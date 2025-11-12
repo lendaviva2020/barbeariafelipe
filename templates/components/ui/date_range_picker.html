@@ -1,0 +1,35 @@
+{# Date Range Picker Component #}
+{% comment %}
+Uso:
+{% include 'components/ui/date_range_picker.html' with name="date_range" start_date=start end_date=end %}
+{% endcomment %}
+
+<div class="grid gap-2" data-date-range-picker>
+    <button
+        type="button"
+        class="btn btn-outline w-[300px] justify-start text-left font-normal"
+        data-date-range-trigger
+    >
+        <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+        </svg>
+        <span data-date-range-label>
+            {% if start_date and end_date %}
+                {{ start_date|date:"d/m/Y" }} - {{ end_date|date:"d/m/Y" }}
+            {% else %}
+                Selecione um período
+            {% endif %}
+        </span>
+    </button>
+    
+    <div class="popover-content hidden" data-date-range-content>
+        <div class="flex space-x-4">
+            <div data-calendar-start></div>
+            <div data-calendar-end></div>
+        </div>
+    </div>
+    
+    <input type="hidden" name="{{ name }}_start" value="{{ start_date }}" data-date-range-start />
+    <input type="hidden" name="{{ name }}_end" value="{{ end_date }}" data-date-range-end />
+</div>
+

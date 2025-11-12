@@ -1,0 +1,37 @@
+{# Accordion Component #}
+{% comment %}
+Uso:
+{% include 'components/ui/accordion.html' with items=accordion_items %}
+
+items deve ser uma lista de dicts: [{'title': 'Título', 'content': 'Conteúdo'}, ...]
+{% endcomment %}
+
+<div class="accordion-container" data-accordion="{{ allow_multiple|yesno:'multiple,single' }}">
+    {% for item in items %}
+    <div class="accordion-item" data-accordion-item>
+        <button
+            type="button"
+            class="accordion-trigger w-full"
+            data-accordion-trigger="{{ forloop.counter0 }}"
+            data-state="closed"
+            aria-expanded="false"
+        >
+            {{ item.title }}
+            <svg class="h-4 w-4 shrink-0 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </button>
+        <div 
+            class="accordion-content" 
+            data-accordion-content="{{ forloop.counter0 }}"
+            data-state="closed"
+            style="display: none;"
+        >
+            <div class="accordion-content-inner">
+                {{ item.content|safe }}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+

@@ -1,0 +1,42 @@
+{# Alert Dialog Component #}
+{% comment %}
+Uso:
+{% include 'components/ui/alert_dialog.html' with id="confirmDialog" title="Confirmar ação" description="Tem certeza?" %}
+{% endcomment %}
+
+<div class="dialog-overlay hidden" 
+     id="{{ id }}"
+     data-state="closed"
+     data-alert-dialog
+     role="alertdialog"
+     aria-modal="true"
+     aria-labelledby="{{ id }}-title"
+     aria-describedby="{{ id }}-description">
+    
+    <div class="dialog-content" onclick="event.stopPropagation()">
+        <div class="dialog-header">
+            <h2 id="{{ id }}-title" class="dialog-title">{{ title }}</h2>
+            <p id="{{ id }}-description" class="dialog-description">{{ description }}</p>
+        </div>
+        
+        {{ content|safe }}
+        
+        <div class="dialog-footer mt-4">
+            <button 
+                type="button"
+                class="btn btn-outline"
+                onclick="UI.overlay.close(document.getElementById('{{ id }}'))"
+            >
+                {{ cancel_text|default:"Cancelar" }}
+            </button>
+            <button 
+                type="button"
+                class="btn btn-{{ action_variant|default:'default' }}"
+                onclick="{{ action_onclick }}"
+            >
+                {{ action_text|default:"Confirmar" }}
+            </button>
+        </div>
+    </div>
+</div>
+

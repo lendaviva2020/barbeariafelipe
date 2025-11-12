@@ -1,0 +1,57 @@
+{# Carousel Component #}
+{% comment %}
+Uso:
+{% include 'components/ui/carousel.html' with items=carousel_items auto_play=True interval=5000 %}
+
+items: lista de conteúdos HTML
+{% endcomment %}
+
+<div class="carousel relative {{ class|default:'' }}" data-carousel data-auto-play="{{ auto_play|yesno:'true,false' }}" data-interval="{{ interval|default:5000 }}">
+    <div class="carousel-viewport overflow-hidden">
+        <div class="carousel-container transition-transform duration-300" data-carousel-container>
+            {% for item in items %}
+            <div class="carousel-item" data-carousel-item="{{ forloop.counter0 }}">
+                {{ item|safe }}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    {% if show_controls|default:True %}
+    <button
+        type="button"
+        class="carousel-button carousel-button-prev btn btn-outline btn-icon"
+        data-carousel-prev
+        aria-label="Anterior"
+    >
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+    </button>
+    
+    <button
+        type="button"
+        class="carousel-button carousel-button-next btn btn-outline btn-icon"
+        data-carousel-next
+        aria-label="Próximo"
+    >
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+    </button>
+    {% endif %}
+    
+    {% if show_indicators|default:True %}
+    <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
+        {% for item in items %}
+        <button
+            type="button"
+            class="w-2 h-2 rounded-full bg-white/50 hover:bg-white transition-colors"
+            data-carousel-indicator="{{ forloop.counter0 }}"
+            aria-label="Ir para slide {{ forloop.counter }}"
+        ></button>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+

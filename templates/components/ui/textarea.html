@@ -1,0 +1,19 @@
+{# Textarea Component #}
+{% comment %}
+Uso:
+{% include 'components/ui/textarea.html' with name="notes" placeholder="Observações" rows=4 %}
+{% endcomment %}
+
+<textarea
+    name="{{ name }}"
+    id="{{ id|default:name }}"
+    class="textarea {{ class|default:'' }}"
+    rows="{{ rows|default:3 }}"
+    {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+    {% if required %}required{% endif %}
+    {% if disabled %}disabled{% endif %}
+    {% if readonly %}readonly{% endif %}
+    {% if maxlength %}maxlength="{{ maxlength }}"{% endif %}
+    {{ attrs|safe }}
+>{% if value %}{{ value }}{% endif %}</textarea>
+

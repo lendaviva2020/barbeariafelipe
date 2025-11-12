@@ -1,0 +1,34 @@
+{# Breadcrumb Component #}
+{% comment %}
+Uso:
+{% include 'components/ui/breadcrumb.html' with items=breadcrumb_items %}
+
+items: [{'url': '/', 'label': 'Home'}, {'url': '/page', 'label': 'Page'}, {'label': 'Current'}]
+{% endcomment %}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb-list">
+        {% for item in items %}
+        <li class="breadcrumb-item">
+            {% if item.url and not forloop.last %}
+            <a href="{{ item.url }}" class="breadcrumb-link">
+                {{ item.label }}
+            </a>
+            {% else %}
+            <span class="breadcrumb-page" aria-current="page">
+                {{ item.label }}
+            </span>
+            {% endif %}
+        </li>
+        
+        {% if not forloop.last %}
+        <li class="breadcrumb-separator" role="presentation" aria-hidden="true">
+            <svg class="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+        </li>
+        {% endif %}
+        {% endfor %}
+    </ol>
+</nav>
+

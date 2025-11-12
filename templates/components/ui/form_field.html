@@ -1,0 +1,36 @@
+{# Form Field Component - Campo completo com label e mensagens de erro #}
+{% comment %}
+Uso:
+{% include 'components/ui/form_field.html' with field=form.email label="Email" description="Seu endereço de email" %}
+{% endcomment %}
+
+<div class="space-y-2" data-form-item>
+    {% if label %}
+    <label for="{{ field.id_for_label }}" class="label {% if field.errors %}text-destructive{% endif %}">
+        {{ label }}{% if field.field.required %} <span class="text-destructive">*</span>{% endif %}
+    </label>
+    {% endif %}
+    
+    <div class="form-control">
+        {{ field }}
+    </div>
+    
+    {% if description %}
+    <p class="text-sm text-muted-foreground" data-form-description>
+        {{ description }}
+    </p>
+    {% endif %}
+    
+    {% if field.errors %}
+    <p class="text-sm font-medium text-destructive" data-form-error>
+        {{ field.errors.0 }}
+    </p>
+    {% endif %}
+    
+    {% if field.help_text and not field.errors %}
+    <p class="text-sm text-muted-foreground" data-form-help>
+        {{ field.help_text }}
+    </p>
+    {% endif %}
+</div>
+

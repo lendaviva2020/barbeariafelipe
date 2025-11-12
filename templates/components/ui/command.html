@@ -1,0 +1,44 @@
+{# Command Palette Component #}
+{% comment %}
+Uso:
+{% include 'components/ui/command.html' with placeholder="Buscar..." items=command_items %}
+{% endcomment %}
+
+<div class="command" data-command>
+    <div class="flex items-center border-b px-3">
+        <svg class="mr-2 h-4 w-4 shrink-0 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+        <input
+            type="text"
+            class="command-input"
+            placeholder="{{ placeholder|default:'Buscar...' }}"
+            data-command-input
+        />
+    </div>
+    
+    <div class="command-list" data-command-list>
+        {% for group in items %}
+        <div class="command-group p-1">
+            {% if group.heading %}
+            <div class="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+                {{ group.heading }}
+            </div>
+            {% endif %}
+            
+            {% for item in group.items %}
+            <div class="command-item" 
+                 data-command-item
+                 data-value="{{ item.value }}"
+                 {% if item.onclick %}onclick="{{ item.onclick }}"{% endif %}>
+                {% if item.icon %}{{ item.icon|safe }}{% endif %}
+                {{ item.label }}
+            </div>
+            {% endfor %}
+        </div>
+        {% empty %}
+        <div class="py-6 text-center text-sm">Nenhum resultado encontrado</div>
+        {% endfor %}
+    </div>
+</div>
+

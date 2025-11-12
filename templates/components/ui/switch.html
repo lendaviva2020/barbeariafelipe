@@ -1,0 +1,33 @@
+{# Switch Component #}
+{% comment %}
+Uso:
+{% include 'components/ui/switch.html' with name="is_enabled" id="enabled" label="Ativar IA" checked=True %}
+{% endcomment %}
+
+<div class="flex items-center space-x-2">
+    <button
+        type="button"
+        role="switch"
+        aria-checked="{{ checked|yesno:'true,false' }}"
+        data-state="{{ checked|yesno:'checked,unchecked' }}"
+        class="switch {{ class|default:'' }}"
+        id="{{ id|default:name }}"
+        {% if disabled %}disabled aria-disabled="true"{% endif %}
+        data-switch-name="{{ name }}"
+        onclick="UI.components.get('switch').toggle(this)"
+    >
+        <span class="switch-thumb"></span>
+    </button>
+    <input 
+        type="hidden" 
+        name="{{ name }}" 
+        value="{{ checked|yesno:'on,off' }}"
+        data-switch-input="{{ name }}"
+    />
+    {% if label %}
+    <label for="{{ id|default:name }}" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer">
+        {{ label }}
+    </label>
+    {% endif %}
+</div>
+

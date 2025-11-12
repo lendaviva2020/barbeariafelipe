@@ -1,0 +1,28 @@
+{# Slider Component #}
+{% comment %}
+Uso:
+{% include 'components/ui/slider.html' with name="volume" min=0 max=100 value=50 step=1 %}
+{% endcomment %}
+
+<div class="slider-container" data-slider>
+    <div class="slider">
+        <div class="slider-track">
+            <div class="slider-range" data-slider-range style="width: {{ value|default:50 }}%;"></div>
+        </div>
+        <input
+            type="range"
+            name="{{ name }}"
+            id="{{ id|default:name }}"
+            min="{{ min|default:0 }}"
+            max="{{ max|default:100 }}"
+            value="{{ value|default:50 }}"
+            step="{{ step|default:1 }}"
+            class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            oninput="UI.components.get('slider').update(this)"
+            {% if disabled %}disabled{% endif %}
+            {{ attrs|safe }}
+        />
+        <div class="slider-thumb" data-slider-thumb style="left: {{ value|default:50 }}%;"></div>
+    </div>
+</div>
+

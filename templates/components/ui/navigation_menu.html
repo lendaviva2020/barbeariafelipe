@@ -1,0 +1,42 @@
+{# Navigation Menu Component #}
+{% comment %}
+Uso:
+{% include 'components/ui/navigation_menu.html' with items=nav_items %}
+{% endcomment %}
+
+<nav class="relative z-10 flex max-w-max flex-1 items-center justify-center" data-navigation-menu>
+    <ul class="group flex flex-1 list-none items-center justify-center space-x-1">
+        {% for item in items %}
+        <li>
+            {% if item.children %}
+            <div class="relative" data-nav-item>
+                <button
+                    type="button"
+                    class="group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none"
+                    data-nav-trigger
+                >
+                    {{ item.label }}
+                    <svg class="relative top-[1px] ml-1 h-3 w-3 transition duration-200 group-data-[state=open]:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div class="absolute left-0 top-full hidden pt-2" data-nav-content>
+                    <div class="rounded-md border bg-popover p-4 shadow-md">
+                        {% for child in item.children %}
+                        <a href="{{ child.url }}" class="block px-4 py-2 text-sm hover:bg-accent rounded-md">
+                            {{ child.label }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <a href="{{ item.url }}" class="group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground">
+                {{ item.label }}
+            </a>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+</nav>
+

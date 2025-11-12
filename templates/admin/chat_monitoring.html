@@ -1,0 +1,309 @@
+{% extends 'admin/base_admin.html' %}
+{% load static %}
+
+{% block title %}Monitoramento de Chat - Painel Admin{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">💬 Monitoramento de Chat</h1>
+        <p class="text-gray-600 mt-2">Visualize e responda mensagens que requerem atenção humana</p>
+    </div>
+
+    <!-- Filtros -->
+    <div class="bg-white rounded-lg shadow p-4 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <select id="filter-status" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                    <option value="all">Todos</option>
+                    <option value="unread" selected>Não Lidos</option>
+                    <option value="read">Lidos</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Requer Atenção</label>
+                <select id="filter-attention" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                    <option value="all">Todos</option>
+                    <option value="yes" selected>Sim</option>
+                    <option value="no">Não</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Barbeiro</label>
+                <select id="filter-barber" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                    <option value="all">Todos</option>
+                    <!-- Barbeiros serão carregados dinamicamente -->
+                </select>
+            </div>
+            
+            <div class="flex items-end">
+                <button onclick="applyFilters()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    🔍 Filtrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estatísticas Rápidas -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-yellow-800 font-semibold">Requer Atenção</p>
+                    <p id="attention-count" class="text-3xl font-bold text-yellow-900">0</p>
+                </div>
+                <div class="text-yellow-500 text-4xl">⚠️</div>
+            </div>
+        </div>
+        
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-blue-800 font-semibold">Não Lidos</p>
+                    <p id="unread-count" class="text-3xl font-bold text-blue-900">0</p>
+                </div>
+                <div class="text-blue-500 text-4xl">📬</div>
+            </div>
+        </div>
+        
+        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-green-800 font-semibold">Respondidos Hoje</p>
+                    <p id="today-count" class="text-3xl font-bold text-green-900">0</p>
+                </div>
+                <div class="text-green-500 text-4xl">✅</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Mensagens -->
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+            <h2 class="text-xl font-semibold">Mensagens Recentes</h2>
+            <button onclick="loadMessages()" class="btn btn-secondary">
+                🔄 Atualizar
+            </button>
+        </div>
+        
+        <div id="messages-list" class="divide-y divide-gray-200">
+            <!-- Mensagens serão carregadas aqui -->
+            <div class="p-8 text-center text-gray-500">
+                <div class="animate-spin inline-block w-8 h-8 border-4 border-current border-t-transparent text-blue-600 rounded-full"></div>
+                <p class="mt-2">Carregando mensagens...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Detalhes -->
+<div id="details-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+            <h3 class="text-2xl font-bold">Detalhes da Conversa</h3>
+            <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <div id="conversation-container" class="p-6">
+            <!-- Conversa será carregada aqui -->
+        </div>
+        
+        <div class="p-6 border-t border-gray-200">
+            <button onclick="markAsRead()" class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                ✅ Marcar como Lida
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentMessageId = null;
+
+// Carregar mensagens
+async function loadMessages() {
+    try {
+        const response = await fetch('/api/chat/attention/', {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!response.ok) throw new Error('Erro ao carregar mensagens');
+        
+        const messages = await response.json();
+        displayMessages(messages);
+        updateCounts(messages);
+    } catch (error) {
+        console.error('Erro:', error);
+        document.getElementById('messages-list').innerHTML = '<div class="p-8 text-center text-red-500">Erro ao carregar mensagens</div>';
+    }
+}
+
+// Exibir mensagens
+function displayMessages(messages) {
+    const container = document.getElementById('messages-list');
+    
+    if (messages.length === 0) {
+        container.innerHTML = '<div class="p-8 text-center text-gray-500">Nenhuma mensagem requer atenção</div>';
+        return;
+    }
+    
+    container.innerHTML = messages.map(msg => `
+        <div class="p-4 hover:bg-gray-50 cursor-pointer transition" onclick="viewDetails(${msg.id}, ${msg.appointment.id})">
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <h3 class="font-semibold text-lg">${msg.appointment_details.customer_name}</h3>
+                        ${!msg.is_read ? '<span class="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">Não Lido</span>' : ''}
+                        ${msg.requires_human_attention ? '<span class="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">⚠️ Atenção</span>' : ''}
+                    </div>
+                    <p class="text-gray-700 mb-2">${msg.message}</p>
+                    <div class="flex items-center space-x-4 text-sm text-gray-500">
+                        <span>📅 ${formatDate(msg.appointment_details.date)} ${msg.appointment_details.time}</span>
+                        <span>🕐 ${formatTime(msg.created_at)}</span>
+                        <span>👤 ${msg.sender_name || 'Cliente'}</span>
+                    </div>
+                </div>
+                <button class="ml-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    Ver Detalhes
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Ver detalhes da conversa
+async function viewDetails(messageId, appointmentId) {
+    currentMessageId = messageId;
+    
+    try {
+        const response = await fetch(`/api/chat/history/${appointmentId}/`, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!response.ok) throw new Error('Erro ao carregar conversa');
+        
+        const messages = await response.json();
+        displayConversation(messages);
+        
+        // Mostrar modal
+        document.getElementById('details-modal').classList.remove('hidden');
+        document.getElementById('details-modal').classList.add('flex');
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao carregar detalhes da conversa');
+    }
+}
+
+// Exibir conversa
+function displayConversation(messages) {
+    const container = document.getElementById('conversation-container');
+    
+    container.innerHTML = messages.map(msg => {
+        const isUser = !msg.is_ai_response;
+        const alignment = isUser ? 'justify-end' : 'justify-start';
+        const bubbleClass = isUser ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800';
+        
+        return `
+            <div class="flex ${alignment} mb-4">
+                <div class="max-w-xs lg:max-w-md">
+                    <div class="${bubbleClass} rounded-lg px-4 py-2 shadow">
+                        ${msg.message}
+                        ${msg.requires_human_attention ? '<span class="text-xs block mt-1 opacity-75">⚠️ Requer atenção</span>' : ''}
+                    </div>
+                    <div class="text-xs text-gray-500 mt-1 ${isUser ? 'text-right' : 'text-left'}">
+                        ${msg.is_ai_response ? '🤖 IA' : '👤 ' + (msg.sender_name || 'Cliente')} • ${formatTime(msg.created_at)}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Marcar como lida
+async function markAsRead() {
+    if (!currentMessageId) return;
+    
+    try {
+        const response = await fetch(`/api/chat/${currentMessageId}/read/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        
+        if (!response.ok) throw new Error('Erro ao marcar como lida');
+        
+        alert('✅ Mensagem marcada como lida!');
+        closeModal();
+        loadMessages();
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('❌ Erro ao marcar mensagem');
+    }
+}
+
+// Fechar modal
+function closeModal() {
+    document.getElementById('details-modal').classList.add('hidden');
+    document.getElementById('details-modal').classList.remove('flex');
+    currentMessageId = null;
+}
+
+// Atualizar contadores
+function updateCounts(messages) {
+    const attentionCount = messages.filter(m => m.requires_human_attention).length;
+    const unreadCount = messages.filter(m => !m.is_read).length;
+    
+    document.getElementById('attention-count').textContent = attentionCount;
+    document.getElementById('unread-count').textContent = unreadCount;
+    // today-count seria calculado via API separada
+}
+
+// Utilidades
+function formatDate(dateStr) {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('pt-BR');
+}
+
+function formatTime(timestamp) {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Inicializar
+document.addEventListener('DOMContentLoaded', function() {
+    loadMessages();
+    
+    // Atualizar a cada 30 segundos
+    setInterval(loadMessages, 30000);
+});
+</script>
+{% endblock %}
+

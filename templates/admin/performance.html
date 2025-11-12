@@ -1,195 +1,193 @@
-{% extends "base.html" %}
+{% extends "admin/base_admin.html" %}
 {% load static %}
 
-{% block title %}Performance - Admin{% endblock %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/admin-reports.css' %}">
-{% endblock %}
+{% block title %}Performance - Painel Administrativo{% endblock %}
 
 {% block content %}
-<div class="admin-performance-container">
-    <header class="admin-header">
-        <h1>Análise de Performance</h1>
-        <select id="periodSelect" class="form-control" onchange="loadPerformance()">
-            <option value="week">Última Semana</option>
-            <option value="month" selected>Último Mês</option>
-            <option value="quarter">Último Trimestre</option>
-            <option value="year">Último Ano</option>
-        </select>
-    </header>
+<div x-data="performanceApp()" x-init="init()">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold flex items-center gap-2">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Monitoramento de Performance
+            </h1>
+            <p class="text-gray-600">Acompanhe métricas de performance do sistema</p>
+        </div>
+        <div class="flex gap-2">
+            <button @click="loadMetrics()" class="btn btn-outline">
+                <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Atualizar
+            </button>
+            <button @click="clearMetrics()" class="btn btn-destructive">
+                <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Limpar Dados
+            </button>
+        </div>
+    </div>
 
-    <!-- KPIs Principais -->
-    <div class="kpis-grid">
-        <div class="kpi-card">
-            <div class="kpi-icon revenue">
-                <i class="fas fa-chart-line"></i>
-            </div>
-            <div class="kpi-content">
-                <h3 id="kpiRevenue">R$ 0,00</h3>
-                <p>Faturamento</p>
-                <span class="kpi-trend" id="revenueTrend"></span>
+    <!-- Cards de Resumo -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="card-metric">
+            <div class="text-2xl font-bold" x-text="metrics.database?.query_count || 0">0</div>
+            <div class="text-sm text-gray-600">Queries SQL</div>
+        </div>
+        <div class="card-metric">
+            <div class="text-2xl font-bold text-blue-600" x-text="(metrics.database?.query_time || 0) + 'ms'">0ms</div>
+            <div class="text-sm text-gray-600">Tempo Total Queries</div>
+        </div>
+        <div class="card-metric">
+            <div class="text-2xl font-bold text-green-600" x-text="(metrics.cache?.hit_rate || 0) + '%'">0%</div>
+            <div class="text-sm text-gray-600">Taxa de Acerto Cache</div>
+        </div>
+        <div class="card-metric">
+            <div class="text-2xl font-bold text-purple-600" x-text="(metrics.system?.memory_mb || 'N/A')">N/A</div>
+            <div class="text-sm text-gray-600">Memória (MB)</div>
+        </div>
+    </div>
+
+    <!-- Métricas Detalhadas -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- Database -->
+        <div class="card">
+            <h3 class="text-lg font-semibold mb-4">Banco de Dados</h3>
+            <div class="space-y-3">
+                <div class="flex justify-between p-3 bg-gray-50 rounded">
+                    <span class="text-sm font-medium">Total de Queries:</span>
+                    <span class="text-sm font-bold" x-text="metrics.database?.query_count || 0">0</span>
+                </div>
+                <div class="flex justify-between p-3 bg-gray-50 rounded">
+                    <span class="text-sm font-medium">Tempo Total:</span>
+                    <span class="text-sm font-bold" x-text="(metrics.database?.query_time || 0) + 'ms'">0ms</span>
+                </div>
+                <div class="flex justify-between p-3 bg-gray-50 rounded">
+                    <span class="text-sm font-medium">Tempo Médio:</span>
+                    <span class="text-sm font-bold" x-text="(metrics.database?.avg_query_time || 0) + 'ms'">0ms</span>
+                </div>
+                <div class="flex justify-between p-3 bg-gray-50 rounded">
+                    <span class="text-sm font-medium">Engine:</span>
+                    <span class="text-sm font-bold uppercase" x-text="metrics.system?.database_engine || 'N/A'">N/A</span>
+                </div>
             </div>
         </div>
 
-        <div class="kpi-card">
-            <div class="kpi-icon appointments">
-                <i class="fas fa-calendar-alt"></i>
-            </div>
-            <div class="kpi-content">
-                <h3 id="kpiAppointments">0</h3>
-                <p>Agendamentos</p>
-                <span class="kpi-trend" id="appointmentsTrend"></span>
-            </div>
-        </div>
-
-        <div class="kpi-card">
-            <div class="kpi-icon conversion">
-                <i class="fas fa-percentage"></i>
-            </div>
-            <div class="kpi-content">
-                <h3 id="kpiConversion">0%</h3>
-                <p>Taxa de Conversão</p>
-                <span class="kpi-trend" id="conversionTrend"></span>
-            </div>
-        </div>
-
-        <div class="kpi-card">
-            <div class="kpi-icon satisfaction">
-                <i class="fas fa-star"></i>
-            </div>
-            <div class="kpi-content">
-                <h3 id="kpiSatisfaction">0.0</h3>
-                <p>Satisfação Média</p>
-                <span class="kpi-trend" id="satisfactionTrend"></span>
-            </div>
-        </div>
-
-        <div class="kpi-card">
-            <div class="kpi-icon retention">
-                <i class="fas fa-redo"></i>
-            </div>
-            <div class="kpi-content">
-                <h3 id="kpiRetention">0%</h3>
-                <p>Taxa de Retenção</p>
-                <span class="kpi-trend" id="retentionTrend"></span>
-            </div>
-        </div>
-
-        <div class="kpi-card">
-            <div class="kpi-icon cancellation">
-                <i class="fas fa-times-circle"></i>
-            </div>
-            <div class="kpi-content">
-                <h3 id="kpiCancellation">0%</h3>
-                <p>Taxa de Cancelamento</p>
-                <span class="kpi-trend" id="cancellationTrend"></span>
+        <!-- Cache -->
+        <div class="card">
+            <h3 class="text-lg font-semibold mb-4">Sistema de Cache</h3>
+            <div class="space-y-3">
+                <div class="flex justify-between p-3 bg-gray-50 rounded">
+                    <span class="text-sm font-medium">Status:</span>
+                    <span class="text-sm font-bold" :class="metrics.cache?.working ? 'text-green-600' : 'text-red-600'" 
+                          x-text="metrics.cache?.working ? 'Funcionando' : 'Offline'">N/A</span>
+                </div>
+                <div class="flex justify-between p-3 bg-gray-50 rounded">
+                    <span class="text-sm font-medium">Cache Hits:</span>
+                    <span class="text-sm font-bold text-green-600" x-text="metrics.cache?.hits || 0">0</span>
+                </div>
+                <div class="flex justify-between p-3 bg-gray-50 rounded">
+                    <span class="text-sm font-medium">Cache Misses:</span>
+                    <span class="text-sm font-bold text-red-600" x-text="metrics.cache?.misses || 0">0</span>
+                </div>
+                <div class="flex justify-between p-3 bg-gray-50 rounded">
+                    <span class="text-sm font-medium">Taxa de Acerto:</span>
+                    <span class="text-sm font-bold" x-text="(metrics.cache?.hit_rate || 0) + '%'">0%</span>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Gráficos de Performance -->
-    <div class="performance-charts">
-        <div class="chart-container full-width">
-            <h3>Evolução de Faturamento e Agendamentos</h3>
-            <canvas id="evolutionChart"></canvas>
-        </div>
-
-        <div class="chart-container">
-            <h3>Performance por Barbeiro</h3>
-            <canvas id="barbersPerformanceChart"></canvas>
-        </div>
-
-        <div class="chart-container">
-            <h3>Distribuição de Horários</h3>
-            <canvas id="timeDistributionChart"></canvas>
-        </div>
-
-        <div class="chart-container">
-            <h3>Serviços Mais Rentáveis</h3>
-            <canvas id="servicesRevenueChart"></canvas>
-        </div>
-
-        <div class="chart-container">
-            <h3>Taxa de Ocupação</h3>
-            <canvas id="occupancyChart"></canvas>
+    <!-- Sistema -->
+    <div class="card">
+        <h3 class="text-lg font-semibold mb-4">Informações do Sistema</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="p-3 bg-gray-50 rounded">
+                <div class="text-xs text-gray-500 mb-1">Python Version</div>
+                <div class="font-mono text-sm font-bold" x-text="metrics.system?.python_version || 'N/A'">N/A</div>
+            </div>
+            <div class="p-3 bg-gray-50 rounded">
+                <div class="text-xs text-gray-500 mb-1">Debug Mode</div>
+                <div class="font-mono text-sm font-bold" :class="metrics.system?.django_debug ? 'text-red-600' : 'text-green-600'" 
+                     x-text="metrics.system?.django_debug ? 'ON (Development)' : 'OFF (Production)'">N/A</div>
+            </div>
+            <div class="p-3 bg-gray-50 rounded">
+                <div class="text-xs text-gray-500 mb-1">Database Engine</div>
+                <div class="font-mono text-sm font-bold uppercase" x-text="metrics.system?.database_engine || 'N/A'">N/A</div>
+            </div>
         </div>
     </div>
 
-    <!-- Ranking de Barbeiros -->
-    <div class="rankings-section">
-        <div class="ranking-card">
-            <h3>🏆 Top Barbeiros do Mês</h3>
-            <div id="topBarbers" class="ranking-list"></div>
+    <!-- Queries Lentas -->
+    <div x-show="metrics.queries?.slow_queries?.length > 0" class="card">
+        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+            <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            Queries Lentas (>100ms)
+        </h3>
+        <div class="space-y-2">
+            <template x-for="(query, index) in metrics.queries?.slow_queries" :key="index">
+                <div class="p-3 bg-yellow-50 border border-yellow-200 rounded">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs font-mono bg-yellow-100 px-2 py-1 rounded" x-text="query.time + 'ms'"></span>
+                    </div>
+                    <code class="text-xs text-gray-700" x-text="query.sql"></code>
+                </div>
+            </template>
         </div>
-
-        <div class="ranking-card">
-            <h3>⭐ Melhores Avaliações</h3>
-            <div id="topRated" class="ranking-list"></div>
-        </div>
-
-        <div class="ranking-card">
-            <h3>💰 Maior Faturamento</h3>
-            <div id="topRevenue" class="ranking-list"></div>
-        </div>
-    </div>
-
-    <!-- Metas e Objetivos -->
-    <div class="goals-section">
-        <h2>Metas e Objetivos</h2>
-        <div id="goalsGrid" class="goals-grid"></div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-    async function loadPerformance() {
-        const period = document.getElementById('periodSelect').value;
+function performanceApp() {
+    return {
+        loading: true,
+        metrics: {},
         
-        try {
-            const response = await fetch(`/api/admin/performance/?period=${period}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                }
-            });
-            const data = await response.json();
+        init() {
+            this.loadMetrics();
+            // Auto-refresh a cada 5 segundos
+            setInterval(() => this.loadMetrics(), 5000);
+        },
+        
+        async loadMetrics() {
+            try {
+                const response = await fetch('/admin-painel/api/performance/metrics/');
+                const data = await response.json();
+                this.metrics = data;
+                this.loading = false;
+            } catch (error) {
+                console.error('Erro:', error);
+            }
+        },
+        
+        async clearMetrics() {
+            if (!confirm('Limpar todas as métricas?')) return;
             
-            renderKPIs(data.kpis);
-            renderCharts(data);
-            renderRankings(data.rankings);
-            renderGoals(data.goals);
-        } catch (error) {
-            console.error('Erro ao carregar performance:', error);
+            try {
+                const response = await fetch('/admin-painel/api/performance/clear/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                });
+                
+                if (response.ok) {
+                    await this.loadMetrics();
+                    alert('Métricas limpas!');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+            }
         }
     }
-
-    function renderKPIs(kpis) {
-        document.getElementById('kpiRevenue').textContent = formatCurrency(kpis.revenue);
-        document.getElementById('kpiAppointments').textContent = kpis.appointments;
-        document.getElementById('kpiConversion').textContent = `${kpis.conversion}%`;
-        document.getElementById('kpiSatisfaction').textContent = kpis.satisfaction.toFixed(1);
-        document.getElementById('kpiRetention').textContent = `${kpis.retention}%`;
-        document.getElementById('kpiCancellation').textContent = `${kpis.cancellation}%`;
-        
-        // Trends
-        updateTrend('revenueTrend', kpis.revenueTrend);
-        updateTrend('appointmentsTrend', kpis.appointmentsTrend);
-        updateTrend('conversionTrend', kpis.conversionTrend);
-        updateTrend('satisfactionTrend', kpis.satisfactionTrend);
-        updateTrend('retentionTrend', kpis.retentionTrend);
-        updateTrend('cancellationTrend', kpis.cancellationTrend);
-    }
-
-    function updateTrend(elementId, value) {
-        const element = document.getElementById(elementId);
-        const icon = value >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
-        const className = value >= 0 ? 'positive' : 'negative';
-        element.innerHTML = `<i class="fas ${icon}"></i> ${Math.abs(value)}%`;
-        element.className = `kpi-trend ${className}`;
-    }
-
-    document.addEventListener('DOMContentLoaded', loadPerformance);
+}
 </script>
 {% endblock %}

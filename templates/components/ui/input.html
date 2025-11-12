@@ -1,0 +1,23 @@
+{# Input Component #}
+{% comment %}
+Uso:
+{% include 'components/ui/input.html' with type="text" name="email" placeholder="Digite seu email" value="" required=True %}
+{% endcomment %}
+
+<input 
+    type="{{ type|default:'text' }}"
+    name="{{ name }}"
+    id="{{ id|default:name }}"
+    class="input {{ class|default:'' }}"
+    {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+    {% if value %}value="{{ value }}"{% endif %}
+    {% if required %}required{% endif %}
+    {% if disabled %}disabled{% endif %}
+    {% if readonly %}readonly{% endif %}
+    {% if maxlength %}maxlength="{{ maxlength }}"{% endif %}
+    {% if minlength %}minlength="{{ minlength }}"{% endif %}
+    {% if pattern %}pattern="{{ pattern }}"{% endif %}
+    {% if autocomplete %}autocomplete="{{ autocomplete }}"{% endif %}
+    {{ attrs|safe }}
+/>
+

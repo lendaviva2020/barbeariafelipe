@@ -1,0 +1,396 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Painel Administrativo - Barbearia Francisco{% endblock %}</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="{% static 'css/design-system.css' %}">
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+    {% block extra_css %}{% endblock %}
+    
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    
+    <!-- Alpine.js -->
+    <script defer src="https://unpkg.com/alpinejs@3.13.3/dist/cdn.min.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    
+    <style>
+        /* Admin Layout Styles */
+        :root {
+            --admin-header-height: 70px;
+            --admin-nav-height: 50px;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #1A0F08;
+            margin: 0;
+            padding: 0;
+            color: #F4E8D8;
+        }
+        
+        .admin-layout-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Header */
+        .admin-header {
+            background: #2C1810;
+            border-bottom: 1px solid #C9A961;
+            height: var(--admin-header-height);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(201, 169, 97, 0.3);
+        }
+        
+        .admin-header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 100%;
+            padding: 0 1.5rem;
+        }
+        
+        .admin-logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .admin-logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #C9A961 0%, #B39650 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #2C1810;
+        }
+        
+        .admin-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #C9A961;
+            margin: 0;
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .admin-user-info {
+            font-size: 0.875rem;
+            color: #E8D9C5;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .admin-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+        
+        /* Navigation Tabs */
+        .admin-tabs-container {
+            background: #2C1810;
+            border-bottom: 1px solid #5C4033;
+            position: sticky;
+            top: var(--admin-header-height);
+            z-index: 99;
+        }
+        
+        .admin-tabs-list {
+            display: flex;
+            overflow-x: auto;
+            padding: 0 1.5rem;
+            gap: 0.5rem;
+            scrollbar-width: thin;
+        }
+        
+        .admin-tabs-list::-webkit-scrollbar {
+            height: 4px;
+        }
+        
+        .admin-tabs-list::-webkit-scrollbar-thumb {
+            background: #C9A961;
+            border-radius: 2px;
+        }
+        
+        .admin-tab-trigger {
+            padding: 0.75rem 1rem;
+            border: none;
+            background: transparent;
+            color: #8B6F5E;
+            font-weight: 500;
+            font-size: 0.875rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        
+        .admin-tab-trigger:hover {
+            color: #C9A961;
+            background: rgba(201, 169, 97, 0.1);
+        }
+        
+        .admin-tab-trigger.active {
+            color: #C9A961;
+            border-bottom-color: #C9A961;
+            font-weight: 600;
+        }
+        
+        /* Main Content */
+        .admin-content {
+            flex: 1;
+            padding: 2rem 1.5rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .admin-header-content {
+                padding: 0 1rem;
+            }
+            
+            .admin-title {
+                font-size: 1rem;
+            }
+            
+            .admin-user-info {
+                font-size: 0.75rem;
+            }
+            
+            .admin-desktop-only {
+                display: none;
+            }
+            
+            .admin-tabs-list {
+                padding: 0 1rem;
+            }
+            
+            .admin-tab-trigger {
+                padding: 0.75rem 0.75rem;
+                font-size: 0.813rem;
+            }
+            
+            .admin-content {
+                padding: 1rem;
+            }
+        }
+        
+        @media (min-width: 769px) {
+            .admin-mobile-only {
+                display: none;
+            }
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #C9A961;
+            color: #2C1810;
+            font-weight: 600;
+        }
+        
+        .btn-primary:hover {
+            background: #D4B876;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(201, 169, 97, 0.3);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: #C9A961;
+            border: 1px solid #C9A961;
+        }
+        
+        .btn-outline:hover {
+            background: rgba(201, 169, 97, 0.1);
+            border-color: #D4B876;
+        }
+        
+        .btn-destructive {
+            background: #8B2635;
+            color: #F4E8D8;
+        }
+        
+        .btn-destructive:hover {
+            background: #6B1D2A;
+        }
+        
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.813rem;
+        }
+        
+        /* Icons */
+        .icon {
+            width: 1rem;
+            height: 1rem;
+        }
+        
+        .icon-sm {
+            width: 0.875rem;
+            height: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-layout-container">
+        <!-- Header -->
+        <header class="admin-header">
+            <div class="container mx-auto">
+                <div class="admin-header-content">
+                    <div class="admin-logo-section">
+                        <div class="admin-logo-icon">
+                            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="admin-title">Painel Administrativo</h1>
+                            <p class="admin-user-info">
+                                <span class="admin-mobile-only">Admin:</span>
+                                <span class="admin-desktop-only">Logado como:</span>
+                                <span style="font-weight: 600; color: #C9A961;">{{ user.name }}</span>
+                                {% if user.is_staff %}
+                                <span style="padding: 0.125rem 0.5rem; font-size: 0.75rem; background: rgba(201, 169, 97, 0.2); color: #C9A961; border-radius: 9999px; border: 1px solid #C9A961;">
+                                    Administrador
+                                </span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="admin-actions">
+                        <a href="{% url 'core:home' %}" class="btn btn-outline btn-sm" title="Voltar ao Site">
+                            <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                            </svg>
+                            <span class="admin-desktop-only">Voltar</span>
+                        </a>
+                        
+                        <a href="{% url 'users:logout' %}" 
+                           onclick="return confirm('Tem certeza que deseja sair?')"
+                           class="btn btn-destructive btn-sm" 
+                           title="Sair do Painel"
+                           style="text-decoration: none;">
+                            <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                            <span class="admin-desktop-only">Sair</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Navigation Tabs -->
+        <div class="admin-tabs-container">
+            <div class="admin-tabs-list">
+                <a href="{% url 'admin_painel:dashboard' %}" 
+                   class="admin-tab-trigger {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    Dashboard
+                </a>
+                <a href="{% url 'admin_painel:appointments' %}" 
+                   class="admin-tab-trigger {% if 'appointment' in request.resolver_match.url_name %}active{% endif %}">
+                    Agendamentos
+                </a>
+                <a href="{% url 'admin_painel:barbers' %}" 
+                   class="admin-tab-trigger {% if 'barber' in request.resolver_match.url_name %}active{% endif %}">
+                    Barbeiros
+                </a>
+                <a href="{% url 'admin_painel:services' %}" 
+                   class="admin-tab-trigger {% if 'service' in request.resolver_match.url_name %}active{% endif %}">
+                    Serviços
+                </a>
+                <a href="{% url 'admin_painel:coupons' %}" 
+                   class="admin-tab-trigger {% if 'coupon' in request.resolver_match.url_name %}active{% endif %}">
+                    Cupons
+                </a>
+                <a href="{% url 'admin_painel:reports' %}" 
+                   class="admin-tab-trigger {% if 'report' in request.resolver_match.url_name %}active{% endif %}">
+                    Relatórios
+                </a>
+                <a href="{% url 'admin_painel:users' %}" 
+                   class="admin-tab-trigger {% if request.resolver_match.url_name == 'users' %}active{% endif %}">
+                    Usuários
+                </a>
+                <a href="{% url 'admin_painel:waiting_list' %}" 
+                   class="admin-tab-trigger {% if 'waiting' in request.resolver_match.url_name %}active{% endif %}">
+                    Lista de Espera
+                </a>
+                <a href="{% url 'admin_painel:audit_logs' %}" 
+                   class="admin-tab-trigger {% if 'audit' in request.resolver_match.url_name %}active{% endif %}">
+                    Logs
+                </a>
+                <a href="{% url 'admin_painel:performance' %}" 
+                   class="admin-tab-trigger {% if 'performance' in request.resolver_match.url_name %}active{% endif %}">
+                    Performance
+                </a>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <main class="admin-content">
+            {% if messages %}
+                <div style="margin-bottom: 1.5rem;">
+                    {% for message in messages %}
+                        {% if message.tags == 'error' %}
+                            <div class="alert" style="padding: 1rem; border-radius: 0.5rem; margin-bottom: 0.5rem; background: rgba(139, 38, 53, 0.2); color: #A64253; border: 1px solid #8B2635;">
+                                {{ message }}
+                            </div>
+                        {% elif message.tags == 'success' %}
+                            <div class="alert" style="padding: 1rem; border-radius: 0.5rem; margin-bottom: 0.5rem; background: rgba(160, 176, 132, 0.2); color: #A0B084; border: 1px solid #7A8C6E;">
+                                {{ message }}
+                            </div>
+                        {% elif message.tags == 'warning' %}
+                            <div class="alert" style="padding: 1rem; border-radius: 0.5rem; margin-bottom: 0.5rem; background: rgba(212, 184, 118, 0.2); color: #D4B876; border: 1px solid #C9A961;">
+                                {{ message }}
+                            </div>
+                        {% else %}
+                            <div class="alert" style="padding: 1rem; border-radius: 0.5rem; margin-bottom: 0.5rem; background: rgba(201, 169, 97, 0.2); color: #C9A961; border: 1px solid #C9A961;">
+                                {{ message }}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+

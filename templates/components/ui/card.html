@@ -1,0 +1,36 @@
+{# Card Component #}
+{% comment %}
+Uso:
+{% include 'components/ui/card.html' with title="Card Title" description="Card description" %}
+    <p>Card content here</p>
+{% endinclude %}
+{% endcomment %}
+
+<div class="card {{ variant|default:'card-classic' }} {{ class|default:'' }}">
+    {% if title or header_content %}
+    <div class="card-header">
+        {% if title %}
+        <h3 class="card-title">{{ title }}</h3>
+        {% endif %}
+        {% if description %}
+        <p class="card-description">{{ description }}</p>
+        {% endif %}
+        {% if header_content %}
+        {{ header_content|safe }}
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    {% if content %}
+    <div class="card-content">
+        {{ content|safe }}
+    </div>
+    {% endif %}
+    
+    {% if footer_content %}
+    <div class="card-footer">
+        {{ footer_content|safe }}
+    </div>
+    {% endif %}
+</div>
+

@@ -1,0 +1,32 @@
+{# Toggle Group Component #}
+{% comment %}
+Uso:
+{% include 'components/ui/toggle_group.html' with items=toggle_items type="single" name="alignment" %}
+
+items: [{'value': 'left', 'label': 'Left', 'icon': '<svg...>'}, ...]
+type: "single" ou "multiple"
+{% endcomment %}
+
+<div class="flex items-center justify-center gap-1" 
+     data-toggle-group
+     data-type="{{ type|default:'single' }}"
+     role="group">
+    
+    {% for item in items %}
+    <button
+        type="button"
+        class="toggle"
+        value="{{ item.value }}"
+        data-toggle-item="{{ item.value }}"
+        {% if item.value == selected %}data-state="on" aria-pressed="true"{% else %}data-state="off" aria-pressed="false"{% endif %}
+    >
+        {% if item.icon %}{{ item.icon|safe }}{% endif %}
+        {{ item.label }}
+    </button>
+    {% endfor %}
+    
+    {% if type == "single" %}
+    <input type="hidden" name="{{ name }}" value="{{ selected }}" data-toggle-value />
+    {% endif %}
+</div>
+

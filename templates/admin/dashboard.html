@@ -1,330 +1,355 @@
-{% extends 'base.html' %}
+{% extends "admin/base_admin.html" %}
 {% load static %}
 
-{% block title %}Dashboard Admin - Barbearia Francisco{% endblock %}
+{% block title %}Dashboard - Painel Administrativo{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin-dashboard.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="admin-layout">
-    <!-- Admin Header -->
-    <div class="admin-header">
-        <div class="container">
-            <h1>🛡️ Painel Administrativo</h1>
-            <div class="admin-user">
-                <span id="adminUserName">Administrador</span>
-                <button class="btn btn-outline btn-sm" onclick="window.location.href='{% url 'home' %}'">Voltar ao Site</button>
-            </div>
+<div x-data="dashboardApp()" x-init="init()">
+    <!-- Header com controles -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
+            <p class="text-gray-600">Visão geral do desempenho da barbearia</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <select x-model="timeRange" @change="loadData()" class="px-4 py-2 border border-gray-300 rounded-lg">
+                <option value="7days">7 dias</option>
+                <option value="30days">30 dias</option>
+                <option value="90days">90 dias</option>
+                <option value="month">Este mês</option>
+            </select>
+            <button @click="loadData()" class="btn btn-outline btn-sm">
+                <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Atualizar
+            </button>
         </div>
     </div>
-    
-    <!-- Admin Navigation -->
-    <div class="admin-nav">
-        <div class="container">
-            <div class="admin-tabs">
-                <button class="admin-tab active" data-tab="dashboard">Dashboard</button>
-                <button class="admin-tab" data-tab="agendamentos">Agendamentos</button>
-                <button class="admin-tab" data-tab="servicos">Serviços</button>
-                <button class="admin-tab" data-tab="barbeiros">Barbeiros</button>
-                <button class="admin-tab" data-tab="cupons">Cupons</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Admin Content -->
-    <div class="admin-content">
-        <div class="container">
-            <!-- Dashboard Tab -->
-            <div class="admin-tab-content active" data-content="dashboard">
-                <h2>Dashboard</h2>
-                
-                <!-- Filtro de Período -->
-                <div class="dashboard-controls">
-                    <select id="timeRange" class="form-control">
-                        <option value="7days">7 dias</option>
-                        <option value="30days" selected>30 dias</option>
-                        <option value="90days">90 dias</option>
-                    </select>
-                    <button class="btn btn-outline btn-sm" id="refreshStats">🔄 Atualizar</button>
-                </div>
-                
-                <!-- Métricas -->
-                <div id="dashboardStats" class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon">💰</div>
-                        <div class="stat-content">
-                            <div class="stat-value" id="stat_revenue">R$ 0,00</div>
-                            <div class="stat-label">Faturamento</div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">📅</div>
-                        <div class="stat-content">
-                            <div class="stat-value" id="stat_appointments">0</div>
-                            <div class="stat-label">Agendamentos</div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">✅</div>
-                        <div class="stat-content">
-                            <div class="stat-value" id="stat_completed">0</div>
-                            <div class="stat-label">Completados</div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">⏳</div>
-                        <div class="stat-content">
-                            <div class="stat-value" id="stat_pending">0</div>
-                            <div class="stat-label">Pendentes</div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">👨‍💼</div>
-                        <div class="stat-content">
-                            <div class="stat-value" id="stat_barbers">0</div>
-                            <div class="stat-label">Barbeiros Ativos</div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">💳</div>
-                        <div class="stat-content">
-                            <div class="stat-value" id="stat_avg_ticket">R$ 0,00</div>
-                            <div class="stat-label">Ticket Médio</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Agendamentos de Hoje -->
-                <div class="today-section">
-                    <h3>Agendamentos de Hoje</h3>
-                    <div class="today-cards">
-                        <div class="today-card success">
-                            <div class="today-icon">✅</div>
-                            <div class="today-value" id="today_completed">0</div>
-                            <div class="today-label">Concluídos</div>
-                        </div>
-                        <div class="today-card warning">
-                            <div class="today-icon">⏳</div>
-                            <div class="today-value" id="today_pending">0</div>
-                            <div class="today-label">Pendentes</div>
-                        </div>
-                        <div class="today-card error">
-                            <div class="today-icon">❌</div>
-                            <div class="today-value" id="today_cancelled">0</div>
-                            <div class="today-label">Cancelados</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Agendamentos Tab -->
-            <div class="admin-tab-content" data-content="agendamentos" style="display: none;">
-                <h2>Gerenciar Agendamentos</h2>
-                
-                <!-- Filtros -->
-                <div class="filters">
-                    <button class="filter-btn active" data-status="all">Todos</button>
-                    <button class="filter-btn" data-status="pending">Pendentes</button>
-                    <button class="filter-btn" data-status="confirmed">Confirmados</button>
-                    <button class="filter-btn" data-status="completed">Completados</button>
-                    <button class="filter-btn" data-status="cancelled">Cancelados</button>
-                </div>
-                
-                <!-- Lista de Agendamentos -->
-                <div id="appointmentsList" class="appointments-list">
-                    <div class="loader-container">
-                        <div class="loader"></div>
-                        <p>Carregando agendamentos...</p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Serviços Tab -->
-            <div class="admin-tab-content" data-content="servicos" style="display: none;">
-                <div class="tab-header">
-                    <h2>Gerenciar Serviços</h2>
-                    <button class="btn btn-primary" onclick="openServiceModal()">➕ Novo Serviço</button>
-                </div>
-                
-                <!-- Lista de Serviços -->
-                <div id="servicesList" class="services-grid">
-                    <div class="loader-container">
-                        <div class="loader"></div>
-                        <p>Carregando serviços...</p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Barbeiros Tab -->
-            <div class="admin-tab-content" data-content="barbeiros" style="display: none;">
-                <div class="tab-header">
-                    <h2>Gerenciar Barbeiros</h2>
-                    <button class="btn btn-primary" onclick="openBarberModal()">➕ Novo Barbeiro</button>
-                </div>
-                
-                <!-- Lista de Barbeiros -->
-                <div id="barbersList" class="barbers-grid">
-                    <div class="loader-container">
-                        <div class="loader"></div>
-                        <p>Carregando barbeiros...</p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Cupons Tab -->
-            <div class="admin-tab-content" data-content="cupons" style="display: none;">
-                <div class="tab-header">
-                    <h2>Gerenciar Cupons</h2>
-                    <button class="btn btn-primary" onclick="openCouponModal()">➕ Novo Cupom</button>
-                </div>
-                
-                <!-- Filtros de Cupons -->
-                <div class="filters">
-                    <button class="coupon-filter-btn active" data-filter="all">Todos</button>
-                    <button class="coupon-filter-btn" data-filter="active">Ativos</button>
-                    <button class="coupon-filter-btn" data-filter="expired">Expirados</button>
-                </div>
-                
-                <!-- Lista de Cupons -->
-                <div id="couponsList" class="coupons-list">
-                    <div class="loader-container">
-                        <div class="loader"></div>
-                        <p>Carregando cupons...</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- Modal para Serviços -->
-<div id="serviceModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 id="serviceModalTitle">Novo Serviço</h3>
-            <button class="modal-close" onclick="closeServiceModal()">✕</button>
-        </div>
-        <form id="serviceForm">
-            <input type="hidden" id="serviceId">
-            <div class="form-group">
-                <label>Nome do Serviço *</label>
-                <input type="text" id="serviceName" class="form-control" required>
-            </div>
-            <div class="form-group">
-                <label>Descrição</label>
-                <textarea id="serviceDescription" class="form-control" rows="3"></textarea>
-            </div>
-            <div class="form-group">
-                <label>Preço (R$) *</label>
-                <input type="number" id="servicePrice" class="form-control" step="0.01" required>
-            </div>
-            <div class="form-group">
-                <label>Duração (minutos) *</label>
-                <input type="number" id="serviceDuration" class="form-control" required>
-            </div>
-            <div class="form-group">
-                <label>
-                    <input type="checkbox" id="serviceActive" checked>
-                    Serviço Ativo
-                </label>
-            </div>
-            <div class="modal-actions">
-                <button type="button" class="btn btn-outline" onclick="closeServiceModal()">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Salvar</button>
-            </div>
-        </form>
+    <!-- Loading State -->
+    <div x-show="loading" class="text-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+        <p class="text-gray-600 mt-4">Carregando dados...</p>
     </div>
-</div>
 
-<!-- Modal para Barbeiros -->
-<div id="barberModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 id="barberModalTitle">Novo Barbeiro</h3>
-            <button class="modal-close" onclick="closeBarberModal()">✕</button>
-        </div>
-        <form id="barberForm">
-            <input type="hidden" id="barberId">
-            <div class="form-group">
-                <label>Nome Completo *</label>
-                <input type="text" id="barberName" class="form-control" required>
+    <!-- Dashboard Content -->
+    <div x-show="!loading" style="display:none;" x-transition>
+        <!-- Métricas Principais -->
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+            <div class="card-metric">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm text-gray-600">Faturamento</span>
+                    <svg class="icon text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div class="text-2xl font-bold text-gray-900" x-text="'R$ ' + stats.total_revenue.toFixed(2)">R$ 0,00</div>
+                <div class="text-xs text-gray-500" x-text="stats.completed_appointments + ' atendimentos'">0 atendimentos</div>
             </div>
-            <div class="form-group">
-                <label>Email *</label>
-                <input type="email" id="barberEmail" class="form-control" required>
-            </div>
-            <div class="form-group">
-                <label>Telefone</label>
-                <input type="tel" id="barberPhone" class="form-control">
-            </div>
-            <div class="form-group">
-                <label>Especialidades</label>
-                <textarea id="barberSpecialties" class="form-control" rows="2" placeholder="Ex: Cortes clássicos, Barbas, Penteados"></textarea>
-            </div>
-            <div class="form-group">
-                <label>
-                    <input type="checkbox" id="barberActive" checked>
-                    Barbeiro Ativo
-                </label>
-            </div>
-            <div class="modal-actions">
-                <button type="button" class="btn btn-outline" onclick="closeBarberModal()">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Salvar</button>
-            </div>
-        </form>
-    </div>
-</div>
 
-<!-- Modal para Cupons -->
-<div id="couponModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 id="couponModalTitle">Novo Cupom</h3>
-            <button class="modal-close" onclick="closeCouponModal()">✕</button>
+            <div class="card-metric">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm text-gray-600">Agendamentos</span>
+                    <svg class="icon text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                </div>
+                <div class="text-2xl font-bold text-gray-900" x-text="stats.total_appointments">0</div>
+                <div class="text-xs text-gray-500" x-text="stats.pending_appointments + ' pendentes'">0 pendentes</div>
+            </div>
+
+            <div class="card-metric">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm text-gray-600">Taxa Conversão</span>
+                    <svg class="icon text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                </div>
+                <div class="text-2xl font-bold text-gray-900" x-text="conversionRate.toFixed(1) + '%'">0%</div>
+                <div class="text-xs text-gray-500">Eficiência em atendimentos</div>
+            </div>
+
+            <div class="card-metric">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm text-gray-600">Ticket Médio</span>
+                    <svg class="icon text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                </div>
+                <div class="text-2xl font-bold text-gray-900" x-text="'R$ ' + stats.average_ticket.toFixed(2)">R$ 0,00</div>
+                <div class="text-xs text-gray-500">Por atendimento</div>
+            </div>
+
+            <div class="card-metric">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm text-gray-600">Barbeiros</span>
+                    <svg class="icon text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                </div>
+                <div class="text-2xl font-bold text-gray-900" x-text="stats.active_barbers">0</div>
+                <div class="text-xs text-gray-500">Em atividade</div>
+            </div>
+
+            <div class="card-metric">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm text-gray-600">Usuários</span>
+                    <svg class="icon text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                </div>
+                <div class="text-2xl font-bold text-gray-900" x-text="stats.total_users">0</div>
+                <div class="text-xs text-gray-500">Clientes ativos</div>
+            </div>
         </div>
-        <form id="couponForm">
-            <input type="hidden" id="couponId">
-            <div class="form-group">
-                <label>Código do Cupom *</label>
-                <input type="text" id="couponCode" class="form-control" placeholder="Ex: PROMO10" required>
+
+        <!-- Resumo de Hoje -->
+        <div class="card mb-6">
+            <div class="card-header">
+                <h3 class="text-lg font-semibold flex items-center gap-2">
+                    <svg class="icon text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Hoje
+                </h3>
+                <p class="text-sm text-gray-600">Resumo das atividades do dia</p>
             </div>
-            <div class="form-group">
-                <label>Tipo de Desconto *</label>
-                <select id="couponType" class="form-control" required>
-                    <option value="percentage">Percentual (%)</option>
-                    <option value="fixed">Valor Fixo (R$)</option>
-                </select>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="text-center p-4 bg-green-50 rounded-lg border border-green-200">
+                    <svg class="icon text-green-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div class="text-2xl font-bold text-green-700" x-text="stats.today.completed">0</div>
+                    <div class="text-sm text-green-600">Concluídos</div>
+                </div>
+                <div class="text-center p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <svg class="icon text-yellow-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <div class="text-2xl font-bold text-yellow-700" x-text="stats.today.pending">0</div>
+                    <div class="text-sm text-yellow-600">Pendentes</div>
+                </div>
+                <div class="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <svg class="icon text-blue-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div class="text-2xl font-bold text-blue-700" x-text="stats.today.total">0</div>
+                    <div class="text-sm text-blue-600">Total Hoje</div>
+                </div>
+                <div class="text-center p-4 bg-red-50 rounded-lg border border-red-200">
+                    <svg class="icon text-red-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div class="text-2xl font-bold text-red-700" x-text="stats.today.cancelled">0</div>
+                    <div class="text-sm text-red-600">Cancelados</div>
+                </div>
             </div>
-            <div class="form-group">
-                <label>Valor do Desconto *</label>
-                <input type="number" id="couponValue" class="form-control" step="0.01" required>
+        </div>
+
+        <!-- Gráficos -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-lg font-semibold">Evolução do Faturamento</h3>
+                    <p class="text-sm text-gray-600">Receita diária ao longo do período</p>
+                </div>
+                <canvas id="revenueChart" height="300"></canvas>
             </div>
-            <div class="form-group">
-                <label>Data de Expiração</label>
-                <input type="date" id="couponExpiration" class="form-control">
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-lg font-semibold">Status dos Agendamentos</h3>
+                    <p class="text-sm text-gray-600">Distribuição atual</p>
+                </div>
+                <canvas id="statusChart" height="300"></canvas>
             </div>
-            <div class="form-group">
-                <label>Limite de Uso</label>
-                <input type="number" id="couponLimit" class="form-control" placeholder="Deixe vazio para ilimitado">
+        </div>
+
+        <!-- Ações Rápidas -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="text-lg font-semibold">Ações Rápidas</h3>
+                <p class="text-sm text-gray-600">Acesso rápido às principais funcionalidades</p>
             </div>
-            <div class="form-group">
-                <label>
-                    <input type="checkbox" id="couponActive" checked>
-                    Cupom Ativo
-                </label>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <a href="{% url 'admin_painel:appointments' %}" class="quick-action">
+                    <svg class="icon text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span>Agendamentos</span>
+                </a>
+                <a href="{% url 'admin_painel:services' %}" class="quick-action">
+                    <svg class="icon text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
+                    </svg>
+                    <span>Serviços</span>
+                </a>
+                <a href="{% url 'admin_painel:coupons' %}" class="quick-action">
+                    <svg class="icon text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                    <span>Cupons</span>
+                </a>
+                <a href="{% url 'admin_painel:barbers' %}" class="quick-action">
+                    <svg class="icon text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    <span>Barbeiros</span>
+                </a>
+                <a href="{% url 'admin_painel:reports' %}" class="quick-action">
+                    <svg class="icon text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <span>Relatórios</span>
+                </a>
+                <a href="{% url 'admin_painel:users' %}" class="quick-action">
+                    <svg class="icon text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <span>Usuários</span>
+                </a>
             </div>
-            <div class="modal-actions">
-                <button type="button" class="btn btn-outline" onclick="closeCouponModal()">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Salvar</button>
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/admin.js' %}"></script>
+<script src="{% static 'js/admin-dashboard.js' %}"></script>
+<script>
+function dashboardApp() {
+    return {
+        loading: true,
+        timeRange: '30days',
+        stats: {
+            total_revenue: 0,
+            total_appointments: 0,
+            completed_appointments: 0,
+            pending_appointments: 0,
+            average_ticket: 0,
+            active_barbers: 0,
+            total_users: 0,
+            today: {
+                total: 0,
+                completed: 0,
+                pending: 0,
+                cancelled: 0
+            }
+        },
+        revenueChart: null,
+        statusChart: null,
+        
+        get conversionRate() {
+            if (this.stats.total_appointments === 0) return 0;
+            return (this.stats.completed_appointments / this.stats.total_appointments) * 100;
+        },
+        
+        init() {
+            this.loadData();
+            // Polling a cada 30 segundos
+            setInterval(() => this.loadData(), 30000);
+        },
+        
+        async loadData() {
+            this.loading = true;
+            try {
+                await Promise.all([
+                    this.loadStats(),
+                    this.loadCharts()
+                ]);
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+            } finally {
+                this.loading = false;
+            }
+        },
+        
+        async loadStats() {
+            const response = await fetch(`/admin-painel/api/dashboard/stats/?time_range=${this.timeRange}`);
+            const data = await response.json();
+            this.stats = data;
+        },
+        
+        async loadCharts() {
+            // Revenue Chart
+            const revenueResponse = await fetch(`/admin-painel/api/dashboard/revenue/?time_range=${this.timeRange}`);
+            const revenueData = await response.json();
+            this.updateRevenueChart(revenueData.data);
+            
+            // Status Chart
+            const statusResponse = await fetch(`/admin-painel/api/dashboard/status/?time_range=${this.timeRange}`);
+            const statusData = await statusResponse.json();
+            this.updateStatusChart(statusData.data);
+        },
+        
+        updateRevenueChart(data) {
+            const ctx = document.getElementById('revenueChart');
+            if (this.revenueChart) {
+                this.revenueChart.destroy();
+            }
+            
+            this.revenueChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => d.date),
+                    datasets: [{
+                        label: 'Faturamento',
+                        data: data.map(d => d.revenue),
+                        borderColor: '#C9A961',
+                        backgroundColor: 'rgba(201, 169, 97, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        },
+        
+        updateStatusChart(data) {
+            const ctx = document.getElementById('statusChart');
+            if (this.statusChart) {
+                this.statusChart.destroy();
+            }
+            
+            this.statusChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.map(d => d.name),
+                    datasets: [{
+                        data: data.map(d => d.value),
+                        backgroundColor: data.map(d => d.color)
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+    }
+}
+</script>
 {% endblock %}
-

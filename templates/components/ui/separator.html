@@ -1,0 +1,12 @@
+{# Separator Component #}
+{% comment %}
+Uso:
+{% include 'components/ui/separator.html' with orientation="horizontal" %}
+{% endcomment %}
+
+<div 
+    class="separator separator-{{ orientation|default:'horizontal' }} {{ class|default:'' }}"
+    role="separator"
+    aria-orientation="{{ orientation|default:'horizontal' }}"
+></div>
+

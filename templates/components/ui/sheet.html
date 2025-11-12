@@ -1,0 +1,49 @@
+{# Sheet Component - Drawer lateral #}
+{% comment %}
+Uso:
+{% include 'components/ui/sheet.html' with id="mySheet" side="right" title="Título" %}
+    <p>Conteúdo</p>
+{% endinclude %}
+
+Sides: top, bottom, left, right
+{% endcomment %}
+
+<div class="sheet-overlay hidden" 
+     id="{{ id }}"
+     data-state="closed"
+     data-sheet
+     onclick="if(event.target === this) UI.overlay.close(this)">
+    
+    <div class="sheet-content" 
+         data-side="{{ side|default:'right' }}"
+         data-sheet-content
+         onclick="event.stopPropagation()">
+        
+        <button 
+            type="button"
+            class="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            onclick="UI.overlay.close(document.getElementById('{{ id }}'))"
+            aria-label="Fechar"
+        >
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+        
+        {% if title or description %}
+        <div class="sheet-header">
+            {% if title %}
+            <h2 class="sheet-title">{{ title }}</h2>
+            {% endif %}
+            {% if description %}
+            <p class="sheet-description">{{ description }}</p>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <div class="sheet-body">
+            {{ content|safe }}
+        </div>
+    </div>
+</div>
+

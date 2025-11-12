@@ -1,0 +1,66 @@
+{# Pagination Component #}
+{% comment %}
+Uso:
+{% include 'components/ui/pagination.html' with page_obj=page_obj url_pattern="?page=" %}
+{% endcomment %}
+
+<nav class="pagination" role="navigation" aria-label="pagination">
+    <ul class="pagination-content">
+        {% if page_obj.has_previous %}
+        <li>
+            <a href="{{ url_pattern }}{{ page_obj.previous_page_number }}" 
+               class="btn btn-ghost gap-1 pl-2.5"
+               aria-label="Página anterior">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+                <span>Anterior</span>
+            </a>
+        </li>
+        {% endif %}
+        
+        {% for num in page_obj.paginator.page_range %}
+        {% if num >= page_obj.number|add:-2 and num <= page_obj.number|add:2 %}
+        <li>
+            <a href="{{ url_pattern }}{{ num }}" 
+               class="btn btn-{{ num == page_obj.number|yesno:'outline,ghost' }} h-10 w-10"
+               aria-label="Página {{ num }}"
+               {% if num == page_obj.number %}aria-current="page"{% endif %}>
+                {{ num }}
+            </a>
+        </li>
+        {% elif num == 1 or num == page_obj.paginator.num_pages %}
+        <li>
+            <a href="{{ url_pattern }}{{ num }}" 
+               class="btn btn-ghost h-10 w-10"
+               aria-label="Página {{ num }}">
+                {{ num }}
+            </a>
+        </li>
+        {% elif num == page_obj.number|add:-3 or num == page_obj.number|add:3 %}
+        <li>
+            <span aria-hidden="true" class="flex h-9 w-9 items-center justify-center">
+                <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                    <circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>
+                </svg>
+                <span class="sr-only">Mais páginas</span>
+            </span>
+        </li>
+        {% endif %}
+        {% endfor %}
+        
+        {% if page_obj.has_next %}
+        <li>
+            <a href="{{ url_pattern }}{{ page_obj.next_page_number }}" 
+               class="btn btn-ghost gap-1 pr-2.5"
+               aria-label="Próxima página">
+                <span>Próxima</span>
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+

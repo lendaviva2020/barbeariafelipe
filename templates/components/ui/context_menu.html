@@ -1,0 +1,25 @@
+{# Context Menu Component #}
+{% comment %}
+Uso:
+<div data-context-menu-trigger>
+    Clique com botão direito aqui
+</div>
+{% include 'components/ui/context_menu.html' with items=context_items %}
+{% endcomment %}
+
+<div class="hidden fixed z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md" 
+     data-context-menu
+     data-state="closed">
+    {% for item in items %}
+    {% if item.separator %}
+    <div class="-mx-1 my-1 h-px bg-border"></div>
+    {% else %}
+    <div class="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground"
+         {% if item.onclick %}onclick="{{ item.onclick }}"{% endif %}>
+        {% if item.icon %}{{ item.icon|safe }}{% endif %}
+        {{ item.label }}
+    </div>
+    {% endif %}
+    {% endfor %}
+</div>
+

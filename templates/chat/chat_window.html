@@ -1,0 +1,302 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Chat - Agendamento #{{ appointment.id }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/chat.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header do Chat -->
+        <div class="bg-white rounded-t-lg shadow p-4 border-b">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold">Chat do Agendamento</h1>
+                    <p class="text-gray-600">
+                        {{ appointment.customer_name }} - {{ appointment.appointment_date|date:"d/m/Y" }} {{ appointment.appointment_time }}
+                    </p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="px-3 py-1 rounded-full text-sm {% if appointment.status == 'confirmed' %}bg-green-100 text-green-800{% elif appointment.status == 'pending' %}bg-yellow-100 text-yellow-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {{ appointment.get_status_display }}
+                    </span>
+                    <a href="{% url 'agendamentos:detail' appointment.id %}" class="btn btn-secondary">Voltar</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Área do Chat -->
+        <div class="bg-gray-50 rounded-b-lg shadow" style="height: 600px; display: flex; flex-direction: column;">
+            <!-- Mensagens -->
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4">
+                <!-- Mensagens serão carregadas aqui via JavaScript -->
+                <div id="loading-messages" class="text-center text-gray-500 py-8">
+                    <div class="animate-spin inline-block w-8 h-8 border-4 border-current border-t-transparent text-blue-600 rounded-full" role="status" aria-label="loading">
+                        <span class="sr-only">Carregando...</span>
+                    </div>
+                    <p class="mt-2">Carregando mensagens...</p>
+                </div>
+            </div>
+
+            <!-- Form de Envio -->
+            <div class="border-t bg-white p-4">
+                <form id="chat-form" class="flex space-x-2">
+                    <input 
+                        type="text" 
+                        id="message-input" 
+                        name="message" 
+                        placeholder="Digite sua mensagem..." 
+                        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        maxlength="1000"
+                        required
+                    >
+                    <button 
+                        type="submit" 
+                        id="send-button"
+                        class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <span id="send-text">Enviar</span>
+                        <span id="send-loading" class="hidden">
+                            <div class="animate-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full"></div>
+                        </span>
+                    </button>
+                </form>
+                <p class="text-xs text-gray-500 mt-2">
+                    <span id="char-count">0</span>/1000 caracteres
+                    <span id="ai-indicator" class="ml-4 text-blue-600">🤖 Respostas automáticas ativas</span>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Configurações
+    const APPOINTMENT_ID = {{ appointment.id }};
+    const POLLING_INTERVAL = 5000; // 5 segundos
+    let pollingTimer = null;
+    let lastMessageId = null;
+
+    // Carregar mensagens ao iniciar
+    document.addEventListener('DOMContentLoaded', function() {
+        loadChatHistory();
+        startPolling();
+        setupFormHandlers();
+    });
+
+    // Carregar histórico de mensagens
+    async function loadChatHistory() {
+        try {
+            const response = await fetch(`/api/chat/history/${APPOINTMENT_ID}/`, {
+                headers: {
+                    'Authorization': `Bearer ${getCookie('token')}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) throw new Error('Erro ao carregar mensagens');
+
+            const messages = await response.json();
+            displayMessages(messages);
+        } catch (error) {
+            console.error('Erro:', error);
+            showError('Erro ao carregar histórico de mensagens');
+        }
+    }
+
+    // Exibir mensagens
+    function displayMessages(messages) {
+        const container = document.getElementById('chat-messages');
+        const loading = document.getElementById('loading-messages');
+        
+        if (loading) loading.remove();
+        
+        if (messages.length === 0) {
+            container.innerHTML = '<div class="text-center text-gray-500 py-8">Nenhuma mensagem ainda. Comece a conversa!</div>';
+            return;
+        }
+
+        container.innerHTML = '';
+        messages.forEach(msg => appendMessage(msg, false));
+        scrollToBottom();
+        
+        if (messages.length > 0) {
+            lastMessageId = messages[messages.length - 1].id;
+        }
+    }
+
+    // Adicionar mensagem ao chat
+    function appendMessage(message, animate = true) {
+        const container = document.getElementById('chat-messages');
+        const isAI = message.is_ai_response;
+        const isUser = !isAI && message.sender;
+
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `flex ${isUser ? 'justify-end' : 'justify-start'}`;
+        if (animate) messageDiv.classList.add('animate-fade-in');
+
+        const bubbleClass = isUser ? 'bg-blue-600 text-white' : (isAI ? 'bg-gray-200 text-gray-800' : 'bg-gray-300 text-gray-800');
+        
+        messageDiv.innerHTML = `
+            <div class="max-w-xs lg:max-w-md">
+                <div class="${bubbleClass} rounded-lg px-4 py-2 shadow">
+                    ${message.message}
+                    ${message.requires_human_attention ? '<span class="text-xs block mt-1 opacity-75">⚠️ Requer atenção</span>' : ''}
+                </div>
+                <div class="text-xs text-gray-500 mt-1 ${isUser ? 'text-right' : 'text-left'}">
+                    ${isAI ? '🤖 IA' : message.sender_name} • ${formatTime(message.created_at)}
+                </div>
+            </div>
+        `;
+
+        container.appendChild(messageDiv);
+        if (animate) scrollToBottom();
+    }
+
+    // Enviar mensagem
+    async function sendMessage(message) {
+        const sendButton = document.getElementById('send-button');
+        const sendText = document.getElementById('send-text');
+        const sendLoading = document.getElementById('send-loading');
+
+        sendButton.disabled = true;
+        sendText.classList.add('hidden');
+        sendLoading.classList.remove('hidden');
+
+        try {
+            const response = await fetch('/api/chat/send/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    appointment_id: APPOINTMENT_ID,
+                    message: message
+                })
+            });
+
+            if (!response.ok) throw new Error('Erro ao enviar mensagem');
+
+            const data = await response.json();
+            
+            // Adicionar mensagens ao chat
+            appendMessage(data.user_message);
+            appendMessage(data.ai_message);
+
+            // Limpar input
+            document.getElementById('message-input').value = '';
+            updateCharCount();
+
+            // Mostrar aviso se requer atenção
+            if (data.requires_human_attention) {
+                showInfo('Sua mensagem foi marcada para atenção do barbeiro.');
+            }
+
+            lastMessageId = data.ai_message.id;
+
+        } catch (error) {
+            console.error('Erro:', error);
+            showError('Erro ao enviar mensagem. Tente novamente.');
+        } finally {
+            sendButton.disabled = false;
+            sendText.classList.remove('hidden');
+            sendLoading.classList.add('hidden');
+        }
+    }
+
+    // Configurar handlers do formulário
+    function setupFormHandlers() {
+        const form = document.getElementById('chat-form');
+        const input = document.getElementById('message-input');
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const message = input.value.trim();
+            if (message) {
+                sendMessage(message);
+            }
+        });
+
+        input.addEventListener('input', updateCharCount);
+    }
+
+    // Atualizar contador de caracteres
+    function updateCharCount() {
+        const input = document.getElementById('message-input');
+        const counter = document.getElementById('char-count');
+        counter.textContent = input.value.length;
+    }
+
+    // Scroll para o final
+    function scrollToBottom() {
+        const container = document.getElementById('chat-messages');
+        container.scrollTop = container.scrollHeight;
+    }
+
+    // Polling para novas mensagens
+    function startPolling() {
+        pollingTimer = setInterval(async () => {
+            try {
+                const response = await fetch(`/api/chat/history/${APPOINTMENT_ID}/`, {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const messages = await response.json();
+                    const newMessages = messages.filter(m => !lastMessageId || m.id > lastMessageId);
+                    
+                    newMessages.forEach(msg => {
+                        appendMessage(msg, true);
+                        lastMessageId = msg.id;
+                    });
+                }
+            } catch (error) {
+                console.error('Polling error:', error);
+            }
+        }, POLLING_INTERVAL);
+    }
+
+    // Utilidades
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function formatTime(timestamp) {
+        const date = new Date(timestamp);
+        return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function showError(message) {
+        alert('❌ ' + message);
+    }
+
+    function showInfo(message) {
+        alert('ℹ️ ' + message);
+    }
+
+    // Limpar polling ao sair
+    window.addEventListener('beforeunload', function() {
+        if (pollingTimer) clearInterval(pollingTimer);
+    });
+</script>
+{% endblock %}
+

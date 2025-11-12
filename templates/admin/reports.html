@@ -1,157 +1,237 @@
-{% extends "base.html" %}
+{% extends "admin/base_admin.html" %}
 {% load static %}
 
-{% block title %}Relatórios - Admin{% endblock %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/admin-reports.css' %}">
-{% endblock %}
+{% block title %}Relatórios - Painel Administrativo{% endblock %}
 
 {% block content %}
-<div class="admin-reports-container">
-    <header class="admin-header">
-        <h1>Relatórios e Análises</h1>
-        <div class="header-actions">
-            <button class="btn btn-secondary" onclick="exportPDF()">
-                <i class="fas fa-file-pdf"></i> Exportar PDF
-            </button>
-            <button class="btn btn-secondary" onclick="exportExcel()">
-                <i class="fas fa-file-excel"></i> Exportar Excel
+<div x-data="reportsApp()" x-init="init()">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold">Relatórios Analíticos</h1>
+            <p class="text-gray-600">Análises detalhadas e métricas de performance</p>
+        </div>
+        <div class="flex gap-3">
+            <select x-model="timeRange" @change="loadData()" class="form-select" style="width: 150px;">
+                <option value="7days">7 dias</option>
+                <option value="30days">30 dias</option>
+                <option value="90days">90 dias</option>
+                <option value="month">Este mês</option>
+            </select>
+            <button @click="exportData()" class="btn btn-outline">
+                <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Exportar
             </button>
         </div>
-    </header>
-
-    <!-- Filtros de Período -->
-    <div class="period-selector">
-        <button class="period-btn active" data-period="today" onclick="selectPeriod('today')">Hoje</button>
-        <button class="period-btn" data-period="week" onclick="selectPeriod('week')">Semana</button>
-        <button class="period-btn" data-period="month" onclick="selectPeriod('month')">Mês</button>
-        <button class="period-btn" data-period="year" onclick="selectPeriod('year')">Ano</button>
-        <button class="period-btn" data-period="custom" onclick="selectPeriod('custom')">Personalizado</button>
     </div>
 
-    <div id="customPeriod" class="custom-period" style="display: none;">
-        <input type="date" id="startDate" class="form-control">
-        <span>até</span>
-        <input type="date" id="endDate" class="form-control">
-        <button class="btn btn-primary" onclick="applyCustomPeriod()">Aplicar</button>
-    </div>
-
-    <!-- Resumo Financeiro -->
-    <div class="financial-summary">
-        <div class="summary-card revenue">
-            <div class="card-icon">
-                <i class="fas fa-dollar-sign"></i>
-            </div>
-            <div class="card-content">
-                <h3 id="totalRevenue">R$ 0,00</h3>
-                <p>Faturamento Total</p>
-                <span class="trend up" id="revenueTrend">
-                    <i class="fas fa-arrow-up"></i> 0%
-                </span>
-            </div>
+    <!-- Métricas Principais -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="card-metric">
+            <div class="text-2xl font-bold text-green-600" x-text="'R$ ' + (metrics.revenue || 0).toFixed(2)">R$ 0,00</div>
+            <div class="text-sm text-gray-600">Faturamento Total</div>
         </div>
-
-        <div class="summary-card appointments">
-            <div class="card-icon">
-                <i class="fas fa-calendar-check"></i>
-            </div>
-            <div class="card-content">
-                <h3 id="totalAppointments">0</h3>
-                <p>Agendamentos</p>
-                <span class="trend up" id="appointmentsTrend">
-                    <i class="fas fa-arrow-up"></i> 0%
-                </span>
-            </div>
+        <div class="card-metric">
+            <div class="text-2xl font-bold text-blue-600" x-text="metrics.appointments || 0">0</div>
+            <div class="text-sm text-gray-600">Atendimentos</div>
         </div>
-
-        <div class="summary-card customers">
-            <div class="card-icon">
-                <i class="fas fa-users"></i>
-            </div>
-            <div class="card-content">
-                <h3 id="totalCustomers">0</h3>
-                <p>Clientes Atendidos</p>
-                <span class="trend" id="customersTrend">
-                    <i class="fas fa-minus"></i> 0%
-                </span>
-            </div>
+        <div class="card-metric">
+            <div class="text-2xl font-bold text-purple-600" x-text="metrics.unique_customers || 0">0</div>
+            <div class="text-sm text-gray-600">Clientes Únicos</div>
         </div>
-
-        <div class="summary-card average">
-            <div class="card-icon">
-                <i class="fas fa-chart-line"></i>
-            </div>
-            <div class="card-content">
-                <h3 id="averageTicket">R$ 0,00</h3>
-                <p>Ticket Médio</p>
-                <span class="trend" id="ticketTrend">
-                    <i class="fas fa-minus"></i> 0%
-                </span>
-            </div>
+        <div class="card-metric">
+            <div class="text-2xl font-bold text-orange-600" x-text="'R$ ' + (metrics.average_ticket || 0).toFixed(2)">R$ 0,00</div>
+            <div class="text-sm text-gray-600">Ticket Médio</div>
         </div>
     </div>
 
     <!-- Gráficos -->
-    <div class="charts-section">
-        <div class="chart-container">
-            <h3>Faturamento por Período</h3>
-            <canvas id="revenueChart"></canvas>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div class="card">
+            <h3 class="text-lg font-semibold mb-4">Evolução do Faturamento</h3>
+            <canvas id="revenueChart" height="300"></canvas>
         </div>
 
-        <div class="chart-container">
-            <h3>Serviços Mais Populares</h3>
-            <canvas id="servicesChart"></canvas>
-        </div>
-    </div>
-
-    <div class="charts-section">
-        <div class="chart-container">
-            <h3>Desempenho por Barbeiro</h3>
-            <canvas id="barbersChart"></canvas>
-        </div>
-
-        <div class="chart-container">
-            <h3>Horários de Maior Movimento</h3>
-            <canvas id="hoursChart"></canvas>
+        <div class="card">
+            <h3 class="text-lg font-semibold mb-4">Top Serviços por Faturamento</h3>
+            <canvas id="servicesChart" height="300"></canvas>
         </div>
     </div>
 
-    <!-- Tabelas de Detalhamento -->
-    <div class="details-section">
-        <div class="details-card">
-            <h3>Top 10 Clientes</h3>
-            <table class="details-table" id="topCustomersTable">
-                <thead>
+    <!-- Top Serviços -->
+    <div class="card mb-6">
+        <h3 class="text-lg font-semibold mb-4">Análise Detalhada de Serviços</h3>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50 border-b">
                     <tr>
-                        <th>Cliente</th>
-                        <th>Visitas</th>
-                        <th>Total Gasto</th>
+                        <th class="text-left p-3 text-sm font-medium text-gray-600">Serviço</th>
+                        <th class="text-center p-3 text-sm font-medium text-gray-600">Agendamentos</th>
+                        <th class="text-center p-3 text-sm font-medium text-gray-600">Faturamento</th>
+                        <th class="text-center p-3 text-sm font-medium text-gray-600">Ticket Médio</th>
                     </tr>
                 </thead>
-                <tbody></tbody>
+                <tbody>
+                    <template x-for="service in topServices" :key="service.id">
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="p-3 text-sm" x-text="service.name"></td>
+                            <td class="p-3 text-sm text-center" x-text="service.count"></td>
+                            <td class="p-3 text-sm text-center text-green-600 font-medium" x-text="'R$ ' + service.revenue.toFixed(2)"></td>
+                            <td class="p-3 text-sm text-center" x-text="'R$ ' + service.avg.toFixed(2)"></td>
+                        </tr>
+                    </template>
+                </tbody>
             </table>
         </div>
+    </div>
 
-        <div class="details-card">
-            <h3>Desempenho dos Barbeiros</h3>
-            <table class="details-table" id="barbersPerformanceTable">
-                <thead>
-                    <tr>
-                        <th>Barbeiro</th>
-                        <th>Atendimentos</th>
-                        <th>Faturamento</th>
-                        <th>Comissão</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
+    <!-- Performance dos Barbeiros -->
+    <div class="card">
+        <h3 class="text-lg font-semibold mb-4">Ranking de Barbeiros</h3>
+        <div class="space-y-3">
+            <template x-for="(barber, index) in topBarbers" :key="barber.id">
+                <div class="flex items-center gap-4 p-3 border rounded-lg">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold"
+                         :class="{
+                             'bg-yellow-500': index === 0,
+                             'bg-gray-400': index === 1,
+                             'bg-orange-500': index === 2,
+                             'bg-blue-500': index >= 3
+                         }"
+                         x-text="index + 1">
+                    </div>
+                    <div class="flex-1">
+                        <div class="font-medium" x-text="barber.name"></div>
+                        <div class="text-sm text-gray-600" x-text="barber.appointments + ' agendamentos'"></div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-bold text-primary" x-text="'R$ ' + barber.revenue.toFixed(2)"></div>
+                        <div class="text-sm" :class="barber.efficiency >= 80 ? 'text-green-600' : 'text-yellow-600'"
+                             x-text="barber.efficiency.toFixed(1) + '% eficiência'"></div>
+                    </div>
+                </div>
+            </template>
         </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="{% static 'js/admin-reports.js' %}"></script>
+<script>
+function reportsApp() {
+    return {
+        loading: true,
+        timeRange: '30days',
+        metrics: {},
+        topServices: [],
+        topBarbers: [],
+        revenueChart: null,
+        servicesChart: null,
+        
+        init() {
+            this.loadData();
+        },
+        
+        async loadData() {
+            this.loading = true;
+            try {
+                await Promise.all([
+                    this.loadMetrics(),
+                    this.loadCharts()
+                ]);
+            } catch (error) {
+                console.error('Erro:', error);
+            } finally {
+                this.loading = false;
+            }
+        },
+        
+        async loadMetrics() {
+            const response = await fetch(`/admin-painel/api/dashboard/stats/?time_range=${this.timeRange}`);
+            const data = await response.json();
+            this.metrics = {
+                revenue: data.total_revenue || 0,
+                appointments: data.completed_appointments || 0,
+                unique_customers: 0, // TODO: calcular
+                average_ticket: data.average_ticket || 0
+            };
+        },
+        
+        async loadCharts() {
+            // Services
+            const servicesResponse = await fetch(`/admin-painel/api/dashboard/services/?time_range=${this.timeRange}`);
+            const servicesData = await servicesResponse.json();
+            this.topServices = (servicesData.data || []).map(s => ({
+                ...s,
+                avg: s.count > 0 ? s.revenue / s.count : 0
+            }));
+            this.updateServicesChart(this.topServices);
+            
+            // Barbers
+            const barbersResponse = await fetch(`/admin-painel/api/dashboard/barbers/?time_range=${this.timeRange}`);
+            const barbersData = await barbersResponse.json();
+            this.topBarbers = barbersData.data || [];
+            
+            // Revenue
+            const revenueResponse = await fetch(`/admin-painel/api/dashboard/revenue/?time_range=${this.timeRange}`);
+            const revenueData = await revenueResponse.json();
+            this.updateRevenueChart(revenueData.data || []);
+        },
+        
+        updateRevenueChart(data) {
+            const ctx = document.getElementById('revenueChart');
+            if (this.revenueChart) {
+                this.revenueChart.destroy();
+            }
+            
+            this.revenueChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => d.date),
+                    datasets: [{
+                        label: 'Faturamento',
+                        data: data.map(d => d.revenue),
+                        borderColor: '#C9A961',
+                        backgroundColor: 'rgba(201, 169, 97, 0.1)',
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        },
+        
+        updateServicesChart(data) {
+            const ctx = document.getElementById('servicesChart');
+            if (this.servicesChart) {
+                this.servicesChart.destroy();
+            }
+            
+            this.servicesChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(d => d.name),
+                    datasets: [{
+                        label: 'Faturamento (R$)',
+                        data: data.map(d => d.revenue),
+                        backgroundColor: '#C9A961'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        },
+        
+        exportData() {
+            alert('Funcionalidade de exportação em desenvolvimento');
+        }
+    }
+}
+</script>
 {% endblock %}

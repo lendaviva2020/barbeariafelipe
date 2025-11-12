@@ -6,20 +6,41 @@
 {% block extra_css %}
 <style>
     .auth-container {
-        min-height: 80vh;
+        min-height: 100vh;
         display: flex;
         align-items: center;
         justify-content: center;
         padding: 2rem;
+        background: linear-gradient(135deg, var(--color-dark-brown) 0%, var(--color-chocolate) 100%);
     }
     
     .auth-card {
         background: var(--color-dark-brown);
-        border-radius: 1rem;
+        border-radius: 1.5rem;
         padding: 2.5rem;
-        max-width: 380px;
+        max-width: 420px;
         width: 100%;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(201, 169, 97, 0.2);
+    }
+    
+    .auth-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .auth-logo {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        color: var(--color-gold);
+        text-decoration: none;
+        margin-bottom: 1rem;
+        transition: transform 0.3s;
+    }
+    
+    .auth-logo:hover {
+        transform: scale(1.05);
     }
     
     .auth-title {
@@ -27,6 +48,7 @@
         color: var(--color-gold);
         margin-bottom: 0.5rem;
         text-align: center;
+        font-family: 'Playfair Display', serif;
     }
     
     .auth-subtitle {
@@ -34,6 +56,19 @@
         text-align: center;
         margin-bottom: 2rem;
         font-size: 0.875rem;
+        opacity: 0.9;
+    }
+    
+    .admin-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        background: #dc2626;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
     }
     
     .form-group {

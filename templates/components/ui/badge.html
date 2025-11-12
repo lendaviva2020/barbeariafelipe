@@ -1,0 +1,13 @@
+{# Badge Component #}
+{% comment %}
+Uso:
+{% include 'components/ui/badge.html' with variant="default" text="Novo" %}
+
+Variantes: default, secondary, destructive, outline
+{% endcomment %}
+
+<div class="badge badge-{{ variant|default:'default' }} {{ class|default:'' }}">
+    {% if icon %}{{ icon|safe }}{% endif %}
+    {{ text|default:content }}
+</div>
+

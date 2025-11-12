@@ -1,0 +1,28 @@
+{# Resizable Panels Component #}
+{% comment %}
+Uso:
+{% include 'components/ui/resizable.html' with orientation="horizontal" panels=panels %}
+
+panels: [{'size': 50, 'content': '<div>Panel 1</div>'}, {'size': 50, 'content': '<div>Panel 2</div>'}]
+{% endcomment %}
+
+<div class="flex h-full w-full {% if orientation == 'vertical' %}flex-col{% endif %}" data-resizable-panels>
+    {% for panel in panels %}
+    <div class="{% if orientation == 'vertical' %}h-{% else %}w-{% endif %}{% if panel.size %}[{{ panel.size }}%]{% else %}full{% endif %} bg-background" 
+         data-resizable-panel="{{ forloop.counter0 }}">
+        {{ panel.content|safe }}
+    </div>
+    
+    {% if not forloop.last %}
+    <div class="relative flex {% if orientation == 'vertical' %}h-px w-full{% else %}w-px h-full{% endif %} items-center justify-center bg-border cursor-{% if orientation == 'vertical' %}ns-resize{% else %}ew-resize{% endif %}"
+         data-resizable-handle="{{ forloop.counter0 }}">
+        <div class="z-10 flex h-4 w-3 items-center justify-center rounded-sm border bg-border">
+            <svg class="h-2.5 w-2.5" fill="currentColor" viewBox="0 0 24 24">
+                <circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/>
+            </svg>
+        </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+</div>
+

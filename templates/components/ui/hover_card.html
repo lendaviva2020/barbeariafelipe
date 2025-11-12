@@ -1,0 +1,16 @@
+{# Hover Card Component #}
+{% comment %}
+Uso:
+<div data-hover-card-trigger="{{ card_id }}">Hover aqui</div>
+{% include 'components/ui/hover_card.html' with id=card_id %}
+    <p>Conteúdo do card</p>
+{% endinclude %}
+{% endcomment %}
+
+<div class="hover-card-content hidden"
+     id="{{ id }}"
+     data-hover-card
+     data-state="closed">
+    {{ content|safe }}
+</div>
+

@@ -1,0 +1,24 @@
+{# Scroll Area Component #}
+{% comment %}
+Uso:
+{% include 'components/ui/scroll_area.html' with height="400px" %}
+    <p>Conteúdo aqui...</p>
+{% endinclude %}
+{% endcomment %}
+
+<div class="scroll-area {{ class|default:'' }}" style="{% if height %}height: {{ height }};{% endif %}" data-scroll-area>
+    <div class="scroll-area-viewport">
+        {{ content|safe }}
+    </div>
+    
+    <!-- Scrollbar vertical -->
+    <div class="scroll-bar scroll-bar-vertical">
+        <div class="scroll-bar-thumb"></div>
+    </div>
+    
+    <!-- Scrollbar horizontal -->
+    <div class="scroll-bar scroll-bar-horizontal hidden">
+        <div class="scroll-bar-thumb"></div>
+    </div>
+</div>
+

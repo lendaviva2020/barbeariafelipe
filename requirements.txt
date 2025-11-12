@@ -54,8 +54,15 @@ pillow==10.2.0
 reportlab==4.0.9
 openpyxl==3.1.2
 
-# Task Queue (optional)
+# Task Queue
 celery==5.3.6
+django-celery-beat==2.5.0
+
+# IA e Chat
+google-generativeai==0.3.2
+
+# Notificações WhatsApp
+twilio==8.11.0
 
 # Development Tools
 django-debug-toolbar==4.3.0

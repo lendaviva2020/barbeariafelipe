@@ -245,3 +245,21 @@ LOGGING = {
         },
     },
 }
+
+# Celery Configuration
+CELERY_BROKER_URL = config("CELERY_BROKER_URL", default="redis://localhost:6379/0")
+CELERY_RESULT_BACKEND = config("CELERY_RESULT_BACKEND", default="redis://localhost:6379/0")
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutos
+
+# Twilio WhatsApp Configuration
+TWILIO_ACCOUNT_SID = config("TWILIO_ACCOUNT_SID", default=None)
+TWILIO_AUTH_TOKEN = config("TWILIO_AUTH_TOKEN", default=None)
+TWILIO_WHATSAPP_NUMBER = config("TWILIO_WHATSAPP_NUMBER", default="whatsapp:+14155238886")
+
+# Google Gemini AI Configuration
+GEMINI_API_KEY = config("GEMINI_API_KEY", default=None)

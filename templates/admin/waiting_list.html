@@ -1,0 +1,315 @@
+{% extends "admin/base_admin.html" %}
+{% load static %}
+
+{% block title %}Lista de Espera - Painel Administrativo{% endblock %}
+
+{% block content %}
+<div x-data="waitingListApp()" x-init="init()">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold">Lista de Espera</h1>
+            <p class="text-gray-600">Gerencie clientes aguardando disponibilidade</p>
+        </div>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+        <div class="card-metric">
+            <div class="text-2xl font-bold" x-text="stats.total">0</div>
+            <div class="text-sm text-gray-600">Total</div>
+        </div>
+        <div class="card-metric">
+            <div class="text-2xl font-bold text-yellow-600" x-text="stats.waiting">0</div>
+            <div class="text-sm text-gray-600">Aguardando</div>
+        </div>
+        <div class="card-metric">
+            <div class="text-2xl font-bold text-blue-600" x-text="stats.notified">0</div>
+            <div class="text-sm text-gray-600">Notificados</div>
+        </div>
+        <div class="card-metric">
+            <div class="text-2xl font-bold text-green-600" x-text="stats.scheduled">0</div>
+            <div class="text-sm text-gray-600">Agendados</div>
+        </div>
+        <div class="card-metric">
+            <div class="text-2xl font-bold text-purple-600" x-text="stats.contacted">0</div>
+            <div class="text-sm text-gray-600">Contactados</div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <input type="text" x-model="filters.search" @input="loadEntries()" 
+                   placeholder="Buscar cliente..." class="form-input">
+            
+            <select x-model="filters.status" @change="loadEntries()" class="form-select">
+                <option value="all">Todos os status</option>
+                <option value="waiting">Aguardando</option>
+                <option value="notified">Notificado</option>
+                <option value="contacted">Contactado</option>
+                <option value="scheduled">Agendado</option>
+                <option value="cancelled">Cancelado</option>
+            </select>
+            
+            <button @click="loadEntries()" class="btn btn-outline">
+                <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Atualizar
+            </button>
+        </div>
+    </div>
+
+    <!-- Lista -->
+    <div class="card">
+        <h3 class="text-lg font-semibold mb-4">
+            Clientes na Lista de Espera
+            <span class="text-sm text-gray-600 font-normal" x-text="'(' + entries.length + ' clientes)'"></span>
+        </h3>
+
+        <div x-show="loading" class="text-center py-12">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p class="text-gray-600 mt-4">Carregando lista...</p>
+        </div>
+
+        <div x-show="!loading && entries.length === 0" class="text-center py-12">
+            <svg class="icon-lg text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h3 class="text-lg font-semibold mb-2">Nenhum cliente na lista</h3>
+        </div>
+
+        <div x-show="!loading && entries.length > 0" class="space-y-4">
+            <template x-for="entry in entries" :key="entry.id">
+                <div class="border rounded-lg p-4">
+                    <div class="flex flex-col lg:flex-row lg:justify-between gap-4">
+                        <div class="flex-1 space-y-3">
+                            <div class="flex justify-between items-start">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-primary bg-opacity-10 rounded-full flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold text-lg" x-text="entry.customer_name"></h4>
+                                        <div class="flex items-center gap-2 mt-1">
+                                            <span class="badge" :class="getStatusClass(entry.status)" x-text="getStatusText(entry.status)"></span>
+                                            <span class="badge badge-gray" x-text="formatDate(entry.preferred_date)"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right text-sm text-gray-600">
+                                    <div>Entrou: <span x-text="formatDate(entry.created_at)"></span></div>
+                                    <div x-show="entry.notified_at">Notificado: <span x-text="formatDate(entry.notified_at)"></span></div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-sm text-gray-600">
+                                <div><strong>Telefone:</strong> <span x-text="entry.customer_phone"></span></div>
+                                <div><strong>Serviço:</strong> <span x-text="entry.service_name"></span> (R$ <span x-text="entry.service_price.toFixed(2)"></span>)</div>
+                                <div><strong>Barbeiro:</strong> <span x-text="entry.barber_name"></span></div>
+                                <div x-show="entry.notes"><strong>Observações:</strong> <span x-text="entry.notes" class="italic"></span></div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-col gap-2 lg:w-48">
+                            <button x-show="entry.status === 'waiting'" 
+                                    @click="notifyCustomer(entry.id)"
+                                    class="btn btn-primary btn-sm">
+                                <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                </svg>
+                                Notificar WhatsApp
+                            </button>
+                            
+                            <select @change="updateStatus(entry.id, $event.target.value)" 
+                                    class="form-select text-sm"
+                                    :value="entry.status">
+                                <option value="waiting">Aguardando</option>
+                                <option value="notified">Notificado</option>
+                                <option value="contacted">Contactado</option>
+                                <option value="scheduled">Agendado</option>
+                                <option value="cancelled">Cancelado</option>
+                            </select>
+                            
+                            <button @click="removeEntry(entry)" class="btn btn-outline btn-sm text-red-600">
+                                <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                Remover
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function waitingListApp() {
+    return {
+        loading: true,
+        entries: [],
+        stats: {
+            total: 0,
+            waiting: 0,
+            notified: 0,
+            contacted: 0,
+            scheduled: 0
+        },
+        filters: {
+            search: '',
+            status: 'all'
+        },
+        
+        init() {
+            this.loadEntries();
+            // Auto-refresh a cada 60s
+            setInterval(() => this.loadEntries(), 60000);
+        },
+        
+        async loadEntries() {
+            this.loading = true;
+            try {
+                const params = new URLSearchParams(this.filters);
+                const response = await fetch(`/admin-painel/api/waiting-list/?${params}`);
+                const data = await response.json();
+                this.entries = data.entries || [];
+                this.calculateStats();
+            } catch (error) {
+                console.error('Erro:', error);
+            } finally {
+                this.loading = false;
+            }
+        },
+        
+        calculateStats() {
+            this.stats = {
+                total: this.entries.length,
+                waiting: this.entries.filter(e => e.status === 'waiting').length,
+                notified: this.entries.filter(e => e.status === 'notified').length,
+                contacted: this.entries.filter(e => e.status === 'contacted').length,
+                scheduled: this.entries.filter(e => e.status === 'scheduled').length
+            };
+        },
+        
+        async notifyCustomer(id) {
+            if (!confirm('Enviar notificação via WhatsApp?')) return;
+            
+            try {
+                const response = await fetch(`/admin-painel/api/waiting-list/${id}/notify/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                });
+                
+                if (response.ok) {
+                    await this.loadEntries();
+                    alert('Cliente notificado via WhatsApp!');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao notificar cliente');
+            }
+        },
+        
+        async updateStatus(id, newStatus) {
+            try {
+                const response = await fetch(`/admin-painel/api/waiting-list/${id}/status/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                
+                if (response.ok) {
+                    await this.loadEntries();
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+            }
+        },
+        
+        async removeEntry(entry) {
+            if (!confirm(`Remover ${entry.customer_name} da lista?`)) return;
+            
+            try {
+                const response = await fetch(`/admin-painel/api/waiting-list/${entry.id}/remove/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                });
+                
+                if (response.ok) {
+                    await this.loadEntries();
+                    alert('Entrada removida!');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+            }
+        },
+        
+        getStatusClass(status) {
+            const classes = {
+                'waiting': 'badge-yellow',
+                'notified': 'badge-blue',
+                'contacted': 'badge-purple',
+                'scheduled': 'badge-green',
+                'cancelled': 'badge-red'
+            };
+            return classes[status] || 'badge-gray';
+        },
+        
+        getStatusText(status) {
+            const texts = {
+                'waiting': 'Aguardando',
+                'notified': 'Notificado',
+                'contacted': 'Contactado',
+                'scheduled': 'Agendado',
+                'cancelled': 'Cancelado'
+            };
+            return texts[status] || status;
+        },
+        
+        formatDate(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('pt-BR');
+        }
+    }
+}
+</script>
+
+<style>
+.badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+.badge-yellow { background: #fef3c7; color: #92400e; }
+.badge-blue { background: #dbeafe; color: #1e40af; }
+.badge-purple { background: #e9d5ff; color: #6b21a8; }
+.badge-green { background: #d1fae5; color: #065f46; }
+.badge-red { background: #fee2e2; color: #991b1b; }
+.badge-gray { background: #f3f4f6; color: #4b5563; }
+.form-input, .form-select {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+}
+.form-input:focus, .form-select:focus {
+    outline: none;
+    border-color: #C9A961;
+    box-shadow: 0 0 0 3px rgba(201, 169, 97, 0.15);
+}
+.icon-lg { width: 3rem; height: 3rem; }
+</style>
+{% endblock %}
+

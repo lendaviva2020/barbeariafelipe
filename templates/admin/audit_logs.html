@@ -1,0 +1,257 @@
+{% extends "admin/base_admin.html" %}
+{% load static %}
+
+{% block title %}Logs de Auditoria - Painel Administrativo{% endblock %}
+
+{% block content %}
+<div x-data="auditLogsApp()" x-init="init()">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold">Logs de Auditoria</h1>
+            <p class="text-gray-600">Histórico completo de todas as ações administrativas</p>
+        </div>
+        <div class="flex gap-2">
+            <button @click="loadLogs()" class="btn btn-outline">
+                <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Atualizar
+            </button>
+            <button @click="exportCSV()" class="btn btn-primary">
+                <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Exportar CSV
+            </button>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-6">
+        <h3 class="text-lg font-semibold mb-4">Filtros e Busca</h3>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <input type="text" x-model="filters.search" @input="loadLogs()" 
+                   placeholder="Buscar em tabela, usuário ou ID..." class="form-input">
+            
+            <select x-model="filters.action" @change="loadLogs()" class="form-select">
+                <option value="all">Todas as ações</option>
+                <option value="CREATE">CREATE</option>
+                <option value="UPDATE">UPDATE</option>
+                <option value="DELETE">DELETE</option>
+                <option value="INSERT">INSERT</option>
+            </select>
+            
+            <select x-model="filters.table" @change="loadLogs()" class="form-select">
+                <option value="all">Todas as tabelas</option>
+                <template x-for="table in tables" :key="table">
+                    <option :value="table" x-text="table"></option>
+                </template>
+            </select>
+            
+            <input type="date" x-model="filters.start_date" @change="loadLogs()" class="form-input">
+        </div>
+    </div>
+
+    <!-- Lista de Logs -->
+    <div class="card">
+        <h3 class="text-lg font-semibold mb-4">
+            Registros de Auditoria
+            <span class="text-sm text-gray-600 font-normal" x-text="'(' + totalLogs + ' ações registradas)'"></span>
+        </h3>
+
+        <div x-show="loading" class="text-center py-12">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p class="text-gray-600 mt-4">Carregando logs...</p>
+        </div>
+
+        <div x-show="!loading && logs.length === 0" class="text-center py-12">
+            <svg class="icon-lg text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <h3 class="text-lg font-semibold mb-2">Nenhum log encontrado</h3>
+        </div>
+
+        <div x-show="!loading && logs.length > 0" class="space-y-4">
+            <template x-for="log in logs" :key="log.id">
+                <div class="border rounded-lg p-4">
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="badge font-mono text-xs" :class="getActionClass(log.action)" x-text="log.action"></span>
+                                <span class="badge badge-gray font-mono text-xs" x-text="log.table_name"></span>
+                            </div>
+                            <div class="text-sm text-gray-600">
+                                <div><strong>Usuário:</strong> <span x-text="log.user_name"></span></div>
+                                <div x-show="log.record_id"><strong>Registro ID:</strong> <code x-text="log.record_id" class="bg-gray-100 px-2 py-1 rounded text-xs"></code></div>
+                            </div>
+                        </div>
+                        <div class="text-right text-sm text-gray-600">
+                            <div x-text="formatDate(log.created_at)"></div>
+                            <div class="text-xs" x-text="formatTime(log.created_at)"></div>
+                        </div>
+                    </div>
+                    
+                    <div x-show="log.old_data || log.new_data">
+                        <button @click="log.showDetails = !log.showDetails" class="text-sm text-primary hover:underline">
+                            <span x-text="log.showDetails ? 'Ocultar' : 'Mostrar'"></span> detalhes
+                        </button>
+                        <div x-show="log.showDetails" class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-3">
+                            <div x-show="log.old_data">
+                                <p class="text-sm font-medium text-gray-600 mb-2">Dados Anteriores:</p>
+                                <pre class="bg-gray-50 p-3 rounded text-xs overflow-auto max-h-48 border" x-text="JSON.stringify(log.old_data, null, 2)"></pre>
+                            </div>
+                            <div x-show="log.new_data">
+                                <p class="text-sm font-medium text-gray-600 mb-2">Dados Novos:</p>
+                                <pre class="bg-gray-50 p-3 rounded text-xs overflow-auto max-h-48 border" x-text="JSON.stringify(log.new_data, null, 2)"></pre>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div x-show="log.ip_address" class="text-xs text-gray-500 mt-2 pt-2 border-t">
+                        IP: <code class="bg-gray-100 px-2 py-0.5 rounded" x-text="log.ip_address"></code>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- Paginação -->
+        <div x-show="totalPages > 1" class="flex justify-between items-center mt-6 pt-4 border-t">
+            <p class="text-sm text-gray-600">
+                Página <span x-text="currentPage"></span> de <span x-text="totalPages"></span>
+            </p>
+            <div class="flex gap-2">
+                <button @click="previousPage()" :disabled="currentPage === 1" class="btn btn-outline btn-sm">Anterior</button>
+                <button @click="nextPage()" :disabled="currentPage === totalPages" class="btn btn-outline btn-sm">Próxima</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function auditLogsApp() {
+    return {
+        loading: true,
+        logs: [],
+        tables: [],
+        totalLogs: 0,
+        currentPage: 1,
+        totalPages: 1,
+        filters: {
+            search: '',
+            action: 'all',
+            table: 'all',
+            start_date: '',
+            end_date: ''
+        },
+        
+        init() {
+            // Carregar últimos 7 dias por padrão
+            const today = new Date();
+            const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+            this.filters.start_date = weekAgo.toISOString().split('T')[0];
+            this.filters.end_date = today.toISOString().split('T')[0];
+            
+            this.loadTables();
+            this.loadLogs();
+        },
+        
+        async loadTables() {
+            try {
+                const response = await fetch('/admin-painel/api/audit-logs/tables/');
+                const data = await response.json();
+                this.tables = data.tables || [];
+            } catch (error) {
+                console.error('Erro ao carregar tabelas:', error);
+            }
+        },
+        
+        async loadLogs() {
+            this.loading = true;
+            try {
+                const params = new URLSearchParams({
+                    ...this.filters,
+                    page: this.currentPage
+                });
+                const response = await fetch(`/admin-painel/api/audit-logs/?${params}`);
+                const data = await response.json();
+                
+                this.logs = (data.logs || []).map(log => ({
+                    ...log,
+                    showDetails: false
+                }));
+                this.totalLogs = data.total || 0;
+                this.totalPages = data.total_pages || 1;
+            } catch (error) {
+                console.error('Erro:', error);
+            } finally {
+                this.loading = false;
+            }
+        },
+        
+        previousPage() {
+            if (this.currentPage > 1) {
+                this.currentPage--;
+                this.loadLogs();
+            }
+        },
+        
+        nextPage() {
+            if (this.currentPage < this.totalPages) {
+                this.currentPage++;
+                this.loadLogs();
+            }
+        },
+        
+        exportCSV() {
+            const params = new URLSearchParams(this.filters);
+            window.location.href = `/admin-painel/api/audit-logs/export/?${params}`;
+        },
+        
+        getActionClass(action) {
+            const classes = {
+                'CREATE': 'badge-green',
+                'INSERT': 'badge-green',
+                'UPDATE': 'badge-blue',
+                'DELETE': 'badge-red'
+            };
+            return classes[action] || 'badge-gray';
+        },
+        
+        formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('pt-BR');
+        },
+        
+        formatTime(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleTimeString('pt-BR');
+        }
+    }
+}
+</script>
+
+<style>
+.badge { padding: 0.25rem 0.75rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 600; }
+.badge-green { background: #d1fae5; color: #065f46; }
+.badge-blue { background: #dbeafe; color: #1e40af; }
+.badge-red { background: #fee2e2; color: #991b1b; }
+.badge-gray { background: #f3f4f6; color: #4b5563; }
+.form-input, .form-select {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+}
+.form-input:focus, .form-select:focus {
+    outline: none;
+    border-color: #C9A961;
+    box-shadow: 0 0 0 3px rgba(201, 169, 97, 0.15);
+}
+.icon-lg { width: 3rem; height: 3rem; }
+</style>
+{% endblock %}
+

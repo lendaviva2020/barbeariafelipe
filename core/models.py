@@ -3,8 +3,69 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from servicos.models import Servico
 from barbeiros.models import Barbeiro
+import json
 
 User = get_user_model()
+
+
+class AuditLog(models.Model):
+    """Log de auditoria para rastreamento de ações administrativas"""
+    ACTION_CHOICES = [
+        ('CREATE', 'Criar'),
+        ('UPDATE', 'Atualizar'),
+        ('DELETE', 'Deletar'),
+        ('INSERT', 'Inserir'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='audit_logs')
+    action = models.CharField(max_length=10, choices=ACTION_CHOICES)
+    table_name = models.CharField(max_length=100)
+    record_id = models.CharField(max_length=100, null=True, blank=True)
+    old_data = models.JSONField(null=True, blank=True)
+    new_data = models.JSONField(null=True, blank=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Log de Auditoria"
+        verbose_name_plural = "Logs de Auditoria"
+        indexes = [
+            models.Index(fields=['-created_at']),
+            models.Index(fields=['table_name']),
+            models.Index(fields=['action']),
+            models.Index(fields=['user']),
+        ]
+    
+    def __str__(self):
+        user_name = self.user.name if self.user else 'Sistema'
+        return f"{user_name} - {self.get_action_display()} em {self.table_name}"
+    
+    @staticmethod
+    def log(user, action, table_name, record_id=None, old_data=None, new_data=None, request=None):
+        """Helper method para criar logs de auditoria"""
+        ip_address = None
+        user_agent = ''
+        
+        if request:
+            x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+            if x_forwarded_for:
+                ip_address = x_forwarded_for.split(',')[0]
+            else:
+                ip_address = request.META.get('REMOTE_ADDR')
+            user_agent = request.META.get('HTTP_USER_AGENT', '')
+        
+        return AuditLog.objects.create(
+            user=user,
+            action=action,
+            table_name=table_name,
+            record_id=str(record_id) if record_id else None,
+            old_data=old_data,
+            new_data=new_data,
+            ip_address=ip_address,
+            user_agent=user_agent
+        )
 
 class BarbershopSettings(models.Model):
     """Configurações gerais da barbearia"""
@@ -53,22 +114,36 @@ class Review(models.Model):
 
 class WaitingList(models.Model):
     """Lista de espera para horários indisponíveis"""
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    STATUS_CHOICES = [
+        ('waiting', 'Aguardando'),
+        ('notified', 'Notificado'),
+        ('contacted', 'Contactado'),
+        ('scheduled', 'Agendado'),
+        ('cancelled', 'Cancelado'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     service = models.ForeignKey(Servico, on_delete=models.CASCADE)
     barber = models.ForeignKey(Barbeiro, on_delete=models.CASCADE, null=True, blank=True)
     preferred_date = models.DateField()
-    preferred_time = models.TimeField()
+    preferred_time_start = models.TimeField(null=True, blank=True)
+    preferred_time_end = models.TimeField(null=True, blank=True)
     customer_name = models.CharField(max_length=200, default='')
     customer_phone = models.CharField(max_length=20, default='')
     customer_email = models.EmailField(blank=True, default='')
     notes = models.TextField(blank=True, default='')
-    notified = models.BooleanField(default=False)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='waiting')
+    notified_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
         ordering = ['-created_at']
         verbose_name = "Lista de Espera"
         verbose_name_plural = "Lista de Espera"
+        indexes = [
+            models.Index(fields=['status', '-created_at']),
+            models.Index(fields=['preferred_date']),
+        ]
     
     def __str__(self):
         return f"{self.customer_name} - {self.preferred_date}"
@@ -274,3 +349,146 @@ class RecurringAppointment(models.Model):
     
     def __str__(self):
         return f"{self.customer_name} - {self.get_frequency_display()}"
+
+class AISettings(models.Model):
+    """Configurações de IA por barbeiro"""
+    PERSONALITY_CHOICES = [
+        ('friendly', 'Amigável'),
+        ('professional', 'Profissional'),
+    ]
+    
+    barber = models.OneToOneField(Barbeiro, on_delete=models.CASCADE, related_name='ai_settings')
+    is_enabled = models.BooleanField(default=True, verbose_name="IA Habilitada")
+    personality = models.CharField(max_length=20, choices=PERSONALITY_CHOICES, default='friendly', verbose_name="Personalidade")
+    custom_instructions = models.TextField(blank=True, verbose_name="Instruções Personalizadas", help_text="Instruções específicas para personalizar o comportamento da IA")
+    max_message_length = models.IntegerField(default=1000, verbose_name="Tamanho Máximo de Mensagem")
+    response_time_seconds = models.IntegerField(default=5, verbose_name="Tempo de Resposta (segundos)")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Configuração de IA"
+        verbose_name_plural = "Configurações de IA"
+    
+    def __str__(self):
+        return f"IA - {self.barber.name} ({self.get_personality_display()})"
+
+class ChatMessage(models.Model):
+    """Mensagens do chat entre cliente e barbeiro/IA"""
+    appointment = models.ForeignKey('agendamentos.Agendamento', on_delete=models.CASCADE, related_name='chat_messages')
+    sender = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='sent_messages')
+    message = models.TextField(verbose_name="Mensagem")
+    is_ai_response = models.BooleanField(default=False, verbose_name="Resposta da IA")
+    requires_human_attention = models.BooleanField(default=False, verbose_name="Requer Atenção Humana")
+    is_read = models.BooleanField(default=False, verbose_name="Lida")
+    read_at = models.DateTimeField(null=True, blank=True, verbose_name="Lida em")
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['created_at']
+        verbose_name = "Mensagem de Chat"
+        verbose_name_plural = "Mensagens de Chat"
+        indexes = [
+            models.Index(fields=['appointment', 'created_at']),
+            models.Index(fields=['requires_human_attention']),
+        ]
+    
+    def __str__(self):
+        sender_name = self.sender.name if self.sender else 'IA'
+        return f"{sender_name}: {self.message[:50]}..."
+    
+    def mark_as_read(self):
+        from django.utils import timezone
+        self.is_read = True
+        self.read_at = timezone.now()
+        self.save()
+
+class AIConversationContext(models.Model):
+    """Contexto e histórico de conversas com IA"""
+    appointment = models.OneToOneField('agendamentos.Agendamento', on_delete=models.CASCADE, related_name='ai_context')
+    context_data = models.JSONField(default=dict, verbose_name="Dados de Contexto")
+    last_summary = models.TextField(blank=True, verbose_name="Último Resumo")
+    message_count = models.IntegerField(default=0, verbose_name="Contagem de Mensagens")
+    last_user_message = models.TextField(blank=True, verbose_name="Última Mensagem do Usuário")
+    last_ai_response = models.TextField(blank=True, verbose_name="Última Resposta da IA")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Contexto de Conversa IA"
+        verbose_name_plural = "Contextos de Conversa IA"
+    
+    def __str__(self):
+        return f"Contexto - Agendamento #{self.appointment.id}"
+    
+    def increment_message_count(self):
+        self.message_count += 1
+        self.save()
+
+class Notification(models.Model):
+    """Registro de notificações enviadas"""
+    TYPE_CHOICES = [
+        ('confirmation', 'Confirmação'),
+        ('reminder', 'Lembrete'),
+        ('cancellation', 'Cancelamento'),
+        ('rescheduled', 'Reagendamento'),
+        ('completed', 'Concluído'),
+    ]
+    
+    CHANNEL_CHOICES = [
+        ('whatsapp', 'WhatsApp'),
+        ('email', 'Email'),
+        ('sms', 'SMS'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pendente'),
+        ('sent', 'Enviado'),
+        ('failed', 'Falhou'),
+        ('delivered', 'Entregue'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    appointment = models.ForeignKey('agendamentos.Agendamento', on_delete=models.CASCADE, related_name='notifications')
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES, verbose_name="Tipo")
+    channel = models.CharField(max_length=20, choices=CHANNEL_CHOICES, verbose_name="Canal")
+    recipient = models.CharField(max_length=200, verbose_name="Destinatário")
+    message = models.TextField(verbose_name="Mensagem")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', verbose_name="Status")
+    error_message = models.TextField(blank=True, verbose_name="Mensagem de Erro")
+    external_id = models.CharField(max_length=200, blank=True, verbose_name="ID Externo", help_text="ID da API externa (Twilio, etc)")
+    sent_at = models.DateTimeField(null=True, blank=True, verbose_name="Enviado em")
+    delivered_at = models.DateTimeField(null=True, blank=True, verbose_name="Entregue em")
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Notificação"
+        verbose_name_plural = "Notificações"
+        indexes = [
+            models.Index(fields=['status', '-created_at']),
+            models.Index(fields=['appointment']),
+            models.Index(fields=['type', 'channel']),
+        ]
+    
+    def __str__(self):
+        return f"{self.get_type_display()} via {self.get_channel_display()} - {self.recipient}"
+    
+    def mark_as_sent(self, external_id=None):
+        from django.utils import timezone
+        self.status = 'sent'
+        self.sent_at = timezone.now()
+        if external_id:
+            self.external_id = external_id
+        self.save()
+    
+    def mark_as_delivered(self):
+        from django.utils import timezone
+        self.status = 'delivered'
+        self.delivered_at = timezone.now()
+        self.save()
+    
+    def mark_as_failed(self, error_message):
+        self.status = 'failed'
+        self.error_message = error_message
+        self.save()

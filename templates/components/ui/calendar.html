@@ -1,0 +1,41 @@
+{# Calendar Component #}
+{% comment %}
+Uso:
+{% include 'components/ui/calendar.html' with name="appointment_date" selected_date=today %}
+{% endcomment %}
+
+<div class="calendar p-3" data-calendar>
+    <div class="calendar-header flex justify-between items-center mb-4">
+        <button type="button" class="btn btn-outline btn-sm" data-calendar-prev>
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+        </button>
+        <div class="text-sm font-medium" data-calendar-month></div>
+        <button type="button" class="btn btn-outline btn-sm" data-calendar-next>
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+        </button>
+    </div>
+    
+    <table class="w-full border-collapse">
+        <thead>
+            <tr class="flex">
+                <th class="text-muted-foreground rounded-md w-9 font-normal text-xs">Dom</th>
+                <th class="text-muted-foreground rounded-md w-9 font-normal text-xs">Seg</th>
+                <th class="text-muted-foreground rounded-md w-9 font-normal text-xs">Ter</th>
+                <th class="text-muted-foreground rounded-md w-9 font-normal text-xs">Qua</th>
+                <th class="text-muted-foreground rounded-md w-9 font-normal text-xs">Qui</th>
+                <th class="text-muted-foreground rounded-md w-9 font-normal text-xs">Sex</th>
+                <th class="text-muted-foreground rounded-md w-9 font-normal text-xs">Sáb</th>
+            </tr>
+        </thead>
+        <tbody data-calendar-body>
+            <!-- Dias serão renderizados via JavaScript -->
+        </tbody>
+    </table>
+    
+    <input type="hidden" name="{{ name }}" value="{{ selected_date }}" data-calendar-input />
+</div>
+

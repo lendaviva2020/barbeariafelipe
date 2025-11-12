@@ -1,0 +1,14 @@
+{# Skeleton Loading Component #}
+{% comment %}
+Uso:
+{% include 'components/ui/skeleton.html' with width="100%" height="20px" rounded="md" %}
+{% endcomment %}
+
+<div 
+    class="skeleton rounded-{{ rounded|default:'md' }} {{ class|default:'' }}"
+    {% if width or height %}style="{% if width %}width: {{ width }};{% endif %}{% if height %}height: {{ height }};{% endif %}"{% endif %}
+    aria-busy="true"
+    aria-live="polite"
+>
+</div>
+

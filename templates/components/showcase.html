@@ -1,0 +1,255 @@
+{% load static %}
+{% load ui_components %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Showcase - Componentes UI Django</title>
+    
+    <!-- Tailwind CSS CDN (para desenvolvimento) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    
+    <!-- JavaScript -->
+    <script src="{% static 'js/ui-core.js' %}" defer></script>
+    <script src="{% static 'js/components/accordion.js' %}" defer></script>
+    <script src="{% static 'js/components/tabs.js' %}" defer></script>
+    <script src="{% static 'js/components/dialog.js' %}" defer></script>
+    <script src="{% static 'js/components/dropdown.js' %}" defer></script>
+    <script src="{% static 'js/components/carousel.js' %}" defer></script>
+    <script src="{% static 'js/components/popover.js' %}" defer></script>
+    <script src="{% static 'js/components/tooltip.js' %}" defer></script>
+    <script src="{% static 'js/components/slider.js' %}" defer></script>
+    <script src="{% static 'js/components/switch.js' %}" defer></script>
+    <script src="{% static 'js/components/command.js' %}" defer></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-4xl font-bold mb-2">🎨 Componentes UI - Django</h1>
+            <p class="text-gray-600">Biblioteca completa de componentes reutilizáveis</p>
+            <button class="btn btn-outline mt-4" onclick="UI.theme.toggle()">
+                🌓 Toggle Tema
+            </button>
+        </div>
+        
+        <!-- Buttons -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold mb-4">Botões</h2>
+            <div class="flex flex-wrap gap-2">
+                {% ui_button text="Default" variant="default" %}
+                {% ui_button text="Destructive" variant="destructive" %}
+                {% ui_button text="Outline" variant="outline" %}
+                {% ui_button text="Secondary" variant="secondary" %}
+                {% ui_button text="Ghost" variant="ghost" %}
+                {% ui_button text="Link" variant="link" %}
+                {% ui_button text="Premium" variant="premium" %}
+            </div>
+            
+            <h3 class="text-lg font-semibold mt-4 mb-2">Tamanhos</h3>
+            <div class="flex flex-wrap items-center gap-2">
+                {% ui_button text="Small" variant="default" size="sm" %}
+                {% ui_button text="Default" variant="default" size="default" %}
+                {% ui_button text="Large" variant="default" size="lg" %}
+                {% ui_button text="XL" variant="default" size="xl" %}
+            </div>
+        </section>
+        
+        <!-- Badges -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold mb-4">Badges</h2>
+            <div class="flex flex-wrap gap-2">
+                {% ui_badge text="Default" variant="default" %}
+                {% ui_badge text="Secondary" variant="secondary" %}
+                {% ui_badge text="Destructive" variant="destructive" %}
+                {% ui_badge text="Outline" variant="outline" %}
+            </div>
+        </section>
+        
+        <!-- Alerts -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold mb-4">Alerts</h2>
+            <div class="space-y-4">
+                {% ui_alert title="Informação" description="Este é um alerta informativo" variant="default" %}
+                {% ui_alert title="Erro!" description="Algo deu errado" variant="destructive" %}
+            </div>
+        </section>
+        
+        <!-- Progress -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold mb-4">Progress</h2>
+            <div class="space-y-4">
+                {% ui_progress value=25 %}
+                {% ui_progress value=50 %}
+                {% ui_progress value=75 %}
+                {% ui_progress value=100 %}
+            </div>
+        </section>
+        
+        <!-- Skeleton -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold mb-4">Skeleton Loading</h2>
+            <div class="space-y-2">
+                {% ui_skeleton width="100%" height="20px" %}
+                {% ui_skeleton width="80%" height="20px" %}
+                {% ui_skeleton width="60%" height="20px" %}
+            </div>
+        </section>
+        
+        <!-- Avatar -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold mb-4">Avatar</h2>
+            <div class="flex gap-2">
+                {% ui_avatar name="João Silva" %}
+                {% ui_avatar name="Maria Santos" fallback="MS" %}
+                {% ui_avatar fallback="AB" %}
+            </div>
+        </section>
+        
+        <!-- Card -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold mb-4">Card</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {% include 'components/ui/card.html' with title="Card Title" description="Card description" %}
+                    <p>Este é o conteúdo do card.</p>
+                    <div class="card-footer mt-4">
+                        {% ui_button text="Ação" %}
+                    </div>
+                {% endinclude %}
+                
+                {% include 'components/ui/card.html' with title="Outro Card" %}
+                    <p>Mais conteúdo aqui.</p>
+                {% endinclude %}
+            </div>
+        </section>
+        
+        <!-- Accordion -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold mb-4">Accordion</h2>
+            {% with items=accordion_items %}
+            {% include 'components/ui/accordion.html' with items=items %}
+            {% endwith %}
+        </section>
+        
+        <!-- Tabs -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold mb-4">Tabs</h2>
+            {% with tabs=tab_items %}
+            {% include 'components/ui/tabs.html' with tabs=tabs %}
+            {% endwith %}
+        </section>
+        
+        <!-- Separator -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold mb-4">Separator</h2>
+            <div>
+                <p>Conteúdo acima</p>
+                {% ui_separator orientation="horizontal" %}
+                <p>Conteúdo abaixo</p>
+            </div>
+        </section>
+        
+        <!-- Forms -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold mb-4">Formulários</h2>
+            <div class="max-w-md space-y-4">
+                <div>
+                    {% include 'components/ui/label.html' with for="name" text="Nome" required=True %}
+                    {% include 'components/ui/input.html' with type="text" name="name" placeholder="Seu nome" %}
+                </div>
+                
+                <div>
+                    {% include 'components/ui/label.html' with for="email" text="Email" %}
+                    {% include 'components/ui/input.html' with type="email" name="email" placeholder="seu@email.com" %}
+                </div>
+                
+                <div>
+                    {% include 'components/ui/label.html' with for="message" text="Mensagem" %}
+                    {% include 'components/ui/textarea.html' with name="message" placeholder="Digite sua mensagem" rows=4 %}
+                </div>
+                
+                <div>
+                    {% include 'components/ui/checkbox.html' with name="terms" label="Aceito os termos" %}
+                </div>
+                
+                <div>
+                    {% include 'components/ui/switch.html' with name="notifications" label="Receber notificações" checked=True %}
+                </div>
+                
+                {% ui_button text="Enviar" variant="default" type="submit" class="w-full" %}
+            </div>
+        </section>
+        
+        <!-- Dialog -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold mb-4">Dialog</h2>
+            <button class="btn btn-default" onclick="UI.overlay.open(document.getElementById('demoDialog'))">
+                Abrir Modal
+            </button>
+        </section>
+        
+        <!-- Toast -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold mb-4">Toast</h2>
+            <div class="flex gap-2">
+                <button class="btn btn-default" onclick="UI.toast.success('Sucesso!', 'Operação realizada')">
+                    Success Toast
+                </button>
+                <button class="btn btn-destructive" onclick="UI.toast.error('Erro!', 'Algo deu errado')">
+                    Error Toast
+                </button>
+                <button class="btn btn-secondary" onclick="UI.toast.info('Info', 'Informação importante')">
+                    Info Toast
+                </button>
+            </div>
+        </section>
+        
+        <!-- Dropdown -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold mb-4">Dropdown Menu</h2>
+            {% with items=dropdown_items %}
+            {% include 'components/ui/dropdown_menu.html' with trigger_text="Abrir Menu" items=items %}
+            {% endwith %}
+        </section>
+    </div>
+    
+    <!-- Demo Dialog -->
+    {% include 'components/ui/dialog.html' with id="demoDialog" title="Título do Modal" description="Descrição do modal" %}
+        <p class="mb-4">Este é um modal de demonstração.</p>
+        <div class="dialog-footer">
+            <button class="btn btn-outline" onclick="UI.overlay.close(document.getElementById('demoDialog'))">Cancelar</button>
+            <button class="btn btn-default" onclick="UI.toast.success('Confirmado!', 'Ação realizada'); UI.overlay.close(document.getElementById('demoDialog'))">Confirmar</button>
+        </div>
+    {% endinclude %}
+    
+    <!-- Toast Container -->
+    {% include 'components/ui/toast.html' %}
+    
+    <script>
+        // Dados de demonstração
+        const accordionItems = [
+            {title: 'Item 1', content: '<p>Conteúdo do item 1</p>'},
+            {title: 'Item 2', content: '<p>Conteúdo do item 2</p>'},
+            {title: 'Item 3', content: '<p>Conteúdo do item 3</p>'}
+        ];
+        
+        const tabItems = [
+            {id: 'tab1', label: 'Tab 1', content: '<p>Conteúdo da tab 1</p>'},
+            {id: 'tab2', label: 'Tab 2', content: '<p>Conteúdo da tab 2</p>'},
+            {id: 'tab3', label: 'Tab 3', content: '<p>Conteúdo da tab 3</p>'}
+        ];
+        
+        const dropdownItems = [
+            {label: 'Opção 1', url: '#'},
+            {label: 'Opção 2', url: '#'},
+            {separator: true},
+            {label: 'Opção 3', url: '#'}
+        ];
+    </script>
+</body>
+</html>
+

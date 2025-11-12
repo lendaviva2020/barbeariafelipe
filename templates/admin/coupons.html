@@ -1,123 +1,412 @@
-{% extends "base.html" %}
+{% extends "admin/base_admin.html" %}
 {% load static %}
 
-{% block title %}Gerenciar Cupons - Admin{% endblock %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/admin-coupons.css' %}">
-{% endblock %}
+{% block title %}Gerenciar Cupons - Painel Administrativo{% endblock %}
 
 {% block content %}
-<div class="admin-coupons-container">
-    <header class="admin-header">
-        <h1>Gerenciar Cupons</h1>
-        <button class="btn btn-primary" onclick="showCreateModal()">
-            <i class="fas fa-plus"></i> Novo Cupom
+<div x-data="couponsApp()" x-init="init()">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold">Gerenciar Cupons</h1>
+            <p class="text-gray-600">Configure descontos promocionais para atrair e fidelizar clientes</p>
+        </div>
+        <button @click="openCreateModal()" class="btn btn-primary">
+            <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Novo Cupom
         </button>
-    </header>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+        <div class="card-metric">
+            <div class="text-2xl font-bold" x-text="stats.total">0</div>
+            <div class="text-sm text-gray-600">Total</div>
+        </div>
+        <div class="card-metric">
+            <div class="text-2xl font-bold text-green-600" x-text="stats.active">0</div>
+            <div class="text-sm text-gray-600">Ativos</div>
+        </div>
+        <div class="card-metric">
+            <div class="text-2xl font-bold text-red-600" x-text="stats.expired">0</div>
+            <div class="text-sm text-gray-600">Expirados</div>
+        </div>
+        <div class="card-metric">
+            <div class="text-2xl font-bold text-blue-600" x-text="stats.percentage">0</div>
+            <div class="text-sm text-gray-600">Percentual</div>
+        </div>
+        <div class="card-metric">
+            <div class="text-2xl font-bold text-purple-600" x-text="stats.fixed">0</div>
+            <div class="text-sm text-gray-600">Valor Fixo</div>
+        </div>
+    </div>
 
     <!-- Filtros -->
-    <div class="filters-section">
-        <input type="text" id="searchCoupon" class="form-control" placeholder="Buscar cupom...">
-        <select id="filterActive" class="form-control">
-            <option value="">Todos</option>
-            <option value="true">Ativos</option>
-            <option value="false">Inativos</option>
-        </select>
-        <select id="filterType" class="form-control">
-            <option value="">Todos os Tipos</option>
-            <option value="percentage">Percentual</option>
-            <option value="fixed">Valor Fixo</option>
-        </select>
-    </div>
-
-    <!-- Tabela de Cupons -->
-    <div class="coupons-table-container">
-        <table class="coupons-table" id="couponsTable">
-            <thead>
-                <tr>
-                    <th>Código</th>
-                    <th>Desconto</th>
-                    <th>Tipo</th>
-                    <th>Usos</th>
-                    <th>Validade</th>
-                    <th>Status</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody id="couponsBody">
-                <tr>
-                    <td colspan="7" class="loading-cell">
-                        <div class="loading-spinner"></div>
-                        Carregando cupons...
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<!-- Modal: Criar/Editar Cupom -->
-<div id="couponModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2 id="modalTitle">Novo Cupom</h2>
-            <button class="close-btn" onclick="closeModal()">&times;</button>
-        </div>
-        <form id="couponForm">
-            <input type="hidden" id="couponId">
+    <div class="card mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <input type="text" x-model="filters.search" @input="loadCoupons()" 
+                   placeholder="Buscar cupom..." class="form-input">
             
-            <div class="form-group">
-                <label for="code">Código do Cupom *</label>
-                <input type="text" id="code" class="form-control" required placeholder="Ex: PRIMEIRAVISITA">
-            </div>
+            <select x-model="filters.status" @change="loadCoupons()" class="form-select">
+                <option value="all">Todos</option>
+                <option value="active">Ativos</option>
+                <option value="expired">Expirados</option>
+                <option value="inactive">Inativos</option>
+            </select>
+            
+            <select x-model="filters.type" @change="loadCoupons()" class="form-select">
+                <option value="all">Todos os Tipos</option>
+                <option value="percentage">Percentual</option>
+                <option value="fixed">Valor Fixo</option>
+            </select>
+            
+            <button @click="loadCoupons()" class="btn btn-outline">
+                <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Atualizar
+            </button>
+        </div>
+    </div>
 
-            <div class="form-group">
-                <label for="description">Descrição</label>
-                <textarea id="description" class="form-control" rows="2"></textarea>
-            </div>
+    <!-- Lista de Cupons -->
+    <div class="card">
+        <div x-show="loading" class="text-center py-12">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p class="text-gray-600 mt-4">Carregando cupons...</p>
+        </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="discountType">Tipo de Desconto *</label>
-                    <select id="discountType" class="form-control" required onchange="updateDiscountLabel()">
-                        <option value="percentage">Percentual (%)</option>
-                        <option value="fixed">Valor Fixo (R$)</option>
-                    </select>
+        <div x-show="!loading && coupons.length === 0" class="text-center py-12">
+            <svg class="icon-lg text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+            </svg>
+            <h3 class="text-lg font-semibold mb-2">Nenhum cupom encontrado</h3>
+        </div>
+
+        <div x-show="!loading && coupons.length > 0" class="space-y-4">
+            <template x-for="coupon in coupons" :key="coupon.id">
+                <div class="border rounded-lg p-4 hover:shadow-md transition">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="flex items-center gap-2">
+                                    <h4 class="font-semibold text-lg font-mono" x-text="coupon.code"></h4>
+                                    <button @click="copyCode(coupon.code)" class="text-gray-400 hover:text-gray-600">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <span class="badge" :class="getStatusClass(coupon)" x-text="getStatusText(coupon)"></span>
+                            </div>
+                            
+                            <p x-show="coupon.description" class="text-sm text-gray-600 mb-2" x-text="coupon.description"></p>
+                            
+                            <div class="text-sm text-gray-600 space-y-1">
+                                <div class="font-medium text-primary">
+                                    <span x-show="coupon.discount_type === 'percentage'" x-text="coupon.discount + '% de desconto'"></span>
+                                    <span x-show="coupon.discount_type === 'fixed'" x-text="'R$ ' + coupon.discount.toFixed(2) + ' de desconto'"></span>
+                                </div>
+                                <div x-show="coupon.min_value">Mínimo: R$ <span x-text="coupon.min_value?.toFixed(2)"></span></div>
+                                <div x-show="coupon.max_uses">
+                                    Usos: <span x-text="(coupon.used_count || 0) + '/' + coupon.max_uses"></span>
+                                </div>
+                                <div x-show="coupon.expiry_date">Expira em: <span x-text="formatDate(coupon.expiry_date)"></span></div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-col gap-2">
+                            <button @click="editCoupon(coupon)" class="btn btn-outline btn-sm">Editar</button>
+                            <button @click="toggleActive(coupon)" class="btn btn-outline btn-sm">
+                                <span x-text="coupon.active ? 'Desativar' : 'Ativar'"></span>
+                            </button>
+                            <button @click="deleteCoupon(coupon)" class="btn btn-destructive btn-sm">Excluir</button>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="discount" id="discountLabel">Desconto (%) *</label>
-                    <input type="number" id="discount" class="form-control" step="0.01" required>
-                </div>
-            </div>
+            </template>
+        </div>
+    </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="expiryDate">Data de Validade</label>
-                    <input type="date" id="expiryDate" class="form-control">
+    <!-- Modal Criar/Editar -->
+    <div x-show="showModal" x-cloak class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click.self="closeModal()">
+        <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <h2 class="text-2xl font-bold mb-4" x-text="editingCoupon ? 'Editar Cupom' : 'Novo Cupom'"></h2>
+            
+            <form @submit.prevent="saveCoupon()">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Código do Cupom *</label>
+                        <input type="text" x-model="formData.code" required class="form-input uppercase" 
+                               placeholder="Ex: PRIMEIRA VISITA">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Descrição</label>
+                        <textarea x-model="formData.description" class="form-input" rows="2"></textarea>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Tipo de Desconto *</label>
+                            <select x-model="formData.discount_type" required class="form-select">
+                                <option value="percentage">Percentual (%)</option>
+                                <option value="fixed">Valor Fixo (R$)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">
+                                Desconto <span x-text="formData.discount_type === 'percentage' ? '(%)' : '(R$)'"></span> *
+                            </label>
+                            <input type="number" x-model="formData.discount" step="0.01" required class="form-input">
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Data de Expiração</label>
+                            <input type="date" x-model="formData.expiry_date" class="form-input">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Limite de Usos</label>
+                            <input type="number" x-model="formData.max_uses" class="form-input" placeholder="Ilimitado">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Valor Mínimo (R$)</label>
+                        <input type="number" x-model="formData.min_value" step="0.01" class="form-input">
+                    </div>
+                    
+                    <div>
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" x-model="formData.active">
+                            <span class="text-sm font-medium">Cupom Ativo</span>
+                        </label>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="maxUses">Limite de Usos</label>
-                    <input type="number" id="maxUses" class="form-control" placeholder="Deixe vazio para ilimitado">
+                
+                <div class="flex gap-3 mt-6">
+                    <button type="button" @click="closeModal()" class="btn btn-outline flex-1">Cancelar</button>
+                    <button type="submit" class="btn btn-primary flex-1">Salvar</button>
                 </div>
-            </div>
-
-            <div class="form-group">
-                <label class="checkbox-label">
-                    <input type="checkbox" id="active" checked>
-                    Cupom Ativo
-                </label>
-            </div>
-
-            <div class="modal-actions">
-                <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Salvar</button>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/admin-coupons.js' %}"></script>
+<script>
+function couponsApp() {
+    return {
+        loading: true,
+        coupons: [],
+        showModal: false,
+        editingCoupon: null,
+        stats: {
+            total: 0,
+            active: 0,
+            expired: 0,
+            percentage: 0,
+            fixed: 0
+        },
+        filters: {
+            search: '',
+            status: 'all',
+            type: 'all'
+        },
+        formData: {
+            code: '',
+            description: '',
+            discount: '',
+            discount_type: 'percentage',
+            expiry_date: '',
+            max_uses: '',
+            min_value: '',
+            active: true
+        },
+        
+        init() {
+            this.loadCoupons();
+        },
+        
+        async loadCoupons() {
+            this.loading = true;
+            try {
+                const response = await fetch('/admin-painel/api/coupons/');
+                const data = await response.json();
+                this.coupons = data.coupons || data || [];
+                this.calculateStats();
+            } catch (error) {
+                console.error('Erro:', error);
+            } finally {
+                this.loading = false;
+            }
+        },
+        
+        calculateStats() {
+            const now = new Date();
+            this.stats = {
+                total: this.coupons.length,
+                active: this.coupons.filter(c => c.active && (!c.expiry_date || new Date(c.expiry_date) > now)).length,
+                expired: this.coupons.filter(c => c.expiry_date && new Date(c.expiry_date) < now).length,
+                percentage: this.coupons.filter(c => c.discount_type === 'percentage').length,
+                fixed: this.coupons.filter(c => c.discount_type === 'fixed').length
+            };
+        },
+        
+        openCreateModal() {
+            this.editingCoupon = null;
+            this.formData = {
+                code: '',
+                description: '',
+                discount: '',
+                discount_type: 'percentage',
+                expiry_date: '',
+                max_uses: '',
+                min_value: '',
+                active: true
+            };
+            this.showModal = true;
+        },
+        
+        editCoupon(coupon) {
+            this.editingCoupon = coupon;
+            this.formData = {
+                code: coupon.code,
+                description: coupon.description || '',
+                discount: coupon.discount,
+                discount_type: coupon.discount_type,
+                expiry_date: coupon.expiry_date || '',
+                max_uses: coupon.max_uses || '',
+                min_value: coupon.min_value || '',
+                active: coupon.active
+            };
+            this.showModal = true;
+        },
+        
+        async saveCoupon() {
+            const url = this.editingCoupon 
+                ? `/admin-painel/api/coupons/${this.editingCoupon.id}/`
+                : '/admin-painel/api/coupons/create/';
+            
+            const method = this.editingCoupon ? 'PUT' : 'POST';
+            
+            try {
+                const response = await fetch(url, {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify(this.formData)
+                });
+                
+                if (response.ok) {
+                    await this.loadCoupons();
+                    this.closeModal();
+                    alert('Cupom salvo com sucesso!');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao salvar cupom');
+            }
+        },
+        
+        async toggleActive(coupon) {
+            try {
+                const response = await fetch(`/admin-painel/api/coupons/${coupon.id}/`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ active: !coupon.active })
+                });
+                
+                if (response.ok) {
+                    await this.loadCoupons();
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+            }
+        },
+        
+        async deleteCoupon(coupon) {
+            if (!confirm(`Excluir cupom ${coupon.code}?`)) return;
+            
+            try {
+                const response = await fetch(`/admin-painel/api/coupons/${coupon.id}/delete/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                });
+                
+                if (response.ok) {
+                    await this.loadCoupons();
+                    alert('Cupom excluído!');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+            }
+        },
+        
+        closeModal() {
+            this.showModal = false;
+        },
+        
+        copyCode(code) {
+            navigator.clipboard.writeText(code);
+            alert('Código copiado!');
+        },
+        
+        getStatusClass(coupon) {
+            const now = new Date();
+            if (!coupon.active) return 'badge-gray';
+            if (coupon.expiry_date && new Date(coupon.expiry_date) < now) return 'badge-red';
+            if (coupon.max_uses && coupon.used_count >= coupon.max_uses) return 'badge-yellow';
+            return 'badge-green';
+        },
+        
+        getStatusText(coupon) {
+            const now = new Date();
+            if (!coupon.active) return 'Inativo';
+            if (coupon.expiry_date && new Date(coupon.expiry_date) < now) return 'Expirado';
+            if (coupon.max_uses && coupon.used_count >= coupon.max_uses) return 'Esgotado';
+            return 'Ativo';
+        },
+        
+        formatDate(dateStr) {
+            if (!dateStr) return '';
+            return new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-BR');
+        }
+    }
+}
+</script>
+
+<style>
+[x-cloak] { display: none !important; }
+.badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+.badge-green { background: #d1fae5; color: #065f46; }
+.badge-red { background: #fee2e2; color: #991b1b; }
+.badge-yellow { background: #fef3c7; color: #92400e; }
+.badge-gray { background: #f3f4f6; color: #4b5563; }
+.form-input, .form-select {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+}
+.form-input:focus, .form-select:focus {
+    outline: none;
+    border-color: #C9A961;
+    box-shadow: 0 0 0 3px rgba(201, 169, 97, 0.15);
+}
+.icon-lg { width: 3rem; height: 3rem; }
+</style>
 {% endblock %}

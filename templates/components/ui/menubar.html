@@ -1,0 +1,35 @@
+{# Menubar Component #}
+{% comment %}
+Uso:
+{% include 'components/ui/menubar.html' with menus=menubar_menus %}
+{% endcomment %}
+
+<div class="flex h-10 items-center space-x-1 rounded-md border bg-background p-1" data-menubar>
+    {% for menu in menus %}
+    <div class="relative" data-menu-item>
+        <button
+            type="button"
+            class="flex cursor-default select-none items-center rounded-sm px-3 py-1.5 text-sm font-medium outline-none focus:bg-accent focus:text-accent-foreground"
+            data-menu-trigger="{{ menu.id }}"
+        >
+            {{ menu.label }}
+        </button>
+        
+        <div class="hidden absolute top-full left-0 mt-1 z-50 min-w-[12rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md" 
+             data-menu-content="{{ menu.id }}">
+            {% for item in menu.items %}
+            {% if item.separator %}
+            <div class="-mx-1 my-1 h-px bg-muted"></div>
+            {% else %}
+            <a href="{{ item.url|default:'#' }}"
+               class="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground"
+               {% if item.onclick %}onclick="{{ item.onclick }}"{% endif %}>
+                {{ item.label }}
+            </a>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+

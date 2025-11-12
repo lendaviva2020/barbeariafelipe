@@ -1,0 +1,19 @@
+{# Toggle Component #}
+{% comment %}
+Uso:
+{% include 'components/ui/toggle.html' with label="Bold" pressed=False %}
+{% endcomment %}
+
+<button
+    type="button"
+    role="switch"
+    aria-pressed="{{ pressed|yesno:'true,false' }}"
+    data-state="{{ pressed|yesno:'on,off' }}"
+    class="toggle {{ variant|default:'default' }} h-{{ size|default:10 }} {{ class|default:'' }}"
+    data-toggle
+    {% if onclick %}onclick="{{ onclick }}"{% endif %}
+>
+    {% if icon %}{{ icon|safe }}{% endif %}
+    {{ label|default:content }}
+</button>
+
