@@ -70,7 +70,7 @@ async function loadServices() {
     
     try {
         console.log('Carregando serviços da API...');
-        const allServices = await apiCall('/servicos/');
+        const allServices = await apiCall('/api/servicos/');
         console.log('Serviços recebidos:', allServices);
         
         // Filtrar apenas serviços individuais (não combos)
@@ -135,7 +135,7 @@ async function loadBarbers() {
     const barbersGrid = document.getElementById('barbersGrid');
     
     try {
-        const barbers = await apiCall('/barbeiros/');
+        const barbers = await apiCall('/api/barbeiros/');
         
         barbersGrid.innerHTML = '';
         
@@ -304,7 +304,7 @@ async function loadAvailableSlots() {
         const serviceId = bookingState.selectedService?.id || '';
         
         const availableSlots = await apiCall(
-            `/agendamentos/available-slots/?date=${dateStr}&barber_id=${barberId}&service_id=${serviceId}`
+            `/api/agendamentos/available-slots/?date=${dateStr}&barber_id=${barberId}&service_id=${serviceId}`
         );
         
         slotsContainer.innerHTML = '';
@@ -426,7 +426,7 @@ async function validateCoupon() {
     feedback.className = 'coupon-feedback';
     
     try {
-        const result = await apiCall('/agendamentos/validate-cupom/', {
+        const result = await apiCall('/api/agendamentos/validate-cupom/', {
             method: 'POST',
             body: JSON.stringify({ code: couponCode })
         });
@@ -554,7 +554,7 @@ async function confirmBooking() {
     confirmBtn.innerHTML = '<div class="spinner"></div> Processando...';
     
     try {
-        const result = await apiCall('/agendamentos/create/', {
+        const result = await apiCall('/api/agendamentos/create/', {
             method: 'POST',
             body: JSON.stringify(bookingData)
         });
