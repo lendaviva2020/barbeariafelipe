@@ -1,5 +1,6 @@
 // App.js - JavaScript principal
-const API_BASE = '/api';
+// API_BASE é definido em config.js (carregado antes)
+const API_BASE = window.API_BASE || '/api';
 
 // Funções de autenticação
 const auth = {

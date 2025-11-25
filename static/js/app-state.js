@@ -26,7 +26,7 @@ class AppState {
         if (this.initialized) return;
         
         try {
-            // Tentar buscar dados do usuário
+            // Tentar buscar dados do usuário (apenas se autenticado)
             const response = await fetch('/api/users/me/', {
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'
@@ -40,9 +40,16 @@ class AppState {
                     user: userData,
                     isAuthenticated: true
                 });
+            } else if (response.status === 401) {
+                // Usuário não autenticado - isso é normal, não é erro
+                // Silenciar este caso
             }
         } catch (error) {
-            console.warn('Could not load user data:', error);
+            // Silenciar erros de rede quando não autenticado
+            // Apenas logar se for um erro diferente de 401
+            if (error.status !== 401) {
+                console.warn('Could not load user data:', error);
+            }
         }
         
         this.initialized = true;

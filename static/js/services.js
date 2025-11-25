@@ -3,7 +3,8 @@
  * Filtros, carregamento dinâmico e integração com API
  */
 
-const API_BASE = '/api';
+// API_BASE é definido em config.js (carregado antes)
+const API_BASE = window.API_BASE || '/api';
 let allServices = [];
 let currentCategory = 'all';
 

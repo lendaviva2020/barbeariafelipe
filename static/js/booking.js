@@ -4,7 +4,8 @@
  */
 
 // ========== CONFIGURAÇÕES ==========
-const API_BASE = '/api';
+// API_BASE é definido em config.js (carregado antes)
+const API_BASE = window.API_BASE || '/api';
 const TIME_SLOTS = [
     "08:00", "08:30", "09:00", "09:30", "10:00", "10:30",
     "11:00", "11:30", "13:00", "13:30", "14:00", "14:30",
