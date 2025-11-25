@@ -1,6 +1,9 @@
 // App.js - JavaScript principal
 // API_BASE é definido em config.js (carregado antes)
-const API_BASE = window.API_BASE || '/api';
+// Usar função helper para evitar redeclaração de const
+function getApiBase() {
+    return (typeof window !== 'undefined' && window.API_BASE) ? window.API_BASE : '/api';
+}
 
 // Funções de autenticação
 const auth = {
@@ -36,7 +39,7 @@ const auth = {
         const refreshToken = localStorage.getItem('refresh_token');
         if (refreshToken) {
             try {
-                await fetch(`${API_BASE}/users/logout/`, {
+                await fetch(`${getApiBase()}/users/logout/`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -65,7 +68,7 @@ async function fetchAPI(url, options = {}) {
         headers['Authorization'] = `Bearer ${token}`;
     }
     
-    const response = await fetch(`${API_BASE}${url}`, {
+    const response = await fetch(`${getApiBase()}${url}`, {
         ...options,
         headers,
     });

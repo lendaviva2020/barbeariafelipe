@@ -5,7 +5,10 @@
 
 // ========== CONFIGURAÇÕES ==========
 // API_BASE é definido em config.js (carregado antes)
-const API_BASE = window.API_BASE || '/api';
+// Usar função helper para evitar redeclaração de const
+function getApiBase() {
+    return (typeof window !== 'undefined' && window.API_BASE) ? window.API_BASE : '/api';
+}
 const TIME_SLOTS = [
     "08:00", "08:30", "09:00", "09:30", "10:00", "10:30",
     "11:00", "11:30", "13:00", "13:30", "14:00", "14:30",
@@ -41,7 +44,7 @@ function initializeBookingSystem() {
 // ========== API CALLS ==========
 async function apiCall(endpoint, options = {}) {
     try {
-        const response = await fetch(`${API_BASE}${endpoint}`, {
+        const response = await fetch(`${getApiBase()}${endpoint}`, {
             ...options,
             headers: {
                 'Content-Type': 'application/json',

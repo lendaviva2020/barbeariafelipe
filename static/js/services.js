@@ -4,7 +4,10 @@
  */
 
 // API_BASE é definido em config.js (carregado antes)
-const API_BASE = window.API_BASE || '/api';
+// Usar função helper para evitar redeclaração de const
+function getApiBase() {
+    return (typeof window !== 'undefined' && window.API_BASE) ? window.API_BASE : '/api';
+}
 let allServices = [];
 let currentCategory = 'all';
 
@@ -34,8 +37,8 @@ async function loadServices() {
     }
     
     try {
-        console.log('Fazendo fetch para:', `${API_BASE}/servicos/`);
-        const response = await fetch(`${API_BASE}/servicos/`);
+        console.log('Fazendo fetch para:', `${getApiBase()}/servicos/`);
+        const response = await fetch(`${getApiBase()}/servicos/`);
         console.log('Response status:', response.status);
         console.log('Response OK:', response.ok);
         

@@ -25,11 +25,23 @@ class AppState {
     async init() {
         if (this.initialized) return;
         
+        // Verificar se há token de autenticação antes de fazer requisição
+        // Isso evita erro 401 desnecessário no console
+        const token = localStorage.getItem('access_token');
+        const hasSessionCookie = document.cookie.includes('sessionid');
+        
+        // Só fazer requisição se houver indicação de autenticação
+        if (!token && !hasSessionCookie) {
+            this.initialized = true;
+            return;
+        }
+        
         try {
             // Tentar buscar dados do usuário (apenas se autenticado)
             const response = await fetch('/api/users/me/', {
                 headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'X-Requested-With': 'XMLHttpRequest',
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
                 },
                 credentials: 'include'
             });
@@ -41,14 +53,19 @@ class AppState {
                     isAuthenticated: true
                 });
             } else if (response.status === 401) {
-                // Usuário não autenticado - isso é normal, não é erro
-                // Silenciar este caso
+                // Usuário não autenticado - limpar tokens inválidos
+                if (token) {
+                    localStorage.removeItem('access_token');
+                    localStorage.removeItem('refresh_token');
+                }
+                // Silenciar - não é um erro, apenas usuário não logado
             }
         } catch (error) {
-            // Silenciar erros de rede quando não autenticado
-            // Apenas logar se for um erro diferente de 401
-            if (error.status !== 401) {
-                console.warn('Could not load user data:', error);
+            // Silenciar erros de rede - não logar no console
+            // Apenas limpar estado se necessário
+            if (token) {
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
             }
         }
         
