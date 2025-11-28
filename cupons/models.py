@@ -1,7 +1,9 @@
+import uuid
 from django.db import models
 
 
 class Cupom(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     DISCOUNT_TYPE_CHOICES = [
         ("percentage", "Porcentagem"),
         ("fixed", "Valor Fixo"),
@@ -30,6 +32,7 @@ class Cupom(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Atualizado em")
 
     class Meta:
+        db_table = "coupons"
         verbose_name = "Cupom"
         verbose_name_plural = "Cupons"
         ordering = ["-created_at"]

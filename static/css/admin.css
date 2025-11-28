@@ -739,42 +739,167 @@
 }
 
 /* ========== RESPONSIVE ADICIONAL ========== */
-@media (max-width: 768px) {
+
+/* Mobile (até 767px) */
+@media (max-width: 767px) {
+    .admin-header {
+        padding: 0.75rem 1rem;
+        height: auto;
+        min-height: 60px;
+    }
+    
+    .admin-nav {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .admin-nav a {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+        white-space: nowrap;
+    }
+    
+    .admin-content {
+        padding: 1rem;
+    }
+    
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .page-header h1 {
+        font-size: clamp(1.5rem, 5vw, 2rem);
+    }
+    
     .services-grid,
     .barbers-grid {
         grid-template-columns: 1fr;
+        gap: 1rem;
     }
     
     .coupon-item {
         grid-template-columns: 1fr;
         gap: 1rem;
+        padding: 1rem;
     }
     
     .coupon-details {
         grid-template-columns: 1fr;
+        gap: 0.75rem;
     }
     
     .coupon-actions {
-        flex-direction: row;
+        flex-direction: column;
+        gap: 0.5rem;
     }
     
     .service-actions,
     .barber-actions {
         flex-direction: column;
+        gap: 0.5rem;
     }
     
     .tab-header {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: stretch;
+        gap: 1rem;
     }
     
     .tab-header .btn {
         width: 100%;
+        padding: 0.875rem 1.5rem;
+        min-height: 44px;
     }
     
     .modal-content {
         max-width: 100%;
         margin: 0;
+        padding: 1rem;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    table {
+        min-width: 600px;
+    }
+}
+
+/* Tablet (768px a 1024px) */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .admin-header {
+        padding: 1rem 1.5rem;
+    }
+    
+    .admin-nav {
+        padding: 1rem 1.5rem;
+    }
+    
+    .admin-content {
+        padding: 1.5rem;
+    }
+    
+    .services-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+    
+    .barbers-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+    
+    .coupon-item {
+        grid-template-columns: 2fr 1fr;
+    }
+    
+    .modal-content {
+        max-width: 90%;
+        padding: 1.5rem;
+    }
+}
+
+/* Desktop (acima de 1024px) */
+@media (min-width: 1025px) {
+    .admin-content {
+        padding: 2rem;
+    }
+    
+    .services-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .barbers-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .modal-content {
+        max-width: 800px;
+        padding: 2rem;
     }
 }
 

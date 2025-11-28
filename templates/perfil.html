@@ -12,8 +12,27 @@
     <div class="container max-w-4xl">
         <!-- Header -->
         <div class="profile-header">
-            <h1 class="page-title">Meu Perfil</h1>
-            <p class="page-subtitle">Gerencie suas informações pessoais</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <div>
+                    <h1 class="page-title">Meu Perfil</h1>
+                    <p class="page-subtitle">Gerencie suas informações pessoais</p>
+                </div>
+                <!-- Botão Admin - será mostrado via JavaScript após verificar no banco -->
+                <div id="admin-button-container" style="display: none;">
+                    <a href="{% url 'admin_painel' %}" 
+                       id="admin-button"
+                       style="padding: 0.5rem 1rem; background: #dc2626; color: white; border-radius: 0.5rem; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; transition: all 0.3s;"
+                       onmouseover="this.style.background='#b91c1c'; this.style.transform='translateY(-2px)'"
+                       onmouseout="this.style.background='#dc2626'; this.style.transform='translateY(0)'">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2 17l10 5 10-5"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2 12l10 5 10-5"></path>
+                        </svg>
+                        Painel Admin
+                    </a>
+                </div>
+            </div>
         </div>
 
         <div class="profile-layout">
@@ -123,5 +142,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- Carregar app.js primeiro para ter acesso ao fetchAPI e auth -->
+<script src="{% static 'js/app.js' %}"></script>
 <script src="{% static 'js/profile.js' %}"></script>
 {% endblock %}

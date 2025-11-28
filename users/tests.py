@@ -72,7 +72,7 @@ class TestUserModel:
         )
         assert user.email == "newuser@example.com"
         assert user.name == "New User"
-        assert user.role == "user"
+        assert user.is_active == True
         assert user.is_active is True
         assert user.is_staff is False
 
@@ -83,7 +83,7 @@ class TestUserModel:
         )
         assert admin.is_staff is True
         assert admin.is_superuser is True
-        assert admin.role == "admin"
+        assert admin.is_staff == True
 
     def test_user_properties(self, user):
         """Teste das propriedades do usuário"""
@@ -93,3 +93,4 @@ class TestUserModel:
     def test_admin_properties(self, admin_user):
         """Teste das propriedades do admin"""
         assert admin_user.is_admin is True
+        assert admin_user.is_staff is True

@@ -6,11 +6,27 @@ from .models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
+    is_active = serializers.SerializerMethodField()
+    is_staff = serializers.SerializerMethodField()
+    is_superuser = serializers.SerializerMethodField()
+    
     class Meta:
         model = User
-        fields = ("id", "email", "name", "phone", "role", "is_active", "created_at")
-        read_only_fields = ("id", "created_at")
+        fields = ("id", "email", "name", "phone", "is_active", "is_staff", "is_superuser", "created_at", "avatar_url")
+        read_only_fields = ("id", "created_at", "is_active", "is_staff", "is_superuser")
         extra_kwargs = {"phone": {"validators": [validate_phone]}}
+    
+    def get_is_active(self, obj):
+        """Retorna sempre True por padrão (campo não existe no banco)"""
+        return getattr(obj, 'is_active', True)
+    
+    def get_is_staff(self, obj):
+        """Retorna se é staff"""
+        return getattr(obj, 'is_staff', False)
+    
+    def get_is_superuser(self, obj):
+        """Retorna se é superusuário"""
+        return getattr(obj, 'is_superuser', False)
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -32,12 +48,19 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data.pop("password_confirm")
-        user = User.objects.create_user(
+        password = validated_data.pop("password", None)
+        
+        # Criar usuário (Supabase gerencia autenticação, mas manter compatibilidade)
+        user = User.objects.create(
             email=validated_data["email"],
-            password=validated_data["password"],
             name=validated_data["name"],
             phone=validated_data.get("phone", ""),
         )
+        
+        # Armazenar hash da senha no cache para autenticação
+        if password:
+            user.set_password(password)
+        
         return user
 
 

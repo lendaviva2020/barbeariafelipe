@@ -51,7 +51,12 @@
             </div>
 
             <!-- Mensagens -->
-            <div x-show="message" x-cloak class="mb-4 p-3 rounded-lg" :class="messageType === 'error' ? 'bg-red-900/50 border border-red-500 text-red-200' : 'bg-green-900/50 border border-green-500 text-green-200'">
+            <div x-show="message" x-cloak class="mb-4 p-3 rounded-lg" 
+                 :class="{
+                     'bg-red-900/50 border border-red-500 text-red-200': messageType === 'error',
+                     'bg-green-900/50 border border-green-500 text-green-200': messageType === 'success',
+                     'bg-blue-900/50 border border-blue-500 text-blue-200': messageType === 'info'
+                 }">
                 <p x-text="message" class="text-sm"></p>
             </div>
 
@@ -209,6 +214,7 @@
 
 {% block extra_js %}
 <script>
+// @ts-nocheck
 function authApp() {
     return {
         mode: '{{ mode }}',
@@ -216,7 +222,7 @@ function authApp() {
         message: '',
         messageType: 'error',
         showPassword: false,
-        isAdminLogin: {{ is_admin_login|yesno:"true,false" }},
+        isAdminLogin: {% if is_admin_login %}true{% else %}false{% endif %},
         loginData: {
             email: '',
             password: ''
@@ -250,6 +256,23 @@ function authApp() {
         
         init() {
             console.log('Auth app inicializado');
+            
+            // Verificar se há um serviço selecionado na URL e mostrar mensagem
+            const urlParams = new URLSearchParams(window.location.search);
+            const serviceId = urlParams.get('service');
+            
+            if (serviceId) {
+                // Mostrar mensagem informativa sobre o serviço selecionado
+                this.message = '🔒 Você precisa fazer login para agendar o serviço escolhido.';
+                this.messageType = 'info';
+                
+                // Remover mensagem após 8 segundos (aumentado para dar tempo de ler)
+                setTimeout(() => {
+                    if (this.messageType === 'info') {
+                        this.message = '';
+                    }
+                }, 8000);
+            }
         },
         
         setMode(newMode) {
@@ -283,32 +306,65 @@ function authApp() {
             this.message = '';
             
             try {
-                const response = await fetch('/api/auth/login/', {
+                const response = await fetch('/api/users/login/', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': '{{ csrf_token }}'
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
                         email: this.loginData.email,
-                        password: this.loginData.password,
-                        isAdminLogin: this.isAdminLogin
+                        password: this.loginData.password
                     })
                 });
                 
                 const data = await response.json();
                 
-                if (data.success) {
+                if (response.ok && data.success) {
+                    // Salvar tokens JWT no localStorage
+                    if (data.tokens) {
+                        localStorage.setItem('access_token', data.tokens.access);
+                        localStorage.setItem('refresh_token', data.tokens.refresh);
+                    }
+                    // Salvar dados do usuário
+                    if (data.user) {
+                        localStorage.setItem('user', JSON.stringify(data.user));
+                        // Salvar informação se é admin
+                        if (data.is_admin) {
+                            localStorage.setItem('is_admin', 'true');
+                        }
+                    }
+                    
                     this.messageType = 'success';
-                    this.message = data.message;
-                    setTimeout(() => {
-                        window.location.href = data.redirect;
-                    }, 500);
+                    this.message = data.message || 'Login realizado com sucesso!';
+                    
+                    // Verificar se há um serviço, barbeiro ou next na URL
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const serviceId = urlParams.get('service');
+                    const barberId = urlParams.get('barber');
+                    const nextUrl = urlParams.get('next');
+                    
+                    // Se houver serviço ou barbeiro selecionado, redirecionar para agendamento
+                    if ((serviceId || barberId) && nextUrl) {
+                        setTimeout(() => {
+                            window.location.href = nextUrl;
+                        }, 1000);
+                    } else if (nextUrl) {
+                        // Se houver apenas next, usar ele
+                        setTimeout(() => {
+                            window.location.href = nextUrl;
+                        }, 1000);
+                    } else {
+                        // Caso contrário, redirecionar para /perfil/
+                        setTimeout(() => {
+                            window.location.href = data.redirect || '/perfil/';
+                        }, 1000);
+                    }
                 } else {
                     this.messageType = 'error';
-                    this.message = data.error;
+                    this.message = data.error || 'Email ou senha incorretos';
                 }
             } catch (error) {
+                console.error('Login error:', error);
                 this.messageType = 'error';
                 this.message = 'Erro ao fazer login. Tente novamente.';
             } finally {
@@ -327,29 +383,72 @@ function authApp() {
                 return;
             }
             
+            if (this.registerData.password.length < 6) {
+                this.messageType = 'error';
+                this.message = 'A senha deve ter no mínimo 6 caracteres';
+                this.loading = false;
+                return;
+            }
+            
             try {
-                const response = await fetch('/api/auth/register/', {
+                const response = await fetch('/api/users/register/', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': '{{ csrf_token }}'
+                        'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(this.registerData)
+                    body: JSON.stringify({
+                        name: this.registerData.name,
+                        email: this.registerData.email,
+                        phone: this.registerData.phone || '',
+                        password: this.registerData.password,
+                        password_confirm: this.registerData.confirmPassword
+                    })
                 });
                 
                 const data = await response.json();
                 
-                if (data.success) {
+                if (response.ok && data.success) {
+                    // Salvar tokens JWT no localStorage
+                    if (data.tokens) {
+                        localStorage.setItem('access_token', data.tokens.access);
+                        localStorage.setItem('refresh_token', data.tokens.refresh);
+                    }
+                    // Salvar dados do usuário
+                    if (data.user) {
+                        localStorage.setItem('user', JSON.stringify(data.user));
+                    }
+                    
                     this.messageType = 'success';
-                    this.message = data.message;
-                    setTimeout(() => {
-                        window.location.href = data.redirect;
-                    }, 1000);
+                    this.message = data.message || 'Conta criada com sucesso! Bem-vindo à Barbearia Francisco!';
+                    
+                    // Verificar se há um serviço, barbeiro ou next na URL
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const serviceId = urlParams.get('service');
+                    const barberId = urlParams.get('barber');
+                    const nextUrl = urlParams.get('next');
+                    
+                    // Se houver serviço ou barbeiro selecionado, redirecionar para agendamento
+                    if ((serviceId || barberId) && nextUrl) {
+                        setTimeout(() => {
+                            window.location.href = nextUrl;
+                        }, 2500);
+                    } else if (nextUrl) {
+                        // Se houver apenas next, usar ele
+                        setTimeout(() => {
+                            window.location.href = nextUrl;
+                        }, 2500);
+                    } else {
+                        // Caso contrário, redirecionar para /perfil/
+                        setTimeout(() => {
+                            window.location.href = '/perfil/';
+                        }, 2500);
+                    }
                 } else {
                     this.messageType = 'error';
-                    this.message = data.errors ? Object.values(data.errors).join(', ') : data.error;
+                    this.message = data.error || (data.errors ? Object.values(data.errors).join(', ') : 'Erro ao criar conta');
                 }
             } catch (error) {
+                console.error('Register error:', error);
                 this.messageType = 'error';
                 this.message = 'Erro ao criar conta. Tente novamente.';
             } finally {

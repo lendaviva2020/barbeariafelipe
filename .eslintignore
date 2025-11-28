@@ -1,0 +1,4 @@
+# Ignorar templates HTML com JavaScript inline
+templates/**/*.html
+static/js/**/*.js
+

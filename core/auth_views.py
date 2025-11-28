@@ -15,17 +15,27 @@ import json
 def auth_page(request):
     """Página de autenticação com tabs login/registro"""
     if request.user.is_authenticated:
+        # Se já estiver autenticado e houver next, redirecionar
+        next_url = request.GET.get('next', '')
+        if next_url:
+            return redirect(next_url)
         return redirect('core:home')
     
     # Verificar parâmetros de URL
     redirect_param = request.GET.get('redirect', '')
     mode = request.GET.get('mode', 'login')
     is_admin_login = redirect_param == 'admin'
+    service_id = request.GET.get('service', '')
+    barber_id = request.GET.get('barber', '')
+    next_url = request.GET.get('next', '')
     
     context = {
         'mode': mode,
         'is_admin_login': is_admin_login,
-        'redirect_param': redirect_param
+        'redirect_param': redirect_param,
+        'service_id': service_id,
+        'barber_id': barber_id,
+        'next_url': next_url
     }
     
     return render(request, 'auth/auth_enhanced.html', context)

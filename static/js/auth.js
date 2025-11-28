@@ -1,4 +1,32 @@
 // Authentication JavaScript
+// Garantir que o objeto auth existe (definir se não existir)
+if (typeof auth === 'undefined') {
+    window.auth = {
+        getToken() {
+            return localStorage.getItem('access_token');
+        },
+        setTokens(access, refresh) {
+            localStorage.setItem('access_token', access);
+            localStorage.setItem('refresh_token', refresh);
+        },
+        removeTokens() {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+            localStorage.removeItem('user');
+        },
+        getUser() {
+            const user = localStorage.getItem('user');
+            return user ? JSON.parse(user) : null;
+        },
+        setUser(user) {
+            localStorage.setItem('user', JSON.stringify(user));
+        },
+        isAuthenticated() {
+            return !!this.getToken();
+        }
+    };
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
@@ -55,19 +83,27 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const result = await response.json();
             
-            if (response.ok) {
+            if (response.ok && result.success) {
                 // Salvar tokens e usuário
-                auth.setTokens(result.tokens.access, result.tokens.refresh);
-                auth.setUser(result.user);
+                if (result.tokens) {
+                    auth.setTokens(result.tokens.access, result.tokens.refresh);
+                }
+                if (result.user) {
+                    auth.setUser(result.user);
+                }
                 
-                showMessage(authMessage, 'Login realizado com sucesso!', 'success');
+                // Mostrar mensagem de sucesso
+                const successMsg = result.message || 'Login realizado com sucesso!';
+                showMessage(authMessage, successMsg, 'success');
                 
-                // Redirecionar
+                // Redirecionar para página de agendamento ou home
                 setTimeout(() => {
-                    window.location.href = '/';
+                    const redirectUrl = new URLSearchParams(window.location.search).get('next') || '/agendar/';
+                    window.location.href = redirectUrl;
                 }, 1000);
             } else {
-                showMessage(authMessage, result.error || 'Erro ao fazer login', 'error');
+                const errorMsg = result.error || 'Email ou senha incorretos';
+                showMessage(authMessage, errorMsg, 'error');
             }
         } catch (error) {
             console.error('Login error:', error);
@@ -121,19 +157,26 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const result = await response.json();
             
-            if (response.ok) {
+            if (response.ok && result.success) {
                 // Salvar tokens e usuário
-                auth.setTokens(result.tokens.access, result.tokens.refresh);
-                auth.setUser(result.user);
+                if (result.tokens) {
+                    auth.setTokens(result.tokens.access, result.tokens.refresh);
+                }
+                if (result.user) {
+                    auth.setUser(result.user);
+                }
                 
-                showMessage(authMessage, 'Conta criada com sucesso!', 'success');
+                // Mostrar mensagem de sucesso
+                const successMsg = result.message || 'Conta criada com sucesso! Bem-vindo à Barbearia Francisco!';
+                showMessage(authMessage, successMsg, 'success');
                 
-                // Redirecionar
+                // Redirecionar para página de agendamento ou home
                 setTimeout(() => {
-                    window.location.href = '/';
-                }, 1000);
+                    const redirectUrl = result.redirect || new URLSearchParams(window.location.search).get('next') || '/agendar/';
+                    window.location.href = redirectUrl;
+                }, 2000);
             } else {
-                const errorMsg = result.email?.[0] || result.error || 'Erro ao criar conta';
+                const errorMsg = result.error || result.email?.[0] || 'Erro ao criar conta';
                 showMessage(authMessage, errorMsg, 'error');
             }
         } catch (error) {
@@ -146,4 +189,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+// Função para mostrar mensagens
+function showMessage(element, message, type) {
+    if (!element) return;
+    
+    element.textContent = message;
+    element.className = `auth-message ${type}`;
+    element.style.display = 'block';
+    
+    // Remover mensagem após 5 segundos
+    setTimeout(() => {
+        element.style.display = 'none';
+        element.textContent = '';
+    }, 5000);
+}
 

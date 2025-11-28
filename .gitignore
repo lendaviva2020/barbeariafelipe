@@ -17,10 +17,16 @@ db.sqlite3
 db.sqlite3-journal
 media/
 staticfiles/
+htmlcov/
 
 # Environment
 .env
 .env.local
+.env.*.local
+
+# Supabase
+supabase/.env
+supabase/.env.local
 
 # IDE
 .vscode/
@@ -31,4 +37,42 @@ staticfiles/
 # OS
 .DS_Store
 Thumbs.db
+
+# Scripts temporários e de teste
+testar_*.py
+test_*.py
+verificar_*.py
+diagnostico_*.py
+fix_*.py
+configure_*.py
+setup_*.py
+migrate_to_*.py
+remover_*.py
+corrigir_*.py
+atualizar_*.py
+adicionar_*.py
+criar_*.py
+add_*.py
+populate_*.py
+create_*.py
+manage_*.py
+check_*.py
+reset_*.py
+mapear_*.py
+update_*.py
+
+# Arquivos de documentação temporária
+COMANDOS_*.txt
+COMO_*.txt
+CONFIGURAR_*.txt
+LIBERAR_*.txt
+REMOVER_*.txt
+RESOLVER_*.txt
+*_DIAGNOSTICO.md
+*_TESTE_*.md
+*_SETUP.md
+*_MIGRACOES.md
+*_CORRECOES.md
+ONDE_*.md
+SOBRE_*.md
 

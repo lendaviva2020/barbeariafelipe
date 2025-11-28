@@ -138,9 +138,12 @@
 
 .service-image {
     height: 200px;
+    min-height: 200px;
     background-color: #ddd;
     background-size: cover;
     background-position: center;
+    background-repeat: no-repeat;
+    border-radius: var(--radius) var(--radius) 0 0;
 }
 
 .service-content {
@@ -282,9 +285,12 @@
 
 .combo-image {
     height: 200px;
+    min-height: 200px;
     background-color: #ddd;
     background-size: cover;
     background-position: center;
+    background-repeat: no-repeat;
+    border-radius: var(--radius) var(--radius) 0 0;
 }
 
 .combo-content {
@@ -391,45 +397,144 @@
 }
 
 /* ========== RESPONSIVENESS ========== */
-@media (max-width: 768px) {
+
+/* Mobile (até 767px) */
+@media (max-width: 767px) {
+    .services-hero {
+        padding: 3rem 1rem;
+        margin-bottom: 2rem;
+    }
+    
     .services-hero h2 {
-        font-size: 2rem;
+        font-size: clamp(1.75rem, 6vw, 2rem);
+        margin-bottom: 0.75rem;
     }
     
     .services-hero p {
-        font-size: 1rem;
+        font-size: clamp(0.875rem, 3vw, 1rem);
+        margin-bottom: 1.5rem;
     }
     
-    .services-grid, .combos-grid {
+    .services-container {
+        padding: 2rem 1rem;
+    }
+    
+    .page-title h2 {
+        font-size: clamp(1.5rem, 5vw, 1.8rem);
+    }
+    
+    .categories {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: center;
+        padding: 1rem 0;
+    }
+    
+    .category-btn {
+        padding: 0.625rem 1rem;
+        font-size: 0.875rem;
+        min-height: 44px;
+    }
+    
+    .services-grid,
+    .combos-grid {
         grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .service-card,
+    .combo-card {
+        padding: 1rem;
     }
     
     .service-actions {
         flex-direction: column;
+        gap: 0.75rem;
     }
     
     .btn {
         width: 100%;
         text-align: center;
+        padding: 0.875rem 1.5rem;
+        font-size: 0.875rem;
+        min-height: 44px;
     }
     
-    .page-title h2 {
-        font-size: 1.8rem;
+    .service-price {
+        font-size: 1.5rem;
     }
 }
 
-@media (max-width: 480px) {
+/* Tablet (768px a 1024px) */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .services-hero {
+        padding: 4rem 2rem;
+        margin-bottom: 2.5rem;
+    }
+    
+    .services-hero h2 {
+        font-size: 2.25rem;
+    }
+    
+    .services-hero p {
+        font-size: 1.125rem;
+    }
+    
     .services-container {
-        padding: 2rem 15px;
+        padding: 2.5rem 1.5rem;
     }
     
-    .categories {
-        gap: 0.5rem;
+    .services-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
     }
     
-    .category-btn {
-        padding: 0.5rem 1rem;
-        font-size: 0.9rem;
+    .combos-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+    
+    .service-actions {
+        flex-direction: row;
+        gap: 1rem;
+    }
+    
+    .btn {
+        width: auto;
+        padding: 0.875rem 2rem;
+    }
+}
+
+/* Desktop (acima de 1024px) */
+@media (min-width: 1025px) {
+    .services-hero {
+        padding: 5rem 0;
+    }
+    
+    .services-hero h2 {
+        font-size: 2.5rem;
+    }
+    
+    .services-hero p {
+        font-size: 1.2rem;
+    }
+    
+    .services-container {
+        padding: 3rem 20px;
+    }
+    
+    .services-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
+    }
+    
+    .combos-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
+    }
+    
+    .service-card:hover {
+        transform: translateY(-4px);
     }
 }
 

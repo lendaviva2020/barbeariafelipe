@@ -11,12 +11,14 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Lazy import para evitar erro se biblioteca não estiver instalada
+GEMINI_AVAILABLE = False
+genai = None
 try:
     import google.generativeai as genai
     GEMINI_AVAILABLE = True
-except ImportError:
+except (ImportError, TypeError, Exception) as e:
     GEMINI_AVAILABLE = False
-    logger.warning("google-generativeai não instalado. Sistema de IA desabilitado.")
+    logger.warning(f"google-generativeai não disponível. Sistema de IA desabilitado. Erro: {e}")
 
 
 def sanitize_input(text: str, max_length: int = 1000) -> str:

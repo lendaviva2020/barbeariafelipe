@@ -3,20 +3,13 @@
  * Extraído 100% do React Gallery.tsx (447 linhas)
  */
 
-// Gallery Images Data
+// Gallery Images Data - Usando imagens da pasta gallery
 const galleryImages = [
-    { id: 1, src: '/static/images/corte-classico.jpg', alt: 'Corte clássico executivo premium', category: 'cortes', featured: true },
-    { id: 2, src: '/static/images/corte-barba.jpg', alt: 'Transformação completa corte e barba', category: 'antes-depois', featured: true },
-    { id: 3, src: '/static/images/barba-completa.jpg', alt: 'Barba cheia modelada profissionalmente', category: 'barbas' },
-    { id: 4, src: '/static/images/bigode.jpg', alt: 'Bigode estilizado vintage', category: 'barbas' },
-    { id: 5, src: '/static/images/barbershop-hero.jpg', alt: 'Interior clássico da barbearia', category: 'ambiente', featured: true },
-    { id: 6, src: '/static/images/degrade.jpg', alt: 'Degradê moderno preciso', category: 'cortes' },
-    { id: 7, src: '/static/images/barba-desenho.jpg', alt: 'Barba com desenho artístico', category: 'barbas', featured: true },
-    { id: 8, src: '/static/images/corte-moderno.jpg', alt: 'Corte moderno texturizado', category: 'cortes' },
-    { id: 9, src: '/static/images/antes-depois-1.jpg', alt: 'Antes e depois impressionante', category: 'antes-depois' },
-    { id: 10, src: '/static/images/ambiente-1.jpg', alt: 'Cadeira vintage de barbeiro', category: 'ambiente' },
-    { id: 11, src: '/static/images/ambiente-2.jpg', alt: 'Espelhos clássicos', category: 'ambiente' },
-    { id: 12, src: '/static/images/produto-premium.jpg', alt: 'Produtos premium utilizados', category: 'ambiente' }
+    { id: 1, src: '/static/images/gallery/corte-classico.jpg', alt: 'Corte clássico executivo premium', category: 'cortes', featured: true },
+    { id: 2, src: '/static/images/gallery/corte-barba.jpg', alt: 'Transformação completa corte e barba', category: 'antes-depois', featured: true },
+    { id: 3, src: '/static/images/gallery/barba-completa.jpg', alt: 'Barba cheia modelada profissionalmente', category: 'barbas', featured: true },
+    { id: 4, src: '/static/images/gallery/bigode.jpg', alt: 'Bigode estilizado vintage', category: 'barbas', featured: true },
+    { id: 5, src: '/static/images/gallery/barbershop-hero.jpg', alt: 'Interior clássico da barbearia', category: 'ambiente', featured: true }
 ];
 
 // State

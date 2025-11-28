@@ -1,0 +1,839 @@
+/* ========================================
+   RESPONSIVE DESIGN SYSTEM
+   Sistema completo de responsividade para Mobile, Tablet e Desktop
+   ======================================== */
+
+/* ========================================
+   1. BREAKPOINTS
+   ======================================== */
+:root {
+  /* Breakpoints */
+  --breakpoint-mobile: 767px;
+  --breakpoint-tablet-min: 768px;
+  --breakpoint-tablet-max: 1024px;
+  --breakpoint-desktop: 1025px;
+  
+  /* Spacing responsivo */
+  --spacing-mobile: 1rem;
+  --spacing-tablet: 1.5rem;
+  --spacing-desktop: 2rem;
+  
+  /* Container max-width */
+  --container-mobile: 100%;
+  --container-tablet: 720px;
+  --container-desktop: 1200px;
+}
+
+/* ========================================
+   2. CONTAINER RESPONSIVO
+   ======================================== */
+.container {
+  width: 100%;
+  max-width: var(--container-mobile);
+  margin: 0 auto;
+  padding: 0 var(--spacing-mobile);
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: var(--container-tablet);
+    padding: 0 var(--spacing-tablet);
+  }
+}
+
+@media (min-width: 1025px) {
+  .container {
+    max-width: var(--container-desktop);
+    padding: 0 var(--spacing-desktop);
+  }
+}
+
+/* ========================================
+   3. GRID SYSTEM RESPONSIVO
+   ======================================== */
+.grid {
+  display: grid;
+  gap: 1rem;
+}
+
+/* Mobile: 1 coluna */
+.grid-responsive {
+  grid-template-columns: 1fr;
+}
+
+/* Tablet: 2 colunas */
+@media (min-width: 768px) {
+  .grid-responsive {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+/* Desktop: 3-4 colunas */
+@media (min-width: 1025px) {
+  .grid-responsive {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .grid-responsive {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Grid específico para cards */
+.grid-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .grid-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid-cards {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .grid-cards {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
+  }
+}
+
+/* ========================================
+   4. HEADER E NAVEGAÇÃO RESPONSIVA
+   ======================================== */
+.header {
+  padding: 0.75rem 0;
+}
+
+.navbar {
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.nav-menu {
+  flex-direction: column;
+  position: fixed;
+  top: 4rem;
+  left: -100%;
+  width: 100%;
+  height: calc(100vh - 4rem);
+  background: hsla(25, 43%, 13%, 0.98);
+  backdrop-filter: blur(24px);
+  padding: 2rem 0;
+  transition: left 0.3s ease;
+  z-index: 999;
+  overflow-y: auto;
+}
+
+.nav-menu.active {
+  left: 0;
+}
+
+.menu-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  z-index: 1001;
+}
+
+.menu-toggle span {
+  width: 24px;
+  height: 2px;
+  background: var(--color-cream);
+  transition: all 0.3s ease;
+}
+
+.menu-toggle.active span:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+
+.menu-toggle.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.menu-toggle.active span:nth-child(3) {
+  transform: rotate(-45deg) translate(7px, -6px);
+}
+
+.logo h1 {
+  font-size: 1rem;
+}
+
+.nav-menu li {
+  width: 100%;
+  padding: 0.5rem 1rem;
+}
+
+.nav-menu a {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  width: 100%;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.nav-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* Tablet: Menu horizontal */
+@media (min-width: 768px) {
+  .header {
+    padding: 1rem 0;
+  }
+  
+  .navbar {
+    flex-wrap: nowrap;
+  }
+  
+  .nav-menu {
+    position: static;
+    flex-direction: row;
+    width: auto;
+    height: auto;
+    background: transparent;
+    backdrop-filter: none;
+    padding: 0;
+    overflow: visible;
+  }
+  
+  .menu-toggle {
+    display: none;
+  }
+  
+  .logo h1 {
+    font-size: 1.25rem;
+  }
+  
+  .nav-menu li {
+    width: auto;
+    padding: 0;
+  }
+  
+  .nav-menu a {
+    padding: 0.5rem 1rem;
+    width: auto;
+  }
+  
+  .nav-icon {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* Desktop: Menu completo */
+@media (min-width: 1025px) {
+  .logo h1 {
+    font-size: 1.5rem;
+  }
+  
+  .nav-menu {
+    gap: 2rem;
+  }
+  
+  .nav-icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* ========================================
+   5. TIPOGRAFIA RESPONSIVA
+   ======================================== */
+h1 {
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  line-height: 1.1;
+}
+
+h2 {
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  line-height: 1.15;
+}
+
+h3 {
+  font-size: clamp(1.25rem, 3vw, 1.5rem);
+  line-height: 1.2;
+}
+
+h4 {
+  font-size: clamp(1.125rem, 2.5vw, 1.25rem);
+  line-height: 1.3;
+}
+
+h5 {
+  font-size: clamp(1rem, 2vw, 1.125rem);
+  line-height: 1.4;
+}
+
+h6 {
+  font-size: clamp(0.875rem, 1.5vw, 1rem);
+  line-height: 1.5;
+}
+
+p {
+  font-size: clamp(0.875rem, 2vw, 1rem);
+  line-height: 1.6;
+}
+
+/* ========================================
+   6. BOTÕES RESPONSIVOS
+   ======================================== */
+.btn,
+button {
+  padding: 0.75rem 1.5rem;
+  font-size: 0.875rem;
+  min-height: 44px; /* Tamanho mínimo para touch */
+}
+
+@media (min-width: 768px) {
+  .btn,
+  button {
+    padding: 0.875rem 2rem;
+    font-size: 1rem;
+  }
+}
+
+@media (min-width: 1025px) {
+  .btn,
+  button {
+    padding: 1rem 2.5rem;
+    font-size: 1.125rem;
+  }
+}
+
+/* Botões pequenos */
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  min-height: 36px;
+}
+
+@media (min-width: 768px) {
+  .btn-sm {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* Botões grandes */
+.btn-lg {
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  min-height: 52px;
+}
+
+@media (min-width: 768px) {
+  .btn-lg {
+    padding: 1.25rem 2.5rem;
+    font-size: 1.125rem;
+  }
+}
+
+@media (min-width: 1025px) {
+  .btn-lg {
+    padding: 1.5rem 3rem;
+    font-size: 1.25rem;
+  }
+}
+
+/* ========================================
+   7. CARDS RESPONSIVOS
+   ======================================== */
+.card {
+  padding: 1rem;
+  border-radius: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .card {
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+  }
+}
+
+@media (min-width: 1025px) {
+  .card {
+    padding: 2rem;
+    border-radius: 1rem;
+  }
+}
+
+/* ========================================
+   8. FORMULÁRIOS RESPONSIVOS
+   ======================================== */
+.form-group {
+  margin-bottom: 1rem;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="date"],
+input[type="time"],
+select,
+textarea {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1rem;
+  min-height: 44px; /* Tamanho mínimo para touch */
+  border-radius: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  input[type="date"],
+  input[type="time"],
+  select,
+  textarea {
+    padding: 0.875rem 1rem;
+    font-size: 1rem;
+  }
+}
+
+/* Formulários em duas colunas no desktop */
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .form-row {
+    flex-direction: row;
+    gap: 1.5rem;
+  }
+  
+  .form-row .form-group {
+    flex: 1;
+  }
+}
+
+/* ========================================
+   9. TABELAS RESPONSIVAS
+   ======================================== */
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+table {
+  width: 100%;
+  min-width: 600px; /* Largura mínima para legibilidade */
+  border-collapse: collapse;
+}
+
+@media (max-width: 767px) {
+  /* Transformar tabela em cards no mobile */
+  .table-mobile-cards {
+    display: block;
+  }
+  
+  .table-mobile-cards thead {
+    display: none;
+  }
+  
+  .table-mobile-cards tbody,
+  .table-mobile-cards tr,
+  .table-mobile-cards td {
+    display: block;
+    width: 100%;
+  }
+  
+  .table-mobile-cards tr {
+    margin-bottom: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 1rem;
+  }
+  
+  .table-mobile-cards td {
+    padding: 0.5rem 0;
+    text-align: left;
+    border: none;
+  }
+  
+  .table-mobile-cards td::before {
+    content: attr(data-label) ": ";
+    font-weight: 600;
+    display: inline-block;
+    min-width: 100px;
+  }
+}
+
+/* ========================================
+   10. MODAIS E DIALOGS RESPONSIVOS
+   ======================================== */
+.modal,
+.dialog {
+  width: 95%;
+  max-width: 500px;
+  max-height: 90vh;
+  margin: 1rem auto;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+@media (min-width: 768px) {
+  .modal,
+  .dialog {
+    width: 90%;
+    max-width: 600px;
+    padding: 1.5rem;
+  }
+}
+
+@media (min-width: 1025px) {
+  .modal,
+  .dialog {
+    width: 80%;
+    max-width: 800px;
+    padding: 2rem;
+  }
+}
+
+/* ========================================
+   11. IMAGENS RESPONSIVAS
+   ======================================== */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.responsive-img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+/* Imagens em grid */
+.img-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .img-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .img-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1280px) {
+  .img-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ========================================
+   12. FOOTER RESPONSIVO
+   ======================================== */
+.footer {
+  padding: 2rem 0 1rem;
+}
+
+.footer-content {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+.footer-section {
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .footer-content {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+  }
+  
+  .footer-section {
+    text-align: left;
+  }
+}
+
+@media (min-width: 1025px) {
+  .footer-content {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 3rem;
+  }
+}
+
+/* ========================================
+   13. UTILITÁRIOS DE VISIBILIDADE
+   ======================================== */
+/* Mobile only */
+.show-mobile {
+  display: block;
+}
+
+.hide-mobile {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .show-mobile {
+    display: none;
+  }
+  
+  .hide-mobile {
+    display: block;
+  }
+}
+
+/* Tablet only */
+.show-tablet {
+  display: none;
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .show-tablet {
+    display: block;
+  }
+}
+
+@media (min-width: 1025px) {
+  .show-tablet {
+    display: none;
+  }
+}
+
+/* Desktop only */
+.show-desktop {
+  display: none;
+}
+
+@media (min-width: 1025px) {
+  .show-desktop {
+    display: block;
+  }
+}
+
+/* ========================================
+   14. ESPAÇAMENTO RESPONSIVO
+   ======================================== */
+/* Padding responsivo */
+.p-responsive {
+  padding: var(--spacing-mobile);
+}
+
+@media (min-width: 768px) {
+  .p-responsive {
+    padding: var(--spacing-tablet);
+  }
+}
+
+@media (min-width: 1025px) {
+  .p-responsive {
+    padding: var(--spacing-desktop);
+  }
+}
+
+/* Margin responsivo */
+.m-responsive {
+  margin: var(--spacing-mobile);
+}
+
+@media (min-width: 768px) {
+  .m-responsive {
+    margin: var(--spacing-tablet);
+  }
+}
+
+@media (min-width: 1025px) {
+  .m-responsive {
+    margin: var(--spacing-desktop);
+  }
+}
+
+/* ========================================
+   15. HERO SECTION RESPONSIVA
+   ======================================== */
+.hero {
+  padding: 3rem 0;
+  text-align: center;
+}
+
+.hero-title {
+  font-size: clamp(2rem, 6vw, 3.5rem);
+  margin-bottom: 1rem;
+}
+
+.hero-description {
+  font-size: clamp(1rem, 3vw, 1.25rem);
+  margin-bottom: 2rem;
+}
+
+.hero-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .hero {
+    padding: 4rem 0;
+  }
+  
+  .hero-buttons {
+    flex-direction: row;
+    justify-content: center;
+  }
+}
+
+@media (min-width: 1025px) {
+  .hero {
+    padding: 6rem 0;
+  }
+}
+
+/* ========================================
+   16. SECTIONS RESPONSIVAS
+   ======================================== */
+.section {
+  padding: 2rem 0;
+}
+
+.section-title {
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .section {
+    padding: 3rem 0;
+  }
+  
+  .section-title {
+    margin-bottom: 2rem;
+  }
+}
+
+@media (min-width: 1025px) {
+  .section {
+    padding: 4rem 0;
+  }
+  
+  .section-title {
+    margin-bottom: 3rem;
+  }
+}
+
+/* ========================================
+   17. SCROLL SUAVE E PERFORMANCE
+   ======================================== */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ========================================
+   18. TOUCH TARGETS (Acessibilidade Mobile)
+   ======================================== */
+@media (max-width: 767px) {
+  a,
+  button,
+  input[type="button"],
+  input[type="submit"],
+  .clickable {
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* ========================================
+   19. ORIENTAÇÃO LANDSCAPE (Mobile)
+   ======================================== */
+@media (max-width: 767px) and (orientation: landscape) {
+  .header {
+    padding: 0.5rem 0;
+  }
+  
+  .nav-menu {
+    top: 3rem;
+    height: calc(100vh - 3rem);
+  }
+  
+  .hero {
+    padding: 2rem 0;
+  }
+}
+
+/* ========================================
+   20. PRINT STYLES
+   ======================================== */
+@media print {
+  .header,
+  .footer,
+  .menu-toggle,
+  .nav-menu,
+  button,
+  .btn {
+    display: none !important;
+  }
+  
+  body {
+    font-size: 12pt;
+    line-height: 1.5;
+    color: #000;
+    background: #fff;
+  }
+  
+  a {
+    text-decoration: underline;
+  }
+  
+  img {
+    max-width: 100%;
+    page-break-inside: avoid;
+  }
+}
+

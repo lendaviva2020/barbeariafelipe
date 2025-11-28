@@ -46,7 +46,11 @@ async function loadServices() {
             throw new Error(`HTTP ${response.status}: Erro ao carregar serviços`);
         }
         
-        allServices = await response.json();
+        const responseData = await response.json();
+        console.log('Response data:', responseData);
+        
+        // A API pode retornar paginado (com 'results') ou direto como array
+        allServices = Array.isArray(responseData) ? responseData : (responseData.results || []);
         console.log('Total de serviços recebidos:', allServices.length);
         console.log('Dados dos serviços:', allServices);
         
@@ -115,10 +119,29 @@ function createServiceCard(service) {
         service.features.map(f => `<li><i class="fas fa-check"></i> ${f}</li>`).join('') :
         '<li><i class="fas fa-check"></i> Atendimento profissional</li>';
     
-    // Imagem
-    const imageStyle = service.image_url ? 
-        `background-image: url('${service.image_url}')` :
-        `background-color: #ddd`;
+    // Imagem - usar imagem da galeria se disponível
+    let imageUrl = service.image_url;
+    if (!imageUrl) {
+        // Mapear categoria para imagem padrão da galeria
+        if (service.category === 'beard' || service.name.toLowerCase().includes('barba')) {
+            imageUrl = '/static/images/gallery/barba-completa.jpg';
+        } else if (service.category === 'combo' || service.name.toLowerCase().includes('combo') || service.name.toLowerCase().includes('pacote')) {
+            imageUrl = '/static/images/gallery/corte-barba.jpg';
+        } else if (service.name.toLowerCase().includes('bigode') || service.name.toLowerCase().includes('sobrancelha')) {
+            imageUrl = '/static/images/gallery/bigode.jpg';
+        } else {
+            imageUrl = '/static/images/gallery/corte-classico.jpg';
+        }
+    }
+    
+    // Garantir que a URL seja absoluta se começar com /static
+    if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('/')) {
+        imageUrl = '/static/images/gallery/' + imageUrl.split('/').pop();
+    }
+    
+    const imageStyle = imageUrl ? 
+        `background-image: url('${imageUrl}'); background-size: cover; background-position: center;` :
+        `background-color: #ddd; background-image: url('/static/images/gallery/corte-classico.jpg'); background-size: cover; background-position: center;`;
     
     card.innerHTML = `
         ${badgeHtml}
@@ -190,10 +213,21 @@ function createComboCard(combo) {
         <div class="service-price">R$ ${formatPrice(combo.price)}</div>
     `;
     
-    // Imagem
-    const imageStyle = combo.image_url ? 
-        `background-image: url('${combo.image_url}')` :
-        `background-color: #ddd`;
+    // Imagem - usar imagem da galeria se disponível
+    let imageUrl = combo.image_url;
+    if (!imageUrl) {
+        // Combos sempre usam corte-barba.jpg
+        imageUrl = '/static/images/gallery/corte-barba.jpg';
+    }
+    
+    // Garantir que a URL seja absoluta se começar com /static
+    if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('/')) {
+        imageUrl = '/static/images/gallery/' + imageUrl.split('/').pop();
+    }
+    
+    const imageStyle = imageUrl ? 
+        `background-image: url('${imageUrl}'); background-size: cover; background-position: center;` :
+        `background-color: #ddd; background-image: url('/static/images/gallery/corte-barba.jpg'); background-size: cover; background-position: center;`;
     
     card.innerHTML = `
         ${badgeHtml}
@@ -266,6 +300,27 @@ function setupBookingButtons() {
             const btn = e.target.classList.contains('btn-book') ? e.target : e.target.closest('.btn-book');
             const serviceId = btn.getAttribute('data-service-id') || btn.href.split('service=')[1];
             
+            // Verificar se o usuário está autenticado
+            const token = localStorage.getItem('access_token');
+            
+            if (!token) {
+                // Buscar nome do serviço para a mensagem
+                const service = allServices.find(s => s.id == serviceId);
+                const serviceName = service ? service.name : 'o serviço escolhido';
+                
+                // Mostrar mensagem informativa
+                alert(`Você precisa fazer login para agendar ${serviceName}.\n\nVocê será redirecionado para a página de login.`);
+                
+                // Se não estiver logado, redirecionar para login com o service_id
+                if (serviceId) {
+                    window.location.href = `/auth/?service=${serviceId}&next=/agendar/?service=${serviceId}`;
+                } else {
+                    window.location.href = '/auth/?next=/agendar/';
+                }
+                return;
+            }
+            
+            // Se estiver logado, ir direto para agendamento com o serviço selecionado
             if (serviceId) {
                 window.location.href = `/agendar/?service=${serviceId}`;
             } else {

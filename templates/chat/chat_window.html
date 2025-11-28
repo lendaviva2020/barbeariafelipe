@@ -77,7 +77,7 @@
 {% block extra_js %}
 <script>
     // Configurações
-    const APPOINTMENT_ID = {{ appointment.id }};
+    const APPOINTMENT_ID = "{{ appointment.id }}";
     const POLLING_INTERVAL = 5000; // 5 segundos
     let pollingTimer = null;
     let lastMessageId = null;

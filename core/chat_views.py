@@ -23,11 +23,20 @@ from .permissions import (
     CanManageAISettings, CanSendNotifications
 )
 from .decorators import check_rate_limit
-from .ai_chat import process_chat_message, get_ai_statistics
 from .whatsapp import send_notification
 import logging
 
 logger = logging.getLogger(__name__)
+
+# Import seguro do ai_chat para evitar erros de importação
+try:
+    from .ai_chat import process_chat_message, get_ai_statistics
+except (ImportError, TypeError, Exception) as e:
+    logger.warning(f"Não foi possível importar ai_chat: {e}")
+    def process_chat_message(*args, **kwargs):
+        return {"error": "Sistema de IA não disponível"}
+    def get_ai_statistics(*args, **kwargs):
+        return {}
 
 
 class ChatSendMessageView(APIView):
@@ -107,7 +116,7 @@ class ChatHistoryView(generics.ListAPIView):
         # Verificar permissão
         is_owner = appointment.user == self.request.user
         is_barber = hasattr(self.request.user, 'barbeiro') and appointment.barber == self.request.user.barbeiro
-        is_admin = self.request.user.role == 'admin' or self.request.user.is_staff
+        is_admin = self.request.user.is_staff or self.request.user.is_superuser
         
         if not (is_owner or is_barber or is_admin):
             return ChatMessage.objects.none()
@@ -125,7 +134,7 @@ class AISettingsListCreateView(generics.ListCreateAPIView):
     
     def get_queryset(self):
         # Admin vê todos, barbeiro vê apenas o seu
-        if self.request.user.role == 'admin' or self.request.user.is_staff:
+        if self.request.user.is_staff or self.request.user.is_superuser:
             return AISettings.objects.all()
         elif hasattr(self.request.user, 'barbeiro'):
             return AISettings.objects.filter(barber=self.request.user.barbeiro)

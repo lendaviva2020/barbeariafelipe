@@ -1,7 +1,9 @@
+import uuid
 from django.db import models
 
 
 class Servico(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     CATEGORY_CHOICES = [
         ("haircut", "Corte"),
         ("beard", "Barba"),
@@ -19,32 +21,16 @@ class Servico(models.Model):
         default="haircut",
         verbose_name="Categoria",
     )
-    image_url = models.URLField(blank=True, verbose_name="URL da Imagem")
-    badge = models.CharField(max_length=50, blank=True, verbose_name="Badge/Destaque")
-    features = models.JSONField(default=list, blank=True, verbose_name="Características")
+    image_url = models.URLField(blank=True, null=True, verbose_name="URL da Imagem")
     
-    # Campos para combos
-    is_combo = models.BooleanField(default=False, verbose_name="É um Combo?")
-    original_price = models.DecimalField(
-        max_digits=10, 
-        decimal_places=2, 
-        null=True, 
-        blank=True, 
-        verbose_name="Preço Original"
-    )
-    combo_services = models.ManyToManyField(
-        'self', 
-        symmetrical=False, 
-        blank=True, 
-        related_name='combos',
-        verbose_name="Serviços do Combo"
-    )
-    
-    active = models.BooleanField(default=True, verbose_name="Ativo")
+    # Campos que podem não existir no Supabase - marcados como opcionais
+    is_active = models.BooleanField(default=True, verbose_name="Ativo", null=True, blank=True)
+    active = models.BooleanField(default=True, verbose_name="Ativo", null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Criado em")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Atualizado em")
 
     class Meta:
+        db_table = "services"
         verbose_name = "Serviço"
         verbose_name_plural = "Serviços"
         ordering = ["category", "name"]
@@ -55,17 +41,3 @@ class Servico(models.Model):
 
     def __str__(self):
         return f"{self.name} - R$ {self.price}"
-    
-    @property
-    def savings(self):
-        """Calcula economia para combos"""
-        if self.is_combo and self.original_price:
-            return self.original_price - self.price
-        return 0
-    
-    @property
-    def savings_percentage(self):
-        """Calcula percentual de economia"""
-        if self.is_combo and self.original_price and self.original_price > 0:
-            return int(((self.original_price - self.price) / self.original_price) * 100)
-        return 0

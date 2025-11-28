@@ -1,625 +1,759 @@
-/**
- * BOOKING SYSTEM - Sistema Moderno de Agendamento
- * Integração completa com API REST Django
- */
-
-// ========== CONFIGURAÇÕES ==========
-// API_BASE é definido em config.js (carregado antes)
-// Usar função helper para evitar redeclaração de const
-function getApiBase() {
-    return (typeof window !== 'undefined' && window.API_BASE) ? window.API_BASE : '/api';
-}
-const TIME_SLOTS = [
-    "08:00", "08:30", "09:00", "09:30", "10:00", "10:30",
-    "11:00", "11:30", "13:00", "13:30", "14:00", "14:30",
-    "15:00", "15:30", "16:00", "16:30", "17:00", "17:30"
-];
-
-// ========== STATE MANAGEMENT ==========
+// Estado global do agendamento
 const bookingState = {
     currentStep: 1,
     selectedService: null,
     selectedBarber: null,
     selectedDate: null,
     selectedTime: null,
-    coupon: null,
-    discount: 0,
-    currentMonth: new Date().getMonth(),
-    currentYear: new Date().getFullYear()
+    appliedCoupon: null,
+    services: [],
+    barbers: [],
+    availableSlots: []
 };
 
-// ========== INICIALIZAÇÃO ==========
+// Verificar autenticação antes de inicializar
 document.addEventListener('DOMContentLoaded', function() {
-    initializeBookingSystem();
+    // Verificar se o usuário está autenticado
+    const token = localStorage.getItem('access_token');
+    
+    if (!token) {
+        // Capturar serviço selecionado da URL antes de redirecionar
+        const urlParams = new URLSearchParams(window.location.search);
+        const serviceId = urlParams.get('service');
+        
+        // Mostrar mensagem informativa
+        if (serviceId) {
+            alert('Você precisa fazer login para agendar o serviço escolhido.\n\nVocê será redirecionado para a página de login.');
+        } else {
+            alert('Você precisa fazer login para agendar um horário.\n\nVocê será redirecionado para a página de login.');
+        }
+        
+        // Redirecionar para login mantendo o serviço selecionado
+        if (serviceId) {
+            window.location.href = `/auth/?service=${serviceId}&next=/agendar/?service=${serviceId}`;
+        } else {
+            window.location.href = '/auth/?next=/agendar/';
+        }
+        return;
+    }
+    
+    // Verificar se o token ainda é válido fazendo uma requisição
+    fetch('/api/users/me/', {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            // Token inválido ou expirado
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+            localStorage.removeItem('user');
+            
+            // Capturar serviço selecionado da URL antes de redirecionar
+            const urlParams = new URLSearchParams(window.location.search);
+            const serviceId = urlParams.get('service');
+            
+            // Mostrar mensagem informativa
+            if (serviceId) {
+                alert('Sua sessão expirou. Você precisa fazer login novamente para agendar o serviço escolhido.');
+            } else {
+                alert('Sua sessão expirou. Você precisa fazer login novamente para agendar.');
+            }
+            
+            if (serviceId) {
+                window.location.href = `/auth/?service=${serviceId}&next=/agendar/?service=${serviceId}`;
+            } else {
+                window.location.href = '/auth/?next=/agendar/';
+            }
+        } else {
+            // Token válido, inicializar agendamento
+            initBooking();
+        }
+    })
+    .catch(error => {
+        console.error('Erro ao verificar autenticação:', error);
+        // Em caso de erro, redirecionar para login
+        const urlParams = new URLSearchParams(window.location.search);
+        const serviceId = urlParams.get('service');
+        
+        // Mostrar mensagem informativa
+        if (serviceId) {
+            alert('Erro ao verificar autenticação. Você precisa fazer login para agendar o serviço escolhido.');
+        } else {
+            alert('Erro ao verificar autenticação. Você precisa fazer login para agendar.');
+        }
+        
+        if (serviceId) {
+            window.location.href = `/auth/?service=${serviceId}&next=/agendar/?service=${serviceId}`;
+        } else {
+            window.location.href = '/auth/?next=/agendar/';
+        }
+    });
 });
 
-function initializeBookingSystem() {
+function initBooking() {
     loadServices();
-    loadBarbers();
-    initCalendar();
-    setupStepNavigation();
-    setupFormEvents();
+    setupEventListeners();
+    
+    // Verificar se há um serviço ou barbeiro pré-selecionado na URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const serviceId = urlParams.get('service');
+    const barberId = urlParams.get('barber');
+    
+    if (serviceId) {
+        // Aguardar serviços carregarem e então pré-selecionar
+        // Usar um intervalo para verificar quando os serviços estiverem carregados
+        const checkAndSelect = setInterval(() => {
+            const serviceCard = document.querySelector(`[data-service-id="${serviceId}"]`);
+            if (serviceCard && bookingState.services.length > 0) {
+                clearInterval(checkAndSelect);
+                selectService(serviceCard);
+                // Habilitar botão próximo automaticamente
+                const nextBtn = document.getElementById('nextStep1');
+                if (nextBtn) {
+                    nextBtn.disabled = false;
+                }
+            }
+        }, 100);
+        
+        // Limpar intervalo após 5 segundos para evitar loop infinito
+        setTimeout(() => clearInterval(checkAndSelect), 5000);
+    }
+    
+    // Se houver barbeiro na URL, ir direto para o step 2 (seleção de barbeiro)
+    if (barberId && !serviceId) {
+        // Aguardar barbeiros carregarem e então pré-selecionar
+        const checkAndSelectBarber = setInterval(() => {
+            if (bookingState.barbers.length > 0) {
+                clearInterval(checkAndSelectBarber);
+                const barberCard = document.querySelector(`[data-barber-id="${barberId}"]`);
+                if (barberCard) {
+                    // Ir para step 2 e selecionar o barbeiro
+                    goToStep(2);
+                    setTimeout(() => {
+                        selectBarber(barberCard);
+                    }, 100);
+                }
+            }
+        }, 100);
+        
+        // Limpar intervalo após 5 segundos
+        setTimeout(() => clearInterval(checkAndSelectBarber), 5000);
+    }
 }
 
-// ========== API CALLS ==========
-async function apiCall(endpoint, options = {}) {
+// ===== CARREGAMENTO DE DADOS =====
+async function loadServices() {
+    const grid = document.getElementById('servicesGrid');
+    
     try {
-        const response = await fetch(`${getApiBase()}${endpoint}`, {
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-        
+        // Tentar primeiro o endpoint de booking, depois o padrão
+        let response = await fetch('/api/agendamentos/services/');
+        if (!response.ok) {
+            // Se falhar, tentar endpoint padrão
+            response = await fetch('/api/servicos/');
+        }
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            const text = await response.text();
+            console.error('Resposta não é JSON:', text.substring(0, 200));
+            throw new Error('Resposta não é JSON');
+        }
+        const data = await response.json();
+        bookingState.services = data;
         
-        return await response.json();
-    } catch (error) {
-        console.error('API Error:', error);
-        throw error;
-    }
-}
-
-// ========== LOAD SERVICES ==========
-async function loadServices() {
-    const servicesGrid = document.getElementById('servicesGrid');
-    
-    if (!servicesGrid) {
-        console.error('servicesGrid element not found');
-        return;
-    }
-    
-    try {
-        console.log('Carregando serviços da API...');
-        const allServices = await apiCall('/servicos/');
-        console.log('Serviços recebidos:', allServices);
-        
-        // Filtrar apenas serviços individuais (não combos)
-        const services = allServices.filter(s => !s.is_combo);
-        console.log('Serviços individuais:', services);
-        
-        servicesGrid.innerHTML = '';
-        
-        if (!services || services.length === 0) {
-            servicesGrid.innerHTML = '<p class="empty-state">Nenhum serviço disponível no momento.</p>';
+        if (data.length === 0) {
+            grid.innerHTML = '<p class="empty-state">Nenhum serviço disponível no momento.</p>';
             return;
         }
         
-        services.forEach(service => {
-            const serviceCard = document.createElement('div');
-            serviceCard.className = 'service-card';
-            
-            // Determinar ícone baseado na categoria
-            const icon = getServiceIcon(service.category || 'haircut');
-            
-            serviceCard.innerHTML = `
+        grid.innerHTML = data.map(service => `
+            <div class="service-card" data-service-id="${service.id}">
                 <div class="service-icon">
-                    <i class="${icon}"></i>
+                    <i class="fas fa-cut"></i>
                 </div>
-                <div class="service-duration">${service.duration} min</div>
-                <h3>${service.name}</h3>
-                <p>${service.description || 'Serviço profissional de qualidade'}</p>
-                <div class="service-price">R$ ${parseFloat(service.price).toFixed(2).replace('.', ',')}</div>
-            `;
-            
-            serviceCard.addEventListener('click', () => selectService(serviceCard, service));
-            servicesGrid.appendChild(serviceCard);
+                <h3 class="service-name">${service.name}</h3>
+                <p class="service-description">${service.description || ''}</p>
+                <div class="service-details">
+                    <span class="service-duration">
+                        <i class="fas fa-clock"></i> ${service.duration} min
+                    </span>
+                    <span class="service-price">R$ ${parseFloat(service.price).toFixed(2).replace('.', ',')}</span>
+                </div>
+            </div>
+        `).join('');
+        
+        // Adicionar eventos de clique
+        document.querySelectorAll('.service-card').forEach(card => {
+            card.addEventListener('click', () => selectService(card));
         });
         
-        console.log(`${services.length} serviços renderizados`);
+        // Verificar se há um serviço pré-selecionado na URL e selecioná-lo
+        const urlParams = new URLSearchParams(window.location.search);
+        const serviceId = urlParams.get('service');
+        if (serviceId) {
+            const serviceCard = document.querySelector(`[data-service-id="${serviceId}"]`);
+            if (serviceCard) {
+                selectService(serviceCard);
+                // Habilitar botão próximo automaticamente
+                const nextBtn = document.getElementById('nextStep1');
+                if (nextBtn) {
+                    nextBtn.disabled = false;
+                }
+            }
+        }
         
     } catch (error) {
         console.error('Erro ao carregar serviços:', error);
-        servicesGrid.innerHTML = `<p class="empty-state">Erro ao carregar serviços: ${error.message}</p>`;
+        grid.innerHTML = '<p class="error-state">Erro ao carregar serviços. Tente novamente.</p>';
     }
 }
 
-function getServiceIcon(category) {
-    const icons = {
-        'haircut': 'fas fa-cut',
-        'beard': 'fas fa-user',
-        'combo': 'fas fa-gem',
-        'treatment': 'fas fa-spa'
-    };
-    return icons[category] || 'fas fa-cut';
-}
-
-function selectService(card, service) {
-    document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
-    card.classList.add('selected');
-    bookingState.selectedService = service;
-    document.getElementById('nextStep1').disabled = false;
-}
-
-// ========== LOAD BARBERS ==========
 async function loadBarbers() {
-    const barbersGrid = document.getElementById('barbersGrid');
+    const grid = document.getElementById('barbersGrid');
     
     try {
-        const barbers = await apiCall('/barbeiros/');
+        const token = localStorage.getItem('access_token');
+        const headers = {};
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
         
-        barbersGrid.innerHTML = '';
+        const response = await fetch('/api/agendamentos/barbers/', {
+            headers: headers
+        });
+        const data = await response.json();
+        bookingState.barbers = data;
         
-        // Opção "Qualquer barbeiro"
-        const anyBarberCard = document.createElement('div');
-        anyBarberCard.className = 'barber-card selected';
-        anyBarberCard.innerHTML = `
-            <div class="barber-avatar">
-                <i class="fas fa-random"></i>
+        // Adicionar opção "Qualquer barbeiro"
+        let html = `
+            <div class="barber-card" data-barber-id="">
+                <div class="barber-avatar">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3 class="barber-name">Qualquer Barbeiro</h3>
+                <p class="barber-description">Primeiro disponível</p>
             </div>
-            <h3>Qualquer Barbeiro</h3>
-            <p>Será atendido por qualquer barbeiro disponível</p>
         `;
-        anyBarberCard.addEventListener('click', () => selectBarber(anyBarberCard, null));
-        barbersGrid.appendChild(anyBarberCard);
         
-        // Barbeiros disponíveis
-        if (barbers && barbers.length > 0) {
-            barbers.forEach(barber => {
-                const barberCard = document.createElement('div');
-                barberCard.className = 'barber-card';
-                barberCard.innerHTML = `
-                    <div class="barber-avatar">
-                        ${barber.photo_url ? 
-                            `<img src="${barber.photo_url}" alt="${barber.name}">` : 
-                            '<i class="fas fa-user"></i>'}
-                    </div>
-                    <h3>${barber.name}</h3>
-                    <p>${barber.specialty || 'Barbeiro profissional'}</p>
-                    <div class="barber-rating">
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star-half-alt"></i>
-                    </div>
-                `;
-                barberCard.addEventListener('click', () => selectBarber(barberCard, barber));
-                barbersGrid.appendChild(barberCard);
-            });
+        html += data.map(barber => `
+            <div class="barber-card" data-barber-id="${barber.id}">
+                <div class="barber-avatar">
+                    ${barber.photo ? 
+                        `<img src="${barber.photo}" alt="${barber.name}">` : 
+                        `<i class="fas fa-user"></i>`
+                    }
+                </div>
+                <h3 class="barber-name">${barber.name}</h3>
+                <p class="barber-description">${barber.specialty || 'Barbeiro profissional'}</p>
+            </div>
+        `).join('');
+        
+        grid.innerHTML = html;
+        
+        // Adicionar eventos de clique
+        document.querySelectorAll('.barber-card').forEach(card => {
+            card.addEventListener('click', () => selectBarber(card));
+        });
+        
+        // Verificar se há um barbeiro pré-selecionado na URL e selecioná-lo
+        const urlParams = new URLSearchParams(window.location.search);
+        const barberId = urlParams.get('barber');
+        if (barberId) {
+            const barberCard = document.querySelector(`[data-barber-id="${barberId}"]`);
+            if (barberCard) {
+                selectBarber(barberCard);
+            }
         }
         
     } catch (error) {
-        barbersGrid.innerHTML = '<p class="empty-state">Erro ao carregar barbeiros.</p>';
+        console.error('Erro ao carregar barbeiros:', error);
+        grid.innerHTML = '<p class="error-state">Erro ao carregar barbeiros. Tente novamente.</p>';
     }
 }
 
-function selectBarber(card, barber) {
-    document.querySelectorAll('.barber-card').forEach(c => c.classList.remove('selected'));
-    card.classList.add('selected');
-    bookingState.selectedBarber = barber;
-}
-
-// ========== CALENDAR ==========
-function initCalendar() {
-    renderCalendar();
-}
-
-function renderCalendar() {
-    const calendar = document.getElementById('calendar');
-    calendar.innerHTML = '';
-    
-    const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-                       "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-    
-    // Header
-    const header = document.createElement('div');
-    header.className = 'calendar-header';
-    header.innerHTML = `
-        <button type="button" id="prevMonth"><i class="fas fa-chevron-left"></i></button>
-        <h4>${monthNames[bookingState.currentMonth]} ${bookingState.currentYear}</h4>
-        <button type="button" id="nextMonth"><i class="fas fa-chevron-right"></i></button>
-    `;
-    calendar.appendChild(header);
-    
-    // Grid de dias
-    const daysGrid = document.createElement('div');
-    daysGrid.className = 'calendar-grid';
-    
-    // Dias da semana
-    const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-    weekDays.forEach(day => {
-        const dayElement = document.createElement('div');
-        dayElement.className = 'calendar-day';
-        dayElement.textContent = day;
-        daysGrid.appendChild(dayElement);
-    });
-    
-    // Dias do mês
-    const firstDay = new Date(bookingState.currentYear, bookingState.currentMonth, 1);
-    const lastDay = new Date(bookingState.currentYear, bookingState.currentMonth + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    // Dias vazios antes do primeiro dia
-    for (let i = 0; i < firstDay.getDay(); i++) {
-        const emptyDay = document.createElement('div');
-        emptyDay.className = 'calendar-date disabled';
-        daysGrid.appendChild(emptyDay);
-    }
-    
-    // Dias do mês
-    for (let i = 1; i <= daysInMonth; i++) {
-        const dateElement = document.createElement('div');
-        dateElement.className = 'calendar-date';
-        dateElement.textContent = i;
-        
-        const date = new Date(bookingState.currentYear, bookingState.currentMonth, i);
-        date.setHours(0, 0, 0, 0);
-        
-        if (date < today) {
-            dateElement.classList.add('disabled');
-        } else {
-            dateElement.addEventListener('click', () => selectDate(dateElement, date));
-        }
-        
-        daysGrid.appendChild(dateElement);
-    }
-    
-    calendar.appendChild(daysGrid);
-    
-    // Event listeners para navegação
-    document.getElementById('prevMonth').addEventListener('click', () => {
-        if (bookingState.currentMonth === 0) {
-            bookingState.currentMonth = 11;
-            bookingState.currentYear--;
-        } else {
-            bookingState.currentMonth--;
-        }
-        renderCalendar();
-    });
-    
-    document.getElementById('nextMonth').addEventListener('click', () => {
-        if (bookingState.currentMonth === 11) {
-            bookingState.currentMonth = 0;
-            bookingState.currentYear++;
-        } else {
-            bookingState.currentMonth++;
-        }
-        renderCalendar();
-    });
-}
-
-function selectDate(element, date) {
-    document.querySelectorAll('.calendar-date').forEach(el => el.classList.remove('selected'));
-    element.classList.add('selected');
-    bookingState.selectedDate = date;
-    loadAvailableSlots();
-}
-
-// ========== LOAD AVAILABLE SLOTS ==========
-async function loadAvailableSlots() {
-    const slotsContainer = document.getElementById('availableSlots');
-    
-    if (!bookingState.selectedDate) {
-        slotsContainer.innerHTML = '<p class="empty-state">Selecione uma data primeiro</p>';
-        return;
-    }
-    
-    slotsContainer.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Carregando horários...</p></div>';
+async function loadAvailableSlots(date) {
+    const container = document.getElementById('availableSlots');
+    container.innerHTML = '<div class="loading-state"><div class="spinner"></div><p>Carregando horários...</p></div>';
     
     try {
-        const dateStr = bookingState.selectedDate.toISOString().split('T')[0];
-        const barberId = bookingState.selectedBarber?.id || '';
-        const serviceId = bookingState.selectedService?.id || '';
+        const params = new URLSearchParams({
+            date: date,
+            service_id: bookingState.selectedService.id,
+        });
         
-        const availableSlots = await apiCall(
-            `/agendamentos/available-slots/?date=${dateStr}&barber_id=${barberId}&service_id=${serviceId}`
-        );
+        if (bookingState.selectedBarber && bookingState.selectedBarber.id) {
+            params.append('barber_id', bookingState.selectedBarber.id);
+        }
         
-        slotsContainer.innerHTML = '';
+        const token = localStorage.getItem('access_token');
+        const headers = {};
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
         
-        if (!availableSlots || availableSlots.length === 0) {
-            slotsContainer.innerHTML = '<p class="empty-state">Nenhum horário disponível nesta data</p>';
+        const response = await fetch(`/api/agendamentos/available-slots/?${params}`, {
+            headers: headers
+        });
+        const data = await response.json();
+        bookingState.availableSlots = data;
+        
+        if (data.length === 0) {
+            container.innerHTML = '<p class="empty-state">Nenhum horário disponível para esta data.</p>';
             return;
         }
         
-        availableSlots.forEach(slot => {
-            const timeSlot = document.createElement('div');
-            timeSlot.className = 'time-slot';
-            timeSlot.textContent = slot.time || slot;
+        // Verificar formato da resposta
+        const slots = Array.isArray(data) ? data : [];
+        
+        if (slots.length === 0) {
+            container.innerHTML = '<p class="empty-state">Nenhum horário disponível para esta data.</p>';
+            return;
+        }
+        
+        container.innerHTML = slots.map(slot => {
+            // O slot pode ter 'time' ou ser uma string direta
+            const timeValue = slot.time || slot;
+            const isAvailable = slot.available !== false; // Default true se não especificado
+            const disabledClass = isAvailable ? '' : 'disabled';
+            const disabledAttr = isAvailable ? '' : 'disabled';
             
-            if (slot.available === false) {
-                timeSlot.classList.add('disabled');
-            } else {
-                timeSlot.addEventListener('click', () => selectTimeSlot(timeSlot, slot.time || slot));
-            }
-            
-            slotsContainer.appendChild(timeSlot);
+            return `
+                <button class="time-slot ${disabledClass}" data-time="${timeValue}" type="button" ${disabledAttr}>
+                    ${timeValue}
+                </button>
+            `;
+        }).join('');
+        
+        // Adicionar eventos de clique
+        document.querySelectorAll('.time-slot').forEach(btn => {
+            btn.addEventListener('click', function() {
+                selectTimeSlot(this);
+            });
         });
         
     } catch (error) {
-        // Fallback para horários padrão
-        slotsContainer.innerHTML = '';
-        TIME_SLOTS.forEach(time => {
-            const timeSlot = document.createElement('div');
-            timeSlot.className = 'time-slot';
-            timeSlot.textContent = time;
-            timeSlot.addEventListener('click', () => selectTimeSlot(timeSlot, time));
-            slotsContainer.appendChild(timeSlot);
-        });
+        console.error('Erro ao carregar horários:', error);
+        container.innerHTML = '<p class="error-state">Erro ao carregar horários. Tente novamente.</p>';
     }
 }
 
-function selectTimeSlot(element, time) {
-    document.querySelectorAll('.time-slot').forEach(el => el.classList.remove('selected'));
-    element.classList.add('selected');
-    bookingState.selectedTime = time;
+// ===== SELEÇÕES =====
+function selectService(card) {
+    // Remove seleção anterior
+    document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    
+    const serviceId = card.dataset.serviceId;
+    bookingState.selectedService = bookingState.services.find(s => s.id == serviceId);
+    
+    // Habilitar botão próximo
+    document.getElementById('nextStep1').disabled = false;
+    
+    updateSummary();
+}
+
+function selectBarber(card) {
+    // Remove seleção anterior
+    document.querySelectorAll('.barber-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    
+    const barberId = card.dataset.barberId;
+    bookingState.selectedBarber = barberId ? 
+        bookingState.barbers.find(b => b.id == barberId) : null;
+    
+    updateSummary();
+}
+
+function selectTimeSlot(btn) {
+    // Remove seleção anterior
+    document.querySelectorAll('.time-slot').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    
+    bookingState.selectedTime = btn.dataset.time;
+    
+    // Habilitar botão próximo
     document.getElementById('nextStep3').disabled = false;
-}
-
-// ========== NAVIGATION ==========
-function setupStepNavigation() {
-    document.getElementById('nextStep1')?.addEventListener('click', () => navigateToStep(2));
-    document.getElementById('nextStep2')?.addEventListener('click', () => navigateToStep(3));
-    document.getElementById('nextStep3')?.addEventListener('click', () => {
-        updateBookingSummary();
-        navigateToStep(4);
-    });
     
-    document.getElementById('prevStep2')?.addEventListener('click', () => navigateToStep(1));
-    document.getElementById('prevStep3')?.addEventListener('click', () => navigateToStep(2));
-    document.getElementById('prevStep4')?.addEventListener('click', () => navigateToStep(3));
+    updateSummary();
 }
 
-function navigateToStep(step) {
-    // Ocultar etapa atual
-    const currentStepEl = document.getElementById(`step-${bookingState.currentStep}`);
-    if (currentStepEl) {
-        currentStepEl.classList.remove('active');
-        currentStepEl.style.display = 'none';
+// ===== NAVEGAÇÃO ENTRE STEPS =====
+function setupEventListeners() {
+    // Navegação
+    document.getElementById('nextStep1')?.addEventListener('click', () => goToStep(2));
+    document.getElementById('prevStep2')?.addEventListener('click', () => goToStep(1));
+    document.getElementById('nextStep2')?.addEventListener('click', () => goToStep(3));
+    document.getElementById('prevStep3')?.addEventListener('click', () => goToStep(2));
+    document.getElementById('nextStep3')?.addEventListener('click', () => goToStep(4));
+    document.getElementById('prevStep4')?.addEventListener('click', () => goToStep(3));
+    
+    // Confirmação
+    document.getElementById('confirmBooking')?.addEventListener('click', confirmBooking);
+    
+    // Cupom
+    document.getElementById('applyCoupon')?.addEventListener('click', applyCoupon);
+    
+    // Máscara de telefone
+    document.getElementById('customerPhone')?.addEventListener('input', maskPhone);
+}
+
+function goToStep(stepNumber) {
+    // Validações antes de avançar
+    if (stepNumber === 2 && !bookingState.selectedService) {
+        alert('Por favor, selecione um serviço primeiro.');
+        return;
     }
     
-    // Atualizar indicadores de progresso
-    document.querySelectorAll('.step').forEach(stepElement => {
-        const stepNumber = parseInt(stepElement.getAttribute('data-step'));
-        
-        if (stepNumber < step) {
-            stepElement.classList.add('completed');
-            stepElement.classList.remove('active');
-        } else if (stepNumber === step) {
-            stepElement.classList.add('active');
-            stepElement.classList.remove('completed');
+    if (stepNumber === 3 && !bookingState.selectedService) {
+        alert('Por favor, selecione um serviço primeiro.');
+        return;
+    }
+    
+    if (stepNumber === 4 && (!bookingState.selectedDate || !bookingState.selectedTime)) {
+        alert('Por favor, selecione data e horário primeiro.');
+        return;
+    }
+    
+    // Atualizar estado
+    bookingState.currentStep = stepNumber;
+    
+    // Atualizar UI dos steps
+    document.querySelectorAll('.step').forEach((step, index) => {
+        if (index + 1 < stepNumber) {
+            step.classList.add('completed');
+            step.classList.remove('active');
+        } else if (index + 1 === stepNumber) {
+            step.classList.add('active');
+            step.classList.remove('completed');
         } else {
-            stepElement.classList.remove('active', 'completed');
+            step.classList.remove('active', 'completed');
         }
     });
     
-    // Mostrar nova etapa
-    const newStepEl = document.getElementById(`step-${step}`);
-    if (newStepEl) {
-        newStepEl.style.display = 'block';
-        newStepEl.classList.add('active');
+    // Mostrar conteúdo correto
+    document.querySelectorAll('.booking-step-content').forEach((content, index) => {
+        content.classList.toggle('active', index + 1 === stepNumber);
+    });
+    
+    // Carregar dados específicos do step
+    if (stepNumber === 2) {
+        loadBarbers();
+    } else if (stepNumber === 3) {
+        initCalendar();
+    } else if (stepNumber === 4) {
+        updateSummary();
     }
     
-    bookingState.currentStep = step;
-    
-    // Scroll suave para o topo
+    // Scroll para o topo
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ========== FORM EVENTS ==========
-function setupFormEvents() {
-    const applyCouponBtn = document.getElementById('applyCoupon');
-    if (applyCouponBtn) {
-        applyCouponBtn.addEventListener('click', validateCoupon);
-    }
+// ===== CALENDÁRIO =====
+function initCalendar() {
+    const calendarEl = document.getElementById('calendar');
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
     
-    const confirmBtn = document.getElementById('confirmBooking');
-    if (confirmBtn) {
-        confirmBtn.addEventListener('click', confirmBooking);
-    }
+    renderCalendar(currentYear, currentMonth);
 }
 
-// ========== VALIDATE COUPON ==========
-async function validateCoupon() {
-    const couponCode = document.getElementById('couponCode').value.trim();
+function renderCalendar(year, month) {
+    const calendarEl = document.getElementById('calendar');
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startDay = firstDay.getDay();
+    
+    const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                       'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    
+    let html = `
+        <div class="calendar-header">
+            <button class="btn-calendar-nav" onclick="changeMonth(-1)">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <h4>${monthNames[month]} ${year}</h4>
+            <button class="btn-calendar-nav" onclick="changeMonth(1)">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+        <div class="calendar-weekdays">
+            <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div>
+            <div>Qui</div><div>Sex</div><div>Sáb</div>
+        </div>
+        <div class="calendar-days">
+    `;
+    
+    // Dias vazios antes do início do mês
+    for (let i = 0; i < startDay; i++) {
+        html += '<div class="calendar-day empty"></div>';
+    }
+    
+    // Dias do mês
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month, day);
+        const dateString = formatDate(date);
+        const isToday = date.getTime() === today.getTime();
+        const isPast = date < today;
+        const isSelected = bookingState.selectedDate === dateString;
+        
+        let classes = 'calendar-day';
+        if (isToday) classes += ' today';
+        if (isPast) classes += ' disabled';
+        if (isSelected) classes += ' selected';
+        
+        // Usar addEventListener em vez de onclick inline para melhor compatibilidade
+        const dayId = `day-${dateString}`;
+        html += `<div class="${classes}" data-date="${dateString}" id="${dayId}" ${isPast ? '' : 'style="cursor: pointer;"'}>
+            ${day}
+        </div>`;
+    }
+    
+    html += '</div>';
+    calendarEl.innerHTML = html;
+    
+    // Adicionar event listeners após renderizar
+    document.querySelectorAll('.calendar-day:not(.empty):not(.disabled)').forEach(day => {
+        day.addEventListener('click', function() {
+            const dateString = this.dataset.date;
+            if (dateString) {
+                selectDate(dateString);
+            }
+        });
+    });
+}
+
+window.changeMonth = function(direction) {
+    const calendarEl = document.getElementById('calendar');
+    const header = calendarEl.querySelector('.calendar-header h4').textContent;
+    const [monthName, year] = header.split(' ');
+    const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                       'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    
+    let month = monthNames.indexOf(monthName);
+    let newYear = parseInt(year);
+    
+    month += direction;
+    if (month < 0) {
+        month = 11;
+        newYear--;
+    } else if (month > 11) {
+        month = 0;
+        newYear++;
+    }
+    
+    renderCalendar(newYear, month);
+}
+
+window.selectDate = function(dateString) {
+    bookingState.selectedDate = dateString;
+    
+    // Atualizar visual
+    document.querySelectorAll('.calendar-day').forEach(day => {
+        day.classList.remove('selected');
+        if (day.dataset.date === dateString) {
+            day.classList.add('selected');
+        }
+    });
+    
+    // Carregar horários disponíveis
+    loadAvailableSlots(dateString);
+    
+    updateSummary();
+}
+
+// ===== CUPOM =====
+async function applyCoupon() {
+    const code = document.getElementById('couponCode').value.trim();
     const feedback = document.getElementById('couponFeedback');
     
-    if (!couponCode) {
-        feedback.textContent = 'Por favor, digite um código de cupom.';
+    if (!code) {
+        feedback.textContent = 'Digite um código de cupom.';
         feedback.className = 'coupon-feedback error';
         return;
     }
     
-    feedback.textContent = 'Validando...';
-    feedback.className = 'coupon-feedback';
-    
     try {
-        const result = await apiCall('/agendamentos/validate-cupom/', {
-            method: 'POST',
-            body: JSON.stringify({ code: couponCode })
-        });
-        
-        if (result.valid) {
-            feedback.textContent = `Cupom aplicado! Desconto: ${result.discount_display || result.discount}`;
-            feedback.className = 'coupon-feedback success';
-            bookingState.coupon = result;
-            bookingState.discount = parseFloat(result.discount) || 0;
-            updateBookingSummary();
-        } else {
-            feedback.textContent = 'Cupom inválido ou expirado.';
-            feedback.className = 'coupon-feedback error';
+        const token = localStorage.getItem('access_token');
+        const headers = {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        };
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
         }
         
+        const response = await fetch('/api/agendamentos/validate-coupon/', {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({ code: code })
+        });
+        
+        const data = await response.json();
+        
+        if (data.valid) {
+            bookingState.appliedCoupon = data.coupon;
+            feedback.textContent = `Cupom aplicado! Desconto de ${data.coupon.discount}${data.coupon.discount_type === 'percentage' ? '%' : ' reais'}`;
+            feedback.className = 'coupon-feedback success';
+            updateSummary();
+        } else {
+            feedback.textContent = data.message || 'Cupom inválido.';
+            feedback.className = 'coupon-feedback error';
+        }
     } catch (error) {
+        console.error('Erro ao validar cupom:', error);
         feedback.textContent = 'Erro ao validar cupom.';
         feedback.className = 'coupon-feedback error';
     }
 }
 
-// ========== UPDATE SUMMARY ==========
-function updateBookingSummary() {
-    // Serviço
-    if (bookingState.selectedService) {
-        document.getElementById('summaryService').textContent = bookingState.selectedService.name;
-        document.getElementById('summaryDuration').textContent = `${bookingState.selectedService.duration} min`;
-    }
-    
-    // Barbeiro
-    const barberName = bookingState.selectedBarber ? 
-        bookingState.selectedBarber.name : 
-        'Qualquer um disponível';
-    document.getElementById('summaryBarber').textContent = barberName;
-    
-    // Data
-    if (bookingState.selectedDate) {
-        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        document.getElementById('summaryDate').textContent = 
-            bookingState.selectedDate.toLocaleDateString('pt-BR', options);
-    }
-    
-    // Horário
-    if (bookingState.selectedTime) {
-        document.getElementById('summaryTime').textContent = bookingState.selectedTime;
-    }
-    
-    // Cálculo de preços
-    if (bookingState.selectedService) {
-        const price = parseFloat(bookingState.selectedService.price);
-        let discount = 0;
-        
-        if (bookingState.coupon) {
-            if (bookingState.coupon.discount_type === 'percentage') {
-                discount = (price * bookingState.discount) / 100;
-            } else {
-                discount = bookingState.discount;
-            }
-        }
-        
-        const subtotal = price;
-        const total = subtotal - discount;
-        
-        document.getElementById('summarySubtotal').textContent = `R$ ${subtotal.toFixed(2).replace('.', ',')}`;
-        document.getElementById('summaryDiscount').textContent = `- R$ ${discount.toFixed(2).replace('.', ',')}`;
-        document.getElementById('summaryTotal').textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
-        
-        // Mostrar/ocultar desconto
-        const discountItem = document.getElementById('discountItem');
-        if (discount > 0) {
-            discountItem.style.display = 'flex';
-        } else {
-            discountItem.style.display = 'none';
-        }
-    }
-}
-
-// ========== CONFIRM BOOKING ==========
+// ===== CONFIRMAÇÃO =====
 async function confirmBooking() {
-    const customerName = document.getElementById('customerName').value.trim();
-    const customerPhone = document.getElementById('customerPhone').value.trim();
-    const customerEmail = document.getElementById('customerEmail').value.trim();
-    const notes = document.getElementById('notes').value.trim();
+    const form = document.getElementById('bookingForm');
     
-    // Validação
-    if (!customerName || !customerPhone) {
-        alert('Por favor, preencha nome e telefone.');
+    if (!form.checkValidity()) {
+        form.reportValidity();
         return;
     }
     
-    if (!bookingState.selectedService || !bookingState.selectedDate || !bookingState.selectedTime) {
-        alert('Por favor, complete todas as etapas do agendamento.');
-        return;
-    }
-    
-    // Preparar dados
     const bookingData = {
-        service: bookingState.selectedService.id,
-        barber: bookingState.selectedBarber?.id || null,
-        appointment_date: bookingState.selectedDate.toISOString().split('T')[0],
-        appointment_time: bookingState.selectedTime,
-        customer_name: customerName,
-        customer_phone: customerPhone,
-        customer_email: customerEmail,
-        notes: notes,
-        payment_method: 'cash',
-        price: bookingState.selectedService.price,
-        discount_amount: 0,
-        coupon_code: bookingState.coupon?.code || ''
+        service_id: bookingState.selectedService.id,
+        barber_id: bookingState.selectedBarber?.id || null,
+        date: bookingState.selectedDate,
+        time: bookingState.selectedTime,
+        customer_name: document.getElementById('customerName').value,
+        customer_phone: document.getElementById('customerPhone').value,
+        customer_email: document.getElementById('customerEmail').value || null,
+        notes: document.getElementById('notes').value || null,
+        coupon_code: bookingState.appliedCoupon?.code || null
     };
     
-    // Calcular desconto
-    if (bookingState.coupon) {
-        const price = parseFloat(bookingState.selectedService.price);
-        if (bookingState.coupon.discount_type === 'percentage') {
-            bookingData.discount_amount = (price * bookingState.discount) / 100;
-        } else {
-            bookingData.discount_amount = bookingState.discount;
-        }
-    }
-    
-    // Desabilitar botão
-    const confirmBtn = document.getElementById('confirmBooking');
-    confirmBtn.disabled = true;
-    confirmBtn.innerHTML = '<div class="spinner"></div> Processando...';
-    
     try {
-        const result = await apiCall('/agendamentos/create/', {
+        const token = localStorage.getItem('access_token');
+        const headers = {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        };
+        
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        const response = await fetch('/api/agendamentos/bookings/', {
             method: 'POST',
+            headers: headers,
             body: JSON.stringify(bookingData)
         });
         
-        // Mostrar modal de sucesso
-        showSuccessModal(result);
+        const data = await response.json();
         
-    } catch (error) {
-        alert('Erro ao criar agendamento. Tente novamente.');
-        confirmBtn.disabled = false;
-        confirmBtn.innerHTML = '<i class="fas fa-check"></i> Confirmar Agendamento';
-    }
-}
-
-// ========== SUCCESS MODAL ==========
-function showSuccessModal(appointmentData) {
-    const modal = document.getElementById('successModal');
-    const successDetails = document.getElementById('successDetails');
-    
-    let details = '';
-    if (bookingState.selectedService) {
-        details += `<strong>Serviço:</strong> ${bookingState.selectedService.name}<br>`;
-    }
-    if (bookingState.selectedBarber) {
-        details += `<strong>Barbeiro:</strong> ${bookingState.selectedBarber.name}<br>`;
-    } else {
-        details += `<strong>Barbeiro:</strong> Qualquer um disponível<br>`;
-    }
-    if (bookingState.selectedDate && bookingState.selectedTime) {
-        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        details += `<strong>Data:</strong> ${bookingState.selectedDate.toLocaleDateString('pt-BR', options)}<br>`;
-        details += `<strong>Horário:</strong> ${bookingState.selectedTime}`;
-    }
-    
-    successDetails.innerHTML = details;
-    modal.classList.add('show');
-    
-    // Fechar modal ao clicar fora
-    modal.addEventListener('click', function(event) {
-        if (event.target === modal) {
-            modal.classList.remove('show');
+        if (data.success) {
+            showSuccessModal(data);
+        } else {
+            alert(data.message || 'Erro ao confirmar agendamento.');
         }
-    });
+    } catch (error) {
+        console.error('Erro ao confirmar agendamento:', error);
+        alert('Erro ao confirmar agendamento. Tente novamente.');
+    }
 }
 
-// ========== UTILITY FUNCTIONS ==========
-function formatCurrency(value) {
-    return `R$ ${parseFloat(value).toFixed(2).replace('.', ',')}`;
+function showSuccessModal(data) {
+    const modal = document.getElementById('successModal');
+    const details = document.getElementById('successDetails');
+    
+    details.innerHTML = `
+        <strong>${bookingState.selectedService.name}</strong><br>
+        ${formatDateBR(bookingState.selectedDate)} às ${bookingState.selectedTime}<br>
+        ${bookingState.selectedBarber ? `Com ${bookingState.selectedBarber.name}` : 'Com qualquer barbeiro disponível'}
+    `;
+    
+    modal.style.display = 'flex';
 }
 
+// ===== RESUMO =====
+function updateSummary() {
+    if (!bookingState.selectedService) return;
+    
+    document.getElementById('summaryService').textContent = bookingState.selectedService.name;
+    document.getElementById('summaryBarber').textContent = 
+        bookingState.selectedBarber ? bookingState.selectedBarber.name : 'Qualquer um disponível';
+    document.getElementById('summaryDate').textContent = 
+        bookingState.selectedDate ? formatDateBR(bookingState.selectedDate) : '-';
+    document.getElementById('summaryTime').textContent = bookingState.selectedTime || '-';
+    document.getElementById('summaryDuration').textContent = 
+        `${bookingState.selectedService.duration} minutos`;
+    
+    const subtotal = parseFloat(bookingState.selectedService.price);
+    let discount = 0;
+    
+    if (bookingState.appliedCoupon) {
+        if (bookingState.appliedCoupon.discount_type === 'percentage') {
+            discount = subtotal * (bookingState.appliedCoupon.discount / 100);
+        } else {
+            discount = parseFloat(bookingState.appliedCoupon.discount);
+        }
+    }
+    
+    const total = subtotal - discount;
+    
+    document.getElementById('summarySubtotal').textContent = `R$ ${subtotal.toFixed(2).replace('.', ',')}`;
+    document.getElementById('summaryDiscount').textContent = `- R$ ${discount.toFixed(2).replace('.', ',')}`;
+    document.getElementById('summaryTotal').textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
+    
+    document.getElementById('discountItem').style.display = discount > 0 ? 'flex' : 'none';
+}
+
+// ===== UTILITÁRIOS =====
 function formatDate(date) {
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    return date.toLocaleDateString('pt-BR', options);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
-// ========== ERROR HANDLING ==========
-function showError(message) {
-    alert(message);
+function formatDateBR(dateString) {
+    const [year, month, day] = dateString.split('-');
+    return `${day}/${month}/${year}`;
 }
 
-function showSuccess(message) {
-    alert(message);
+function maskPhone(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 11) value = value.slice(0, 11);
+    
+    if (value.length > 10) {
+        value = value.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
+    } else if (value.length > 6) {
+        value = value.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, '($1) $2-$3');
+    } else if (value.length > 2) {
+        value = value.replace(/^(\d{2})(\d{0,5})/, '($1) $2');
+    } else {
+        value = value.replace(/^(\d*)/, '($1');
+    }
+    
+    e.target.value = value;
 }
 
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}

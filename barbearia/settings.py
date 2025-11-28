@@ -87,16 +87,32 @@ WSGI_APPLICATION = "barbearia.wsgi.application"
 
 # Database
 # Suporte para PostgreSQL via DATABASE_URL (produção) ou SQLite (dev)
-DATABASES = {
-    "default": dj_database_url.config(
-        default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
-        conn_max_age=600,
-        conn_health_checks=True,
-    )
-}
+DATABASE_URL = config("DATABASE_URL", default=None)
+if DATABASE_URL:
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
+else:
+    # Fallback para SQLite se DATABASE_URL não estiver configurado
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 # Custom User Model
 AUTH_USER_MODEL = "users.User"
+
+# Authentication Backends
+AUTHENTICATION_BACKENDS = [
+    "users.backends.SupabaseAuthBackend",  # Backend customizado para autenticação
+    "django.contrib.auth.backends.ModelBackend",  # Fallback padrão
+]
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -183,21 +199,34 @@ if not DEBUG:
 # WhatsApp Configuration
 WHATSAPP_PHONE = config("WHATSAPP_PHONE", default="5545999417111")
 
-# Cache Configuration (Redis)
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": config("REDIS_URL", default="redis://127.0.0.1:6379/1"),
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            "SOCKET_CONNECT_TIMEOUT": 5,
-            "SOCKET_TIMEOUT": 5,
-            "RETRY_ON_TIMEOUT": True,
-            "IGNORE_EXCEPTIONS": True,  # Não quebra se Redis estiver offline
-        },
-        "KEY_PREFIX": "barbearia",
+# Cache Configuration (Redis com fallback para locmem)
+# Se Redis não estiver disponível, usa cache em memória
+try:
+    import redis
+    redis_client = redis.from_url(config("REDIS_URL", default="redis://127.0.0.1:6379/1"), socket_connect_timeout=2)
+    redis_client.ping()
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": config("REDIS_URL", default="redis://127.0.0.1:6379/1"),
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+                "SOCKET_CONNECT_TIMEOUT": 5,
+                "SOCKET_TIMEOUT": 5,
+                "RETRY_ON_TIMEOUT": True,
+                "IGNORE_EXCEPTIONS": True,
+            },
+            "KEY_PREFIX": "barbearia",
+        }
     }
-}
+except Exception:
+    # Fallback para cache em memória se Redis não estiver disponível
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "KEY_PREFIX": "barbearia",
+        }
+    }
 
 # Session cache (usar Redis se disponível)
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"

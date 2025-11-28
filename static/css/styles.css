@@ -107,6 +107,14 @@ img {
     transition: var(--transition-smooth);
 }
 
+.nav-menu .nav-icon {
+    width: 0.99em;
+    height: 0.99em;
+    flex-shrink: 0;
+    display: inline-block;
+    vertical-align: middle;
+}
+
 .nav-menu a:hover {
     background: hsla(20, 29%, 29%, 0.5);
     color: var(--color-gold);
@@ -253,21 +261,20 @@ img {
     display: flex;
     align-items: center;
     background: linear-gradient(135deg, var(--color-brown-darker) 0%, hsla(25, 43%, 13%, 0.95) 100%);
+    background-image: url('/static/images/gallery/barbershop-hero.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
     overflow: hidden;
 }
 
 .hero::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 24rem;
-    height: 24rem;
-    background: var(--color-gold);
-    border-radius: 50%;
-    filter: blur(100px);
-    opacity: 0.05;
-    animation: glow-pulse 4s ease-in-out infinite;
+    inset: 0;
+    background: linear-gradient(135deg, hsla(25, 43%, 13%, 0.85) 0%, hsla(25, 43%, 13%, 0.95) 100%);
+    z-index: 1;
 }
 
 .hero::after {
@@ -282,6 +289,7 @@ img {
     filter: blur(100px);
     opacity: 0.05;
     animation: glow-pulse 6s ease-in-out infinite 2s;
+    z-index: 2;
 }
 
 .hero-content {
@@ -340,7 +348,7 @@ img {
 .hero-image {
     position: relative;
     height: 700px;
-    display: none;
+    display: block;
 }
 
 .hero-image img {
@@ -677,6 +685,12 @@ img {
     margin-bottom: 0.5rem;
 }
 
+.footer-section svg {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+}
+
 .footer-section a {
     color: var(--color-brown-light);
     display: block;
@@ -760,6 +774,9 @@ img {
 }
 
 /* ========== RESPONSIVE ========== */
+/* Nota: Tipografia responsiva principal está em design-system.css */
+/* Aqui apenas ajustes específicos de componentes */
+
 @media (max-width: 1024px) {
     .hero-image {
         display: none;

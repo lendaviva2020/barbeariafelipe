@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     await loadProfile();
     await loadStats();
+    await checkAdminPermission(); // Verificar se usuário tem permissão de admin
 });
 
 async function loadProfile() {
@@ -57,6 +58,43 @@ async function loadStats() {
         }
     } catch (error) {
         console.error('Erro ao carregar estatísticas:', error);
+    }
+}
+
+/**
+ * Verifica se o usuário atual tem permissão de administrador
+ * Consulta o banco de dados para verificar se o email está autorizado
+ */
+async function checkAdminPermission() {
+    try {
+        // Aguardar um pouco para garantir que app.js foi carregado
+        if (typeof fetchAPI === 'undefined') {
+            console.warn('fetchAPI não disponível, tentando novamente em 100ms...');
+            setTimeout(checkAdminPermission, 100);
+            return;
+        }
+        
+        const response = await fetchAPI('/api/users/check-admin/');
+        
+        if (!response.ok) {
+            console.log('Erro ao verificar permissão de admin:', response.status);
+            return;
+        }
+        
+        const data = await response.json();
+        
+        // Se o usuário é admin, mostrar o botão
+        if (data.is_admin) {
+            const adminButtonContainer = document.getElementById('admin-button-container');
+            if (adminButtonContainer) {
+                adminButtonContainer.style.display = 'block';
+                console.log('✅ Usuário autorizado como administrador. Email:', data.email);
+            }
+        } else {
+            console.log('❌ Usuário não tem permissão de administrador. Email:', data.email);
+        }
+    } catch (error) {
+        console.error('Erro ao verificar permissão de admin:', error);
     }
 }
 
